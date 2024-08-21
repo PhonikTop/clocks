@@ -37,7 +37,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "test_app"
+    "watchy"
 ]
 
 MIDDLEWARE = [
@@ -55,8 +55,8 @@ ROOT_URLCONF = "settings.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
-        "APP_DIRS": True,
+        "DIRS": [os.path.join(BASE_DIR, 'templates/')],
+        "APP_DIRS": False,
         "OPTIONS": {
             "context_processors": [
                 "django.template.context_processors.debug",
@@ -118,9 +118,6 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-# STATICFILES_DIRS = [
-#     "/home/phonik/PycharmProjects/Сlocks/clocks/static",
-# ]
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static/'),
 ]
