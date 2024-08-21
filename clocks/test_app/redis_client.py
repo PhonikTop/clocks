@@ -10,10 +10,12 @@ redis_client = redis.Redis(
 )
 
 
-def save_url_to_redis(url, short_url):
+def save_url_to_redis(url, short_url):  # ttl=432000
     """Сохранение оригинальной и укороченной ссылки в Redis."""
     redis_client.hset('url_mapping', short_url, url)
     redis_client.hset('url_stats', short_url, 0)
+    # redis_client.setex(f"url_mapping:{short_url}", ttl, url)
+    # redis_client.setex(f"url_stats:{short_url}", ttl, 0)
 
 
 def get_url_from_redis(short_url):
@@ -34,7 +36,3 @@ def get_url_stats(short_url):
 def get_all_urls():
     """Получение всех укороченных ссылок и их оригинальных версий."""
     return redis_client.hgetall('url_mapping')
-
-
-save_url_to_redis("Dsdadsdsad.com", "dssa.com")
-print(get_all_urls())
