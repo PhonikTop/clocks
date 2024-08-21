@@ -14,7 +14,7 @@
         </header>
         <main>
             <form id="shorten-form">
-                <input type="url" id="url-input" placeholder="Enter your URL here" required>
+                {{ form.as_p }}
                 <button type="submit">Shorten</button>
             </form>
             <div id="links-container">
@@ -31,3 +31,4 @@
     <script src="{% static 'js/scripts.js' %}"></script>
 </body>
 </html>
+
