@@ -1,13 +1,33 @@
 <!DOCTYPE html>
 {% load static %}
-<html>
+<html lang="en">
 <head>
-    <meta charset="utf-8" />
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}" />
-    <title>Django на METANIT.COM</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Shortener</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 </head>
 <body>
-    <h1>Зимний лес</h1>
-    <img src="{% static 'images/image.jpg' %}" alt="зимний лес" >
+    <div class="container">
+        <header>
+            <h1>URL Shortener</h1>
+        </header>
+        <main>
+            <form id="shorten-form">
+                <input type="url" id="url-input" placeholder="Enter your URL here" required>
+                <button type="submit">Shorten</button>
+            </form>
+            <div id="links-container">
+                <h2>Your Shortened Links</h2>
+                <ul id="links-list">
+                    <!-- Links will be dynamically inserted here -->
+                </ul>
+            </div>
+        </main>
+        <footer>
+            <p>&copy; 2024 URL Shortener</p>
+        </footer>
+    </div>
+    <script src="{% static 'js/scripts.js' %}"></script>
 </body>
 </html>
