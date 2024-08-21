@@ -1,3 +1,43 @@
+<!--<!DOCTYPE html>-->
+<!--{% load static %}-->
+<!--<html lang="en">-->
+<!--<head>-->
+<!--    <meta charset="UTF-8">-->
+<!--    <meta name="viewport" content="width=device-width, initial-scale=1.0">-->
+<!--    <title>URL Shortener</title>-->
+<!--    <link rel="stylesheet" href="{% static 'css/styles.css' %}">-->
+<!--</head>-->
+<!--<body>-->
+<!--    <div class="container">-->
+<!--        <header>-->
+<!--            <h1>URL Shortener</h1>-->
+<!--        </header>-->
+<!--        <main>-->
+<!--            <form id="shorten-form">-->
+<!--&lt;!&ndash;                <input&ndash;&gt;-->
+<!--&lt;!&ndash;                        type="url"&ndash;&gt;-->
+<!--&lt;!&ndash;                        name="url"&ndash;&gt;-->
+<!--&lt;!&ndash;                        placeholder="Введите url"&ndash;&gt;-->
+<!--&lt;!&ndash;                        value="http://www.example.com" required>&ndash;&gt;-->
+<!--                <h3>{{ form }}</h3>-->
+<!--                <button type="submit">Shorten</button>-->
+<!--            </form>-->
+<!--            <div id="links-container">-->
+<!--                <h2>Your Shortened Links</h2>-->
+<!--                <ul id="links-list">-->
+<!--                    &lt;!&ndash; Links will be dynamically inserted here &ndash;&gt;-->
+<!--                </ul>-->
+<!--            </div>-->
+<!--        </main>-->
+<!--        <footer>-->
+<!--            <p>&copy; 2024 URL Shortener</p>-->
+<!--        </footer>-->
+<!--    </div>-->
+<!--&lt;!&ndash;    <script src="{% static 'js/scripts.js' %}"></script>&ndash;&gt;-->
+<!--</body>-->
+<!--</html>-->
+
+
 <!DOCTYPE html>
 {% load static %}
 <html lang="en">
@@ -13,14 +53,34 @@
             <h1>URL Shortener</h1>
         </header>
         <main>
-            <form id="shorten-form">
-                {{ form.as_p }}
+            <!-- Форма для создания укороченных ссылок -->
+            <form id="shorten-form" method="get" action="{% url 'shorten_url' %}">
+                {{ form.as_p }} <!-- Отображение формы с помощью встроенного метода Django -->
                 <button type="submit">Shorten</button>
             </form>
+
+            <!-- Вывод ошибок формы, если есть -->
+            {% if form.errors %}
+                <div class="form-errors">
+                    <ul>
+                        {% for field in form %}
+                            {% for error in field.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+
+            <!-- Список созданных укороченных ссылок -->
             <div id="links-container">
                 <h2>Your Shortened Links</h2>
                 <ul id="links-list">
-                    <!-- Links will be dynamically inserted here -->
+                    {% for link in existing_urls %}
+                        <li><a href="{{ link.short_url }}" target="_blank">{{ link.short_url }}</a> - {{ link.original_url }}</li>
+                    {% empty %}
+                        <li>No links found.</li>
+                    {% endfor %}
                 </ul>
             </div>
         </main>
@@ -31,4 +91,5 @@
     <script src="{% static 'js/scripts.js' %}"></script>
 </body>
 </html>
+
 

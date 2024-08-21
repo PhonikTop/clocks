@@ -18,7 +18,6 @@ Including another URLconf
 from django.urls import path
 from test_app import views
 
-
 urlpatterns = [
-    path("", views.index),
+    path('shorten_url', views.shorten_url, name='shorten_url'),
 ]
