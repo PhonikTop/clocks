@@ -10,12 +10,15 @@ redis_client = redis.Redis(
 )
 
 
-def save_url_to_redis(url, short_url):  # ttl=432000
-    """Сохранение оригинальной и укороченной ссылки в Redis."""
-    redis_client.hset('url_mapping', short_url, url)
-    redis_client.hset('url_stats', short_url, 0)
-    # redis_client.setex(f"url_mapping:{short_url}", ttl, url)
-    # redis_client.setex(f"url_stats:{short_url}", ttl, 0)
+# def save_url_to_redis(url, short_url):
+#     """Сохранение оригинальной и укороченной ссылки в Redis."""
+#     # redis_client.setex(f"url_mapping:{short_url}", ttl, url)
+#     # redis_client.setex(f"url_stats:{short_url}", ttl, 0)
+def save_url_to_redis(url, short_url, cookie_key, ttl=432000):
+    """Сохранение оригинальной и укороченной ссылки в Redis с учетом cookie_key."""
+    redis_client.hset(f"user_links:{cookie_key}", short_url, url)
+    redis_client.expire(f"user_links:{cookie_key}", ttl)
+    redis_client.hset(f"url_stats:{short_url}", 'click_count', 0)
 
 
 def get_url_from_redis(short_url):
@@ -33,6 +36,6 @@ def get_url_stats(short_url):
     return redis_client.hget('url_stats', short_url)
 
 
-def get_all_urls():
-    """Получение всех укороченных ссылок и их оригинальных версий."""
-    return redis_client.hgetall('url_mapping')
+def get_all_urls(cookie_key):
+    """Получение всех укороченных ссылок для конкретного cookie_key."""
+    return redis_client.hgetall(f"user_links:{cookie_key}")

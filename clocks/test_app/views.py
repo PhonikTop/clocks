@@ -7,12 +7,16 @@ from django.http import HttpResponseRedirect
 def shorten_url(request):
     import random
     import string
+    import time
+
     if request.method == "POST":
         save_url_to_redis(request.POST.get("url"),
-                          ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(6)))
+                          ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(6)),
+                          request.COOKIES['user'])
     form = URLShortenerForm()
     return render(request, "index.html",
-                  {"form": form, "existing_urls": get_all_urls()})
+                  {"form": form,
+                   "existing_urls": get_all_urls(request.COOKIES['user']) if 'user' in request.COOKIES else []})
 
 
 def redirect_view(request, short_url):
