@@ -1,15 +1,19 @@
 from django.shortcuts import render
 from .forms import URLShortenerForm
-from .redis_client import get_all_urls, save_url_to_redis
+from .redis_client import get_all_urls, save_url_to_redis, get_url_from_redis, increment_url_stat
+from django.http import HttpResponseRedirect
 
 
 def shorten_url(request):
+    import random
+    import string
     if request.method == "POST":
         # form = URLShortenerForm(request.POST)
         # if form.is_valid():
         #     print(form.cleaned_data)
         form = URLShortenerForm()
-        save_url_to_redis(request.POST.get("url"), url)
+        save_url_to_redis(request.POST.get("url"),
+                          ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(6)))
     else:
         form = URLShortenerForm()
 

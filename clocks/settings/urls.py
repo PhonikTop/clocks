@@ -20,4 +20,5 @@ from test_app import views
 
 urlpatterns = [
     path('shorten_url', views.shorten_url, name='shorten_url'),
+    path('<str:short_url>/', views.redirect_view, name='redirect'),
 ]
