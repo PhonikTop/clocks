@@ -37,10 +37,8 @@ def join_room(request):
     )
 
     # Получение или создание активной сессии для комнаты
-    session = room.current_session
-    if session is None:
-        session = Session.objects.create(room=room, task_name="Default Task")
-        room.current_session = session
+    if room.current_session is None:
+        room.current_session = Session.objects.create(room=room, task_name="Default Task")
         room.save()
 
     # Возврат данных пользователя и идентификатора сессии
@@ -76,13 +74,16 @@ def create_room(request):
     Создание новой комнаты.
     """
     name = request.data.get("name")
+
     if not name:
         return Response(
-            {"error": "Room name is required"}, status=status.HTTP_400_BAD_REQUEST
+            {"error": "Room name is required"},
+            status=status.HTTP_400_BAD_REQUEST
         )
 
     room = Room.objects.create(name=name)
     serializer = RoomSerializer(room)
+
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
@@ -93,6 +94,7 @@ def get_room(request, room_id):
     """
     room = get_object_or_404(Room, id=room_id)
     serializer = RoomSerializer(room)
+
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -114,7 +116,6 @@ def get_room_participants(request, room_id):
     Получение списка участников комнаты.
     """
     room = get_object_or_404(Room, id=room_id)
-    participants = room.users.all()
     data = [
         {
             "id": user.id,
@@ -122,7 +123,7 @@ def get_room_participants(request, room_id):
             "role": "observer" if user.is_observer else "voter",
             "state": user.state,
         }
-        for user in participants
+        for user in room.users.all()
     ]
     return Response(data, status=status.HTTP_200_OK)
 
@@ -132,12 +133,14 @@ def start_session(request):
     """
     Создание новой сессии для голосования в комнате.
     """
+
     room_id = request.data.get("room_id")
     task_name = request.data.get("task_name")
 
     if not room_id or not task_name:
         return Response(
-            {"error": "Missing parameters"}, status=status.HTTP_400_BAD_REQUEST
+            {"error": "Missing parameters"},
+            status=status.HTTP_400_BAD_REQUEST
         )
 
     room = get_object_or_404(Room, id=room_id)
@@ -148,6 +151,7 @@ def start_session(request):
     room.save()
 
     serializer = SessionSerializer(session)
+
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
@@ -158,6 +162,7 @@ def get_session(request, session_id):
     """
     session = get_object_or_404(Session, id=session_id)
     serializer = SessionSerializer(session)
+
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -205,7 +210,7 @@ def end_session(request, session_id):
         )
 
     session.status = "completed"
-    # TODO: Исправить хуйню ниже и привести ее в нормальный вид
+    # TODO: Исправить херню ниже и привести ее в нормальный вид
     if session.votes:
         votes_sum = 0
         for value in session.votes.values():
