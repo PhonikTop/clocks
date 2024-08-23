@@ -1,9 +1,10 @@
 from django.shortcuts import get_object_or_404
+from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework import status
-from .models import Room, User, Session
-from .serializers import UserSerializer, RoomSerializer, SessionSerializer
+
+from .models import Room, Session, User
+from .serializers import RoomSerializer, SessionSerializer, UserSerializer
 
 
 @api_view(["POST"])
@@ -78,8 +79,7 @@ def create_room(request):
 
     if not name:
         return Response(
-            {"error": "Room name is required"},
-            status=status.HTTP_400_BAD_REQUEST
+            {"error": "Room name is required"}, status=status.HTTP_400_BAD_REQUEST
         )
 
     room = Room.objects.create(name=name)
@@ -133,15 +133,14 @@ def get_room_participants(request, room_id):
 def start_session(request):
     """
     Создание новой сессии для голосования в комнате.
-    """
 
+    """
     room_id = request.data.get("room_id")
     task_name = request.data.get("task_name")
 
     if not room_id or not task_name:
         return Response(
-            {"error": "Missing parameters"},
-            status=status.HTTP_400_BAD_REQUEST
+            {"error": "Missing parameters"}, status=status.HTTP_400_BAD_REQUEST
         )
 
     room = get_object_or_404(Room, id=room_id)
@@ -212,7 +211,9 @@ def end_session(request, session_id):
 
     session.status = "completed"
     if session.votes:
-        session.average_score = round(sum(int(value) for value in session.votes.values()) / len(session.votes))
+        session.average_score = round(
+            sum(int(value) for value in session.votes.values()) / len(session.votes)
+        )
     else:
         session.average_score = 0
     session.save()

@@ -1,0 +1,71 @@
+[tool.ruff]
+# match black
+line-length = 120
+target-version = "py311"
+select = [
+    "ALL", # include all the rules, including new ones
+]
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".ipynb_checkpoints",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pyenv",
+    ".pytest_cache",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    ".vscode",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "site-packages",
+    "venv",
+    "clocks/settings/",
+    "clocks/watchy/migrations/",
+    "clocks/watchy/admin.py",
+    "clocks/watchy/tests.py",
+    "clocks/manage.py",
+    "clocks/templates/",
+]
+ignore = [
+    #### modules
+    "COM", # flake8-commas
+    "C90", # mccabe complexity
+    "EXE", # flake8-executable
+    "T10", # debugger
+
+    #### specific rules
+    "D100",   # ignore missing docs
+    "D101",
+    "D102",
+    "D103",
+    "D104",
+    "D105",
+    "D106",
+    "D107",
+    "D200",
+    "D205",
+    "D212",
+    "D400",
+    "D401",
+    "D415",
+    "TRY003", # external messages in exceptions are too verbose
+    "TD002",
+    "TD003",
+    "FIX002", # too verbose descriptions of todos
+    "ARG",
+    "RUF002",
+    "RUF012"
+]
