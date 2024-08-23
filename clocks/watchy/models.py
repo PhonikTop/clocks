@@ -55,6 +55,7 @@ class User(AbstractBaseUser):
     def __str__(self):
         return self.nickname
 
+
 class Session(models.Model):
     room = models.ForeignKey(
         Room,

@@ -30,15 +30,16 @@ def join_room(request):
     # Обновление или создание пользователя
     user = User.objects.create_user(
         nickname=nickname,
-        username=nickname,
         room=room,
         is_observer=role == "observer",
         state="waiting",
     )
 
     # Получение или создание активной сессии для комнаты
-    if room.current_session is None:
-        room.current_session = Session.objects.create(room=room, task_name="Default Task")
+    session = room.current_session
+    if session is None:
+        session = Session.objects.create(room=room, task_name="Default Task")
+        room.current_session = session
         room.save()
 
     # Возврат данных пользователя и идентификатора сессии
@@ -210,12 +211,8 @@ def end_session(request, session_id):
         )
 
     session.status = "completed"
-    # TODO: Исправить херню ниже и привести ее в нормальный вид
     if session.votes:
-        votes_sum = 0
-        for value in session.votes.values():
-            votes_sum += int(value)
-        session.average_score = round(votes_sum / len(session.votes))
+        session.average_score = round(sum(int(value) for value in session.votes.values()) / len(session.votes))
     else:
         session.average_score = 0
     session.save()
