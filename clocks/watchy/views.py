@@ -23,20 +23,17 @@ def join_room(request):
 
     # Проверка допустимости роли
     if role not in ["observer", "participant"]:
-        return Response(
-            {"error": "Invalid role"}, status=status.HTTP_400_BAD_REQUEST
-        )
+        return Response({"error": "Invalid role"}, status=status.HTTP_400_BAD_REQUEST)
 
     # Получение комнаты
     room = get_object_or_404(Room, id=room_id)
     # Обновление или создание пользователя
-    print(nickname)
     user = User.objects.create_user(
         nickname=nickname,
         username=nickname,
         room=room,
         is_observer=role == "observer",
-        state="waiting"
+        state="waiting",
     )
 
     # Получение или создание активной сессии для комнаты
@@ -79,7 +76,6 @@ def create_room(request):
     Создание новой комнаты.
     """
     name = request.data.get("name")
-    print(name)
     if not name:
         return Response(
             {"error": "Room name is required"}, status=status.HTTP_400_BAD_REQUEST
@@ -209,8 +205,14 @@ def end_session(request, session_id):
         )
 
     session.status = "completed"
-    session.average_score = 0 if not votes else round(sum(session.votes.values()) / len(session.votes))
-
+    # TODO: Исправить хуйню ниже и привести ее в нормальный вид
+    if session.votes:
+        votes_sum = 0
+        for value in session.votes.values():
+            votes_sum += int(value)
+        session.average_score = round(votes_sum / len(session.votes))
+    else:
+        session.average_score = 0
     session.save()
 
     return Response(

@@ -18,6 +18,7 @@ class Room(models.Model):
 
 
 class User(AbstractUser):
+    # TODO: Исправить херню с nickname и username (ЗАПИСАЛ В TODOIST)
     nickname = models.CharField(max_length=100, default='Игрок')
     room = models.ForeignKey(
         Room,
