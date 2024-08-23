@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 
 
 class Room(models.Model):
@@ -17,13 +17,27 @@ class Room(models.Model):
         return self.name
 
 
-class User(AbstractUser):
-    # TODO: Исправить херню с nickname и username (ЗАПИСАЛ В TODOIST)
-    nickname = models.CharField(max_length=100, default='Игрок')
+class UserManager(BaseUserManager):
+    def create_user(self, nickname, password=None, **extra_fields):
+        if not nickname:
+            raise ValueError('The nickname field must be set')
+        user = self.model(nickname=nickname, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, nickname, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        return self.create_user(nickname, password, **extra_fields)
+
+
+class User(AbstractBaseUser):
+    nickname = models.CharField(max_length=100, unique=True, default='Игрок')
     room = models.ForeignKey(
-        Room,
+        'Room',
         on_delete=models.CASCADE,
-        related_name='users'  # Уникальное имя для обратной связи
+        related_name='users'
     )
     is_observer = models.BooleanField(default=False)
     state = models.CharField(max_length=20, choices=[
@@ -32,9 +46,14 @@ class User(AbstractUser):
         ('voted', 'Voted'),
     ], default='waiting')
 
+    # Required fields for AbstractBaseUser
+    USERNAME_FIELD = 'nickname'
+    REQUIRED_FIELDS = []
+
+    objects = UserManager()
+
     def __str__(self):
         return self.nickname
-
 
 class Session(models.Model):
     room = models.ForeignKey(
