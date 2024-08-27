@@ -1,51 +1,85 @@
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Group, Permission, PermissionsMixin
 from django.db import models
 
 
-class UserManager(BaseUserManager):
-    def create_user(self, nickname: str, password: str | None = None, **extra_fields) -> "User":
-        """
-        Создание и сохранение обычного пользователя с заданным никнеймом и паролем.
-        """
-        if not nickname:
-            msg = "The nickname field must be set"
+class CustomUserManager(BaseUserManager):
+    def create_user(self, username: str, password: str = None, **extra_fields) -> AbstractBaseUser:
+        if not username:
+            msg = "The username field must be set"
             raise ValueError(msg)
-        user = self.model(nickname=nickname, **extra_fields)
+        user = self.model(username=username, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, nickname: str, password: str | None = None, **extra_fields) -> "User":
-        """
-        Создание и сохранение суперпользователя с заданным никнеймом и паролем.
-        """
+    def create_superuser(self, username: str, password: str = None, **extra_fields) -> AbstractBaseUser:
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
 
-        return self.create_user(nickname, password, **extra_fields)
+        if extra_fields.get("is_staff") is not True:
+            msg = "Superuser must have is_staff=True."
+            raise ValueError(msg)
+        if extra_fields.get("is_superuser") is not True:
+            msg = "Superuser must have is_superuser=True."
+            raise ValueError(msg)
+
+        return self.create_user(username, password, **extra_fields)
 
 
-class User(AbstractBaseUser):
-    from rooms.models import Room
+class AdminUser(AbstractBaseUser, PermissionsMixin):
+    username = models.CharField(max_length=100, unique=True)
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=True)
+    is_superuser = models.BooleanField(default=True)
 
-    nickname: str = models.CharField(max_length=100, unique=True, default="Игрок")
-    room: Room = models.ForeignKey("rooms.Room", on_delete=models.CASCADE, related_name="users")
-    is_observer: bool = models.BooleanField(default=False)
-    state: str = models.CharField(
-        max_length=20,
-        choices=[
-            ("waiting", "Waiting"),
-            ("voting", "Voting"),
-            ("voted", "Voted"),
-        ],
-        default="waiting",
+    groups = models.ManyToManyField(
+        Group,
+        related_name="adminuser_set",
+        blank=True,
+        help_text="The groups this user belongs to. A user will get all permissions granted to each of their groups.",
+        related_query_name="adminuser",
+    )
+    user_permissions = models.ManyToManyField(
+        Permission,
+        related_name="adminuser_set",
+        blank=True,
+        help_text="Specific permissions for this user.",
+        related_query_name="adminuser",
     )
 
-    # Required fields for AbstractBaseUser
-    USERNAME_FIELD: str = "nickname"
-    REQUIRED_FIELDS: list[str] = []
+    objects = CustomUserManager()
 
-    objects: UserManager = UserManager()
+    USERNAME_FIELD = "username"
+    REQUIRED_FIELDS = []
 
     def __str__(self) -> str:
-        return self.nickname
+        return self.username
+
+
+class StaffUser(AbstractBaseUser, PermissionsMixin):
+    username = models.CharField(max_length=100, unique=True)
+    is_staff = models.BooleanField(default=True)
+    is_superuser = models.BooleanField(default=False)
+
+    groups = models.ManyToManyField(
+        Group,
+        related_name="staffuser_set",
+        blank=True,
+        help_text="The groups this user belongs to. A user will get all permissions granted to each of their groups.",
+        related_query_name="staffuser",
+    )
+    user_permissions = models.ManyToManyField(
+        Permission,
+        related_name="staffuser_set",
+        blank=True,
+        help_text="Specific permissions for this user.",
+        related_query_name="staffuser",
+    )
+
+    objects = CustomUserManager()
+
+    USERNAME_FIELD = "username"
+    REQUIRED_FIELDS = []
+
+    def __str__(self) -> str:
+        return self.username

@@ -6,8 +6,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rooms.models import Room
 
-from .models import User
-from .serializers import UserSerializer
+from .redis_client import save_new_client_to_redis
 
 
 @api_view(["POST"])
@@ -29,36 +28,30 @@ def join_room(request: Request) -> Response:
     if role not in ["observer", "participant"]:
         return Response({"error": "Invalid role"}, status=status.HTTP_400_BAD_REQUEST)
 
+    save_new_client_to_redis(nickname, ("testing_cookie"), role)
+
     # Получение комнаты
     room: Room = get_object_or_404(Room, id=room_id)
-
-    # Обновление или создание пользователя
-    user: User = User.objects.create_user(
-        nickname=nickname,
-        room=room,
-        is_observer=role == "observer",
-        state="waiting",
-    )
 
     # Получение или создание активной сессии для комнаты
     session: Session = room.current_session
     if session is None:
-        session = Session.objects.create(room=room, task_name="Default Task")
+        session = Session.objects.create(room=room, task_name="Введите название таска")
         room.current_session = session
         room.save()
 
-    # Возврат данных пользователя и идентификатора сессии
-    serializer = UserSerializer(user)
     return Response(
-        {"user": serializer.data, "session_id": session.id}, status=status.HTTP_200_OK
+        {"user": nickname, "session_id": session.id}, status=status.HTTP_200_OK
     )
 
 
+# TODO: Написать функцию получения информации o пользователе по куки
 @api_view(["GET"])
 def get_current_user(request: Request) -> Response:
     """
     Получение информации о текущем пользователе.
     """
-    user: User = request.user
-    serializer = UserSerializer(user)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+    # user: User = request.user
+    # serializer = UserSerializer(user)
+    # return Response(serializer.data, status=status.HTTP_200_OK)
+    return None
