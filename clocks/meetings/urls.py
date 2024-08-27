@@ -1,11 +1,19 @@
-import views
 from django.urls import path
 
+from .views import (
+    EndSessionView,
+    GetSessionResultsView,
+    GetSessionView,
+    StartSessionView,
+    UpdateSessionTaskView,
+    VoteView,
+)
+
 urlpatterns = [
-    path("session", views.start_session, name="start_session"),
-    path("session/<int:session_id>", views.get_session, name="get_session"),
-    path("session/<int:session_id>/vote", views.vote, name="vote"),
-    path("session/<int:session_id>/end", views.end_session, name="end_session"),
-    path("session/<int:session_id>/task", views.update_session_task, name="update_session_task"),
-    path("session/<int:session_id>/results", views.get_session_results, name="get_session_results"),
+    path("", StartSessionView.as_view(), name='start_session'),
+    path("<int:session_id>", GetSessionView.as_view(), name="get_session"),
+    path("<int:session_id>/vote", VoteView.as_view(), name="vote"),
+    path("<int:session_id>/end", EndSessionView.as_view(), name="end_session"),
+    path("<int:session_id>/task", UpdateSessionTaskView.as_view(), name="update_session_task"),
+    path("<int:session_id>/results", GetSessionResultsView.as_view(), name="get_session_results"),
 ]
