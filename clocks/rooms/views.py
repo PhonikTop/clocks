@@ -1,4 +1,5 @@
 from django.shortcuts import get_object_or_404
+from meetings.models import Session
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -74,12 +75,10 @@ class RoomParticipantsView(APIView):
         room = get_object_or_404(Room, id=room_id)
         data = [
             {
-                "id": user.id,
-                "nickname": user.nickname,
-                "role": "observer" if user.is_observer else "voter",
-                "state": user.state,
+                "nickname": list(user.keys())[0],
+                "role": "observer" if user[list(user.keys())[0]] == "observer" else "voter",
             }
-            for user in room.users.all()
+            for user in room.users  # Предполагается, что room.users — это queryset
         ]
         return Response(data, status=status.HTTP_200_OK)
 
@@ -94,7 +93,7 @@ class RoomHistoryView(APIView):
         Получение истории сессий в комнате.
         """
         room = get_object_or_404(Room, id=room_id)
-        sessions = Session.objects.filter(room=room, status="completed")
+        sessions = Session.objects.filter(room=room, active=False)
         data = [
             {
                 "id": session.id,

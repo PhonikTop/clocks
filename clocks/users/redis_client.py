@@ -15,3 +15,10 @@ def save_new_client_to_redis(name: str, cookie_key: tuple, role: str, ttl: int =
     """Сохранение оригинальной и укороченной ссылки в Redis с учетом cookie_key."""
     redis_client.hset(name, mapping={"cookie": cookie_key, "role": role})
     redis_client.expire(name, ttl)
+
+
+def check_nickname_in_db(name: str) -> bool:
+    """
+    Проверка на существование никнейма в базе.
+    """
+    return redis_client.exists(name) > 0
