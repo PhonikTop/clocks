@@ -1,5 +1,5 @@
 from django.shortcuts import get_object_or_404
-from meetings.models import Session
+from meetings.models import Meeting
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -15,9 +15,9 @@ class JoinRoomView(APIView):
     """
 
     def post(self, request: Request) -> Response:
-        nickname: str = request.data.get("nickname")
-        room_id: int = request.data.get("room_id")
-        role: str = request.data.get("role")
+        nickname: str = request.data.get("nickname", )
+        room_id: int = request.data.get("room_id", )
+        role: str = request.data.get("role", )
 
         # Проверка обязательных параметров
         if not all([nickname, room_id, role]):
@@ -38,14 +38,14 @@ class JoinRoomView(APIView):
             room.users.append({nickname: role})
             room.save()
             # Получение или создание активной сессии для комнаты
-            session: Session = room.current_session
-            if session is None:
-                session = Session.objects.create(room=room, task_name="Введите название таска")
-                room.current_session = session
+            meeting: Meeting = room.current_meeting
+            if meeting is None:
+                meeting = Meeting.objects.create(room=room, task_name="Введите название таска")
+                room.current_meeting = meeting
                 room.save()
 
             return Response(
-                {"user": nickname, "session_id": session.id}, status=status.HTTP_200_OK
+                {"user": nickname, "Meeting": meeting.id}, status=status.HTTP_200_OK
             )
         else:
             return Response(

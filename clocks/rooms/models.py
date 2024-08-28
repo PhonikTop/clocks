@@ -4,8 +4,8 @@ from django.db import models
 class Room(models.Model):
     name = models.CharField(max_length=100)
     is_active = models.BooleanField(default=True)
-    current_session = models.OneToOneField(
-        "meetings.Session",
+    current_meeting = models.OneToOneField(
+        "meetings.Meeting",
         null=True,
         blank=True,
         on_delete=models.SET_NULL,

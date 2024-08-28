@@ -1,9 +1,9 @@
 from rest_framework import serializers
 
-from .models import Session
+from .models import Meeting
 
 
-class SessionSerializer(serializers.ModelSerializer):
+class MeetingSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Session
+        model = Meeting
         fields = ["id", "room", "task_name", "votes", "average_score", "active"]

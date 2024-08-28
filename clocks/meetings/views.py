@@ -4,12 +4,13 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rooms.models import Room
+from users.redis_client import check_nickname_in_db
 
-from .models import Session
-from .serializers import SessionSerializer
+from .models import Meeting
+from .serializers import MeetingSerializer
 
 
-class StartSessionView(APIView):
+class StartMeetingView(APIView):
     """
     Создание новой сессии для голосования в комнате.
     """
@@ -26,22 +27,22 @@ class StartSessionView(APIView):
         room = get_object_or_404(Room, id=room_id)
 
         # Создание новой сессии
-        session = Session.objects.create(room=room, task_name=task_name)
-        room.current_session = session
+        meeting = Meeting.objects.create(room=room, task_name=task_name)
+        room.current_meeting = meeting
         room.save()
 
-        serializer = SessionSerializer(session)
+        serializer = MeetingSerializer(meeting)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-class GetSessionView(APIView):
+class GetMeetingView(APIView):
     """
     Получение информации о конкретной сессии.
     """
 
-    def get(self, request: Request, session_id: int) -> Response:
-        session = get_object_or_404(Session, id=session_id)
-        serializer = SessionSerializer(session)
+    def get(self, request: Request, meeting_id: int) -> Response:
+        meeting = get_object_or_404(Meeting, id=meeting_id)
+        serializer = MeetingSerializer(meeting)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -50,8 +51,8 @@ class VoteView(APIView):
     Отправка голоса участника в текущей сессии.
     """
 
-    def post(self, request: Request, session_id: int) -> Response:
-        session = get_object_or_404(Session, id=session_id)
+    def post(self, request: Request, meeting_id: int) -> Response:
+        meeting = get_object_or_404(Meeting, id=meeting_id)
         user_name = request.data.get("user")
         user_vote = request.data.get("vote")
 
@@ -59,74 +60,79 @@ class VoteView(APIView):
             return Response(
                 {"error": "Missing parameters"}, status=status.HTTP_400_BAD_REQUEST
             )
+        room: Room = get_object_or_404(Room, current_meeting_id=meeting_id)
+        if not any(user_name in d for d in room.users):
+            return Response(
+                {"error": "Participant doesn't exists"}, status=status.HTTP_400_BAD_REQUEST
+            )
 
-        session.votes[user_name] = user_vote
-        session.save()
+        meeting.votes[user_name] = user_vote
+        meeting.save()
 
         return Response({"message": "Vote recorded"}, status=status.HTTP_200_OK)
 
 
-class EndSessionView(APIView):
+class EndMeetingView(APIView):
     """
     Завершение текущего раунда голосования.
     """
 
-    def post(self, request: Request, session_id: int) -> Response:
-        session = get_object_or_404(Session, id=session_id)
+    def post(self, request: Request, meeting_id: int) -> Response:
+        meeting = get_object_or_404(Meeting, id=meeting_id)
 
-        if not session.active:
+        if not meeting.active:
             return Response(
-                {"error": "Session already completed"}, status=status.HTTP_400_BAD_REQUEST
+                {"error": "Meeting already completed"}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        session.active = False
-        if session.votes:
-            session.average_score = round(
-                sum(int(value) for value in session.votes.values()) / len(session.votes)
+        meeting.active = False
+        if meeting.votes:
+            meeting.average_score = round(
+                sum(int(value) for value in meeting.votes.values()) / len(meeting.votes)
             )
         else:
-            session.average_score = 0
-        session.save()
+            meeting.average_score = 0
+        meeting.save()
 
         return Response(
-            {"message": "Session ended", "average_score": session.average_score},
+            {"message": "Meeting ended", "average_score": meeting.average_score},
             status=status.HTTP_200_OK,
         )
 
 
-class UpdateSessionTaskView(APIView):
+class UpdateMeetingTaskView(APIView):
     """
     Установка задачи для текущей сессии.
     """
 
-    def post(self, request: Request, session_id: int) -> Response:
-        session = get_object_or_404(Session, id=session_id)
-        task_name = request.data.get("task_name")
+    def post(self, request: Request, meeting_id: int) -> Response:
+        meeting = get_object_or_404(Meeting, id=meeting_id)
+        task_name = request.data.get("task_name", )
 
         if not task_name:
             return Response(
                 {"error": "Task name is required"}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        session.task_name = task_name
-        session.save()
+        meeting.task_name = task_name
+        meeting.save()
 
         return Response(
-            {"message": "Task updated", "task_name": session.task_name},
+            {"message": "Task updated", "task_name": meeting.task_name},
             status=status.HTTP_200_OK,
         )
 
 
-class GetSessionResultsView(APIView):
+class GetMeetingResultsView(APIView):
     """
     Получение результатов конкретной сессии.
     """
 
-    def get(self, request: Request, session_id: int) -> Response:
-        session = get_object_or_404(Session, id=session_id)
+    def get(self, request: Request, meeting_id: int) -> Response:
+        meeting = get_object_or_404(Meeting, id=meeting_id)
         results = {
-            "task_name": session.task_name,
-            "votes": session.votes,
-            "average_score": session.average_score,
+            "task_name": meeting.task_name,
+            "votes": meeting.votes,
+            "average_score": meeting.average_score,
         }
         return Response(results, status=status.HTTP_200_OK)

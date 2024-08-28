@@ -1,11 +1,11 @@
 from django.db import models
 
 
-class Session(models.Model):
+class Meeting(models.Model):
     room = models.ForeignKey(
         "rooms.Room",
         on_delete=models.CASCADE,
-        related_name="sessions",
+        related_name="meetings",
     )
     task_name = models.CharField(max_length=200)
     votes = models.JSONField(default=dict)
@@ -13,4 +13,4 @@ class Session(models.Model):
     active: bool = models.BooleanField(default=True)
 
     def __str__(self) -> str:
-        return f"Session for {self.room.name} - {self.task_name}"
+        return f"Meeting for {self.room.name} - {self.task_name}"

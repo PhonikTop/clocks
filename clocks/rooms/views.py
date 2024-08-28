@@ -1,5 +1,5 @@
 from django.shortcuts import get_object_or_404
-from meetings.models import Session
+from meetings.models import Meeting
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -15,7 +15,7 @@ class RoomCreateView(APIView):
     """
 
     def post(self, request: Request, *args, **kwargs) -> Response:
-        name = request.data.get("name")
+        name = request.data.get("name", )
         if not name:
             return Response(
                 {"error": "Room name is required"}, status=status.HTTP_400_BAD_REQUEST
@@ -93,13 +93,13 @@ class RoomHistoryView(APIView):
         Получение истории сессий в комнате.
         """
         room = get_object_or_404(Room, id=room_id)
-        sessions = Session.objects.filter(room=room, active=False)
+        meetings = Meeting.objects.filter(room=room, active=False)
         data = [
             {
-                "id": session.id,
-                "task_name": session.task_name,
-                "average_score": session.average_score,
+                "id": meeting.id,
+                "task_name": meeting.task_name,
+                "average_score": meeting.average_score,
             }
-            for session in sessions
+            for meeting in meetings
         ]
         return Response(data, status=status.HTTP_200_OK)
