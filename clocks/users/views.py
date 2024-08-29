@@ -1,3 +1,4 @@
+from api.api_utils import APIResponseHandler
 from django.shortcuts import get_object_or_404
 from meetings.models import Meeting
 from rest_framework import status
@@ -7,6 +8,8 @@ from rest_framework.views import APIView
 from rooms.models import Room
 
 from .redis_client import check_nickname_in_db, save_new_client_to_redis
+
+response = APIResponseHandler()
 
 
 class JoinRoomView(APIView):
@@ -20,12 +23,12 @@ class JoinRoomView(APIView):
         role: str = request.data.get("role", )
 
         if not all([nickname, room_id, role]):
-            return Response(
-                {"error": "Missing parameters"}, status=status.HTTP_400_BAD_REQUEST
-            )
+            return response.error_response(msg="Missing parameters", data=None,
+                                           response_status=status.HTTP_400_BAD_REQUEST)
 
         if role not in ["observer", "participant"]:
-            return Response({"error": "Invalid role"}, status=status.HTTP_400_BAD_REQUEST)
+            return response.error_response(msg="Invalid role", data=None,
+                                           response_status=status.HTTP_400_BAD_REQUEST)
 
         if not check_nickname_in_db(nickname):
             save_new_client_to_redis(nickname, "testing_cookie", role)
@@ -40,13 +43,11 @@ class JoinRoomView(APIView):
                 room.current_meeting = meeting
                 room.save()
 
-            return Response(
-                {"user": nickname, "Meeting": meeting.id}, status=status.HTTP_200_OK
-            )
+            return response.success_response(msg="User joined", data={"user": nickname, "Meeting": meeting.id},
+                                             response_status=status.HTTP_200_OK)
         else:
-            return Response(
-                {"detail": "Юзер уже существует"}, status=status.HTTP_200_OK
-            )
+            return response.error_response(msg="User exists", data=None,
+                                           response_status=status.HTTP_400_BAD_REQUEST)
 
 
 class CurrentUserView(APIView):
@@ -55,4 +56,5 @@ class CurrentUserView(APIView):
     """
 
     def get(self, request: Request) -> Response:
-        return Response({"detail": "Not implemented"}, status=status.HTTP_501_NOT_IMPLEMENTED)
+        return response.success_response(msg="Not implemented", data=None,
+                                         response_status=status.HTTP_201_CREATED)

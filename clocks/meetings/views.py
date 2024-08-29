@@ -1,3 +1,4 @@
+from api.api_utils import APIResponseHandler
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.request import Request
@@ -7,6 +8,8 @@ from rooms.models import Room
 
 from .models import Meeting
 from .serializers import MeetingSerializer
+
+response = APIResponseHandler()
 
 
 class StartMeetingView(APIView):
@@ -19,9 +22,8 @@ class StartMeetingView(APIView):
         task_name = request.data.get("task_name")
 
         if not room_id or not task_name:
-            return Response(
-                {"error": "Missing parameters"}, status=status.HTTP_400_BAD_REQUEST
-            )
+            return response.error_response(msg="Missing parameters", data=None,
+                                           response_status=status.HTTP_400_BAD_REQUEST)
 
         room = get_object_or_404(Room, id=room_id)
 
@@ -30,12 +32,12 @@ class StartMeetingView(APIView):
             room.current_meeting = meeting
             room.save()
 
-            serializer = MeetingSerializer(meeting, many=True, fields=["id", "room"])
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            serializer = MeetingSerializer(meeting, fields=["id", "room"])
+            return response.success_response(msg="Meeting started", data=serializer.data,
+                                             response_status=status.HTTP_201_CREATED)
         else:
-            return Response(
-                {"error": "Room session exists"}, status=status.HTTP_400_BAD_REQUEST
-            )
+            return response.error_response(msg="Room session exists", data=None,
+                                           response_status=status.HTTP_400_BAD_REQUEST)
 
 
 class GetMeetingView(APIView):
@@ -47,7 +49,8 @@ class GetMeetingView(APIView):
         meeting = get_object_or_404(Meeting, id=meeting_id)
         serializer = MeetingSerializer(meeting, many=True,
                                        fields=["id", "room", "task_name", "votes", "average_score", "active"])
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return response.success_response(msg="Meeting info", data=serializer.data,
+                                         response_status=status.HTTP_200_OK)
 
 
 class VoteView(APIView):
@@ -61,19 +64,19 @@ class VoteView(APIView):
         user_vote = request.data.get("vote")
 
         if not user_name or user_vote is None:
-            return Response(
-                {"error": "Missing parameters"}, status=status.HTTP_400_BAD_REQUEST
-            )
+            return response.error_response(msg="Missing parameters", data=None,
+                                           response_status=status.HTTP_400_BAD_REQUEST)
+
         room: Room = get_object_or_404(Room, current_meeting_id=meeting_id)
         if not any(user_name in d for d in room.users):
-            return Response(
-                {"error": "Participant doesn't exists"}, status=status.HTTP_400_BAD_REQUEST
-            )
+            return response.error_response(msg="Participant doesn't exists", data=None,
+                                           response_status=status.HTTP_400_BAD_REQUEST)
 
         meeting.votes[user_name] = user_vote
         meeting.save()
 
-        return Response({"message": "Vote recorded"}, status=status.HTTP_200_OK)
+        return response.success_response(msg="Vote recorded", data=None,
+                                         response_status=status.HTTP_200_OK)
 
 
 class EndMeetingView(APIView):
@@ -85,11 +88,10 @@ class EndMeetingView(APIView):
         meeting = get_object_or_404(Meeting, id=meeting_id)
 
         if not meeting.active:
-            return Response(
-                {"error": "Meeting already completed"}, status=status.HTTP_400_BAD_REQUEST
-            )
-
+            return response.error_response(msg="Meeting already completed", data=None,
+                                           response_status=status.HTTP_400_BAD_REQUEST)
         meeting.active = False
+
         if meeting.votes:
             meeting.average_score = round(
                 sum(int(value) for value in meeting.votes.values()) / len(meeting.votes)
@@ -98,10 +100,8 @@ class EndMeetingView(APIView):
             meeting.average_score = 0
         meeting.save()
 
-        return Response(
-            {"message": "Meeting ended", "average_score": meeting.average_score},
-            status=status.HTTP_200_OK,
-        )
+        return response.success_response(msg="Meeting ended", data={"average_score": meeting.average_score},
+                                         response_status=status.HTTP_200_OK)
 
 
 class UpdateMeetingTaskView(APIView):
@@ -111,20 +111,23 @@ class UpdateMeetingTaskView(APIView):
 
     def post(self, request: Request, meeting_id: int) -> Response:
         meeting = get_object_or_404(Meeting, id=meeting_id)
-        task_name = request.data.get("task_name", )
+        task_name = request.data.get("task_name")
 
         if not task_name:
-            return Response(
-                {"error": "Task name is required"}, status=status.HTTP_400_BAD_REQUEST
-            )
+            return response.error_response(msg="Task name is required", data=None,
+                                           response_status=status.HTTP_400_BAD_REQUEST)
 
         meeting.task_name = task_name
         meeting.save()
 
-        return Response(
-            {"message": "Task updated", "task_name": meeting.task_name},
-            status=status.HTTP_200_OK,
-        )
+        serializer = MeetingSerializer(data=request.data, fields=["task_name"])
+
+        if serializer.is_valid():
+            return response.success_response(msg="Task updated", data={"task_name": task_name},
+                                             response_status=status.HTTP_200_OK)
+        else:
+            return response.error_response(msg="Error", data=serializer.errors,
+                                           response_status=status.HTTP_400_BAD_REQUEST)
 
 
 class GetMeetingResultsView(APIView):
@@ -136,4 +139,5 @@ class GetMeetingResultsView(APIView):
         meeting = get_object_or_404(Meeting, id=meeting_id)
 
         serializer = MeetingSerializer(meeting, fields=["task_name", "votes", "average_score"])
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return response.success_response(msg="Meeting Results", data=serializer.data,
+                                         response_status=status.HTTP_200_OK)

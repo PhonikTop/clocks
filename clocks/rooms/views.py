@@ -1,3 +1,4 @@
+from api.api_utils import APIResponseHandler
 from django.shortcuts import get_object_or_404
 from meetings.models import Meeting
 from meetings.serializers import MeetingSerializer
@@ -9,6 +10,8 @@ from rest_framework.views import APIView
 from .models import Room
 from .serializers import RoomSerializer
 
+response = APIResponseHandler()
+
 
 class RoomCreateView(APIView):
     """
@@ -16,14 +19,15 @@ class RoomCreateView(APIView):
     """
 
     def post(self, request: Request, *args, **kwargs) -> Response:
-        name = request.data.get("name", )
-        if not name:
-            return Response(
-                {"error": "Room name is required"}, status=status.HTTP_400_BAD_REQUEST
-            )
-        room = Room.objects.create(name=name)
-        serializer = RoomSerializer(instance=room, fields=["id", "name"])
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        serializer = RoomSerializer(data=request.data)
+        if serializer.is_valid():
+            room = serializer.save()
+            response_serializer = RoomSerializer(instance=room, fields=["id", "name"])
+            return response.success_response(msg="Room created", data=response_serializer.data,
+                                             response_status=status.HTTP_201_CREATED)
+        else:
+            return response.error_response(msg="Error", data=serializer.errors,
+                                           response_status=status.HTTP_400_BAD_REQUEST)
 
 
 class RoomListView(APIView):
@@ -38,7 +42,8 @@ class RoomListView(APIView):
         rooms = Room.objects.filter(is_active=True)
         serializer = RoomSerializer(instance=rooms, many=True,
                                     fields=["id", "name", "is_active", "users", "current_meeting_id"])
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return response.success_response(msg="Room list", data=serializer.data,
+                                         response_status=status.HTTP_200_OK)
 
 
 class RoomDetailView(APIView):
@@ -52,7 +57,8 @@ class RoomDetailView(APIView):
         """
         room = get_object_or_404(Room, id=room_id)
         serializer = RoomSerializer(room)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return response.success_response(msg="Room info", data=serializer.data,
+                                         response_status=status.HTTP_200_OK)
 
     def delete(self, request: Request, room_id: int, *args, **kwargs) -> Response:
         """
@@ -60,9 +66,8 @@ class RoomDetailView(APIView):
         """
         room = get_object_or_404(Room, id=room_id)
         room.delete()
-        return Response(
-            {"message": "Room deleted successfully"}, status=status.HTTP_204_NO_CONTENT
-        )
+        return response.success_response(msg="Room deleted successfully", data=None,
+                                         response_status=status.HTTP_204_NO_CONTENT)
 
 
 class RoomParticipantsView(APIView):
@@ -84,7 +89,8 @@ class RoomParticipantsView(APIView):
             for nickname, role in user.items()
         ]
 
-        return Response(data, status=status.HTTP_200_OK)
+        return response.success_response(msg="Room participants", data=data,
+                                         response_status=status.HTTP_200_OK)
 
 
 class RoomHistoryView(APIView):
@@ -102,4 +108,5 @@ class RoomHistoryView(APIView):
         serializer = MeetingSerializer(meetings, many=True,
                                        fields=["id", "room", "task_name", "votes", "average_score", "active"])
 
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return response.success_response(msg="Room history", data=serializer.data,
+                                         response_status=status.HTTP_200_OK)
