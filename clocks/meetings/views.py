@@ -4,7 +4,6 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rooms.models import Room
-from users.redis_client import check_nickname_in_db
 
 from .models import Meeting
 from .serializers import MeetingSerializer
@@ -26,7 +25,6 @@ class StartMeetingView(APIView):
 
         room = get_object_or_404(Room, id=room_id)
 
-        # Создание новой сессии
         meeting = Meeting.objects.create(room=room, task_name=task_name)
         room.current_meeting = meeting
         room.save()

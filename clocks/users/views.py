@@ -19,25 +19,21 @@ class JoinRoomView(APIView):
         room_id: int = request.data.get("room_id", )
         role: str = request.data.get("role", )
 
-        # Проверка обязательных параметров
         if not all([nickname, room_id, role]):
             return Response(
                 {"error": "Missing parameters"}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Проверка допустимости роли
         if role not in ["observer", "participant"]:
             return Response({"error": "Invalid role"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Проверка наличия пользователя в базе данных
         if not check_nickname_in_db(nickname):
             save_new_client_to_redis(nickname, "testing_cookie", role)
 
-            # Получение комнаты
             room: Room = get_object_or_404(Room, id=room_id)
             room.users.append({nickname: role})
             room.save()
-            # Получение или создание активной сессии для комнаты
+
             meeting: Meeting = room.current_meeting
             if meeting is None:
                 meeting = Meeting.objects.create(room=room, task_name="Введите название таска")
@@ -59,5 +55,4 @@ class CurrentUserView(APIView):
     """
 
     def get(self, request: Request) -> Response:
-        # Если реализация метода временно отсутствует:
         return Response({"detail": "Not implemented"}, status=status.HTTP_501_NOT_IMPLEMENTED)

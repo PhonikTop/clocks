@@ -78,7 +78,7 @@ class RoomParticipantsView(APIView):
                 "nickname": list(user.keys())[0],
                 "role": "observer" if user[list(user.keys())[0]] == "observer" else "voter",
             }
-            for user in room.users  # Предполагается, что room.users — это queryset
+            for user in room.users
         ]
         return Response(data, status=status.HTTP_200_OK)
 
