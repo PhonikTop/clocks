@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404
 from meetings.models import Meeting
+from meetings.serializers import MeetingSerializer
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -21,7 +22,7 @@ class RoomCreateView(APIView):
                 {"error": "Room name is required"}, status=status.HTTP_400_BAD_REQUEST
             )
         room = Room.objects.create(name=name)
-        serializer = RoomSerializer(room)
+        serializer = RoomSerializer(instance=room, fields=["id", "name"])
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
@@ -35,7 +36,8 @@ class RoomListView(APIView):
         Получение списка активных комнат.
         """
         rooms = Room.objects.filter(is_active=True)
-        serializer = RoomSerializer(rooms, many=True)
+        serializer = RoomSerializer(instance=rooms, many=True,
+                                    fields=["id", "name", "is_active", "users", "current_meeting_id"])
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -75,11 +77,13 @@ class RoomParticipantsView(APIView):
         room = get_object_or_404(Room, id=room_id)
         data = [
             {
-                "nickname": list(user.keys())[0],
-                "role": "observer" if user[list(user.keys())[0]] == "observer" else "voter",
+                "nickname": nickname,
+                "role": "observer" if role == "observer" else "voter",
             }
             for user in room.users
+            for nickname, role in user.items()
         ]
+
         return Response(data, status=status.HTTP_200_OK)
 
 
@@ -94,12 +98,8 @@ class RoomHistoryView(APIView):
         """
         room = get_object_or_404(Room, id=room_id)
         meetings = Meeting.objects.filter(room=room, active=False)
-        data = [
-            {
-                "id": meeting.id,
-                "task_name": meeting.task_name,
-                "average_score": meeting.average_score,
-            }
-            for meeting in meetings
-        ]
-        return Response(data, status=status.HTTP_200_OK)
+
+        serializer = MeetingSerializer(meetings, many=True,
+                                       fields=["id", "room", "task_name", "votes", "average_score", "active"])
+
+        return Response(serializer.data, status=status.HTTP_200_OK)

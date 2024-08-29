@@ -25,12 +25,17 @@ class StartMeetingView(APIView):
 
         room = get_object_or_404(Room, id=room_id)
 
-        meeting = Meeting.objects.create(room=room, task_name=task_name)
-        room.current_meeting = meeting
-        room.save()
+        if room.current_meeting is None:
+            meeting = Meeting.objects.create(room=room, task_name=task_name)
+            room.current_meeting = meeting
+            room.save()
 
-        serializer = MeetingSerializer(meeting)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+            serializer = MeetingSerializer(meeting, many=True, fields=["id", "room"])
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(
+                {"error": "Room session exists"}, status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 class GetMeetingView(APIView):
@@ -40,7 +45,8 @@ class GetMeetingView(APIView):
 
     def get(self, request: Request, meeting_id: int) -> Response:
         meeting = get_object_or_404(Meeting, id=meeting_id)
-        serializer = MeetingSerializer(meeting)
+        serializer = MeetingSerializer(meeting, many=True,
+                                       fields=["id", "room", "task_name", "votes", "average_score", "active"])
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -128,9 +134,6 @@ class GetMeetingResultsView(APIView):
 
     def get(self, request: Request, meeting_id: int) -> Response:
         meeting = get_object_or_404(Meeting, id=meeting_id)
-        results = {
-            "task_name": meeting.task_name,
-            "votes": meeting.votes,
-            "average_score": meeting.average_score,
-        }
-        return Response(results, status=status.HTTP_200_OK)
+
+        serializer = MeetingSerializer(meeting, fields=["task_name", "votes", "average_score"])
+        return Response(serializer.data, status=status.HTTP_200_OK)
