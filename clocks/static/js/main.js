@@ -1,43 +1,38 @@
-document.addEventListener('DOMContentLoaded', function() {
-    const socket = new WebSocket(`ws://127.0.0.1:8000/ws/room/12`);
+document.addEventListener('DOMContentLoaded', () => {
+    const socket = new WebSocket('ws://127.0.0.1:8000/ws/room/12');
 
-    socket.onopen = function(e) {
+    socket.addEventListener('open', () => {
         console.log('WebSocket connection established');
-    };
+    });
 
-    socket.onmessage = function(e) {
+    socket.addEventListener('message', (e) => {
         const data = JSON.parse(e.data);
         console.log('Received data:', data);
 
-        // Обработка данных о участниках
         if (data.participants) {
-            console.log('Participants data:', data.participants);
             updateParticipants(data.participants);
         } else {
             console.warn('No participants data received');
         }
 
-        // Обработка данных о голосах
         if (data.votes) {
-            console.log('Votes data:', data.votes);
             updateVotes(data.votes);
         } else {
             console.warn('No votes data received');
         }
-    };
+    });
 
-    socket.onerror = function(e) {
+    socket.addEventListener('error', (e) => {
         console.error('WebSocket error:', e);
-    };
+    });
 
-    socket.onclose = function(e) {
+    socket.addEventListener('close', () => {
         console.error('WebSocket connection closed unexpectedly');
-    };
+    });
 
-    // Обработка нажатия кнопки для обновления участников
     const refreshButton = document.getElementById('refresh-participants-btn');
     if (refreshButton) {
-        refreshButton.addEventListener('click', function() {
+        refreshButton.addEventListener('click', () => {
             console.log('Refresh button clicked');
             socket.send(JSON.stringify({ action: 'refresh_participants' }));
         });
@@ -45,11 +40,10 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error('Refresh button not found');
     }
 
-    // Обработка отправки формы
     const voteForm = document.getElementById('vote-form');
     if (voteForm) {
-        voteForm.addEventListener('submit', function(event) {
-            event.preventDefault(); // Предотвратить отправку формы по умолчанию
+        voteForm.addEventListener('submit', (event) => {
+            event.preventDefault();
 
             const userId = document.getElementById('user-id').value;
             const voteValue = document.getElementById('vote-value').value;
@@ -68,16 +62,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function updateParticipants(participants) {
         const participantsList = document.getElementById('participants-list');
-        participantsList.innerHTML = ''; // Очистить старые данные
+        participantsList.innerHTML = '';
 
         if (!Array.isArray(participants)) {
             console.error('Invalid participants data:', participants);
             return;
         }
 
-        participants.forEach(participant => {
+        participants.forEach(({ username, role, status }) => {
             const li = document.createElement('li');
-            li.textContent = `${participant.username} (${participant.role}): ${participant.status}`;
+            li.textContent = `${username} (${role}): ${status}`;
             participantsList.appendChild(li);
         });
     }
@@ -86,27 +80,15 @@ document.addEventListener('DOMContentLoaded', function() {
         const votesList = document.getElementById('votes-list');
         votesList.innerHTML = ''; // Очистить старые данные
 
-        if (!votes || typeof votes !== 'object') {
+        if (typeof votes !== 'object' || votes === null) {
             console.error('Invalid votes data:', votes);
             return;
         }
 
-        for (const [meetingId, voteList] of Object.entries(votes)) {
-            const meetingDiv = document.createElement('div');
-            meetingDiv.innerHTML = `<h3>Meeting ${meetingId}</h3>`;
-
-            if (!Array.isArray(voteList)) {
-                console.error('Invalid vote list for meeting:', meetingId, voteList);
-                continue;
-            }
-
-            voteList.forEach(vote => {
-                const p = document.createElement('p');
-                p.textContent = `${vote.user__username}: ${vote.vote}`;
-                meetingDiv.appendChild(p);
-            });
-
-            votesList.appendChild(meetingDiv);
+        for (const [username, vote] of Object.entries(votes)) {
+            const p = document.createElement('p');
+            p.textContent = `${username}: ${vote}`;
+            votesList.appendChild(p);
         }
     }
 });
