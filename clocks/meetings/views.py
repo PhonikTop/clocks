@@ -1,4 +1,6 @@
 from api.api_utils import APIResponseHandler
+
+# from django.contrib.auth.decorators import permission_required
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.request import Request
@@ -47,7 +49,7 @@ class GetMeetingView(APIView):
 
     def get(self, request: Request, meeting_id: int) -> Response:
         meeting = get_object_or_404(Meeting, id=meeting_id)
-        serializer = MeetingSerializer(meeting, many=True,
+        serializer = MeetingSerializer(meeting,
                                        fields=["id", "room", "task_name", "votes", "average_score", "active"])
         return response.success_response(msg="Meeting info", data=serializer.data,
                                          response_status=status.HTTP_200_OK)
@@ -91,16 +93,33 @@ class EndMeetingView(APIView):
             return response.error_response(msg="Meeting already completed", data=None,
                                            response_status=status.HTTP_400_BAD_REQUEST)
         meeting.active = False
+        room = get_object_or_404(Room, current_meeting=meeting_id)
+        room.current_meeting = None
+        room.save()
 
-        if meeting.votes:
-            meeting.average_score = round(
-                sum(int(value) for value in meeting.votes.values()) / len(meeting.votes)
-            )
-        else:
-            meeting.average_score = 0
+        return response.success_response(msg="Meeting ended", data=None,
+                                         response_status=status.HTTP_200_OK)
+
+
+class RestartMeetingView(APIView):
+    """
+    Перезапуск текущего раунда голосования.
+    """
+
+    def post(self, request: Request, meeting_id: int) -> Response:
+        meeting = get_object_or_404(Meeting, id=meeting_id)
+
+        meeting.active = True
+        meeting.votes = {}
+        meeting.average_score = 0
         meeting.save()
 
-        return response.success_response(msg="Meeting ended", data={"average_score": meeting.average_score},
+        room = get_object_or_404(Room, current_meeting=meeting_id)
+        if room.current_meeting is None:
+            room.current_meeting = meeting_id
+            room.save()
+
+        return response.success_response(msg="Meeting Restarted", data=None,
                                          response_status=status.HTTP_200_OK)
 
 
@@ -137,6 +156,14 @@ class GetMeetingResultsView(APIView):
 
     def get(self, request: Request, meeting_id: int) -> Response:
         meeting = get_object_or_404(Meeting, id=meeting_id)
+
+        if meeting.votes:
+            meeting.average_score = round(
+                sum(int(value) for value in meeting.votes.values()) / len(meeting.votes)
+            )
+        else:
+            meeting.average_score = 0
+        meeting.save()
 
         serializer = MeetingSerializer(meeting, fields=["task_name", "votes", "average_score"])
         return response.success_response(msg="Meeting Results", data=serializer.data,
