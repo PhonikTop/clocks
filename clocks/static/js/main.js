@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const socket = new WebSocket('ws://127.0.0.1:8000/ws/room/12');
+    // Используем roomId, переданный из Django шаблона
+    const socket = new WebSocket(`ws://${window.location.host}/ws/room/${roomId}/`);
 
     socket.addEventListener('open', () => {
         console.log('WebSocket connection established');

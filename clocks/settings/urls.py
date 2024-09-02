@@ -2,12 +2,11 @@ from django.shortcuts import render
 from django.urls import include, path
 
 
-def index(request):
-    return render(request, "index.html")
-    print("index")
+def Test_Page(request, room_id):
+    return render(request, "index.html", {"room_id": room_id})
 
 
 urlpatterns = [
     path("api/v1/", include("api.urls")),
-    path("", index),
+    path("room/<int:room_id>/", Test_Page),
 ]

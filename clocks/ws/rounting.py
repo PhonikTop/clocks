@@ -1,7 +1,7 @@
-from django.urls import path
+from django.urls import re_path
 
 from .consumers import RoomConsumer
 
 ws_urlpatterns = [
-    path("ws/room/<int:room_id>", RoomConsumer.as_asgi())
+    re_path(r"ws/room/(?P<room_id>\d+)/$", RoomConsumer.as_asgi()),
 ]

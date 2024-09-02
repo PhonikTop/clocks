@@ -11,11 +11,12 @@ from rooms.models import Room
 class RoomConsumer(WebsocketConsumer):
 
     def connect(self):
-        async_to_sync(self.channel_layer.group_add)("room", self.channel_name)
+        self.room_id = self.scope["url_route"]["kwargs"]["room_id"]
+        async_to_sync(self.channel_layer.group_add)(f"room_{self.room_id}", self.channel_name)
         self.accept()
 
     def disconnect(self, close_code):
-        async_to_sync(self.channel_layer.group_discard)("room", self.channel_name)
+        async_to_sync(self.channel_layer.group_discard)(f"room_{self.room_id}", self.channel_name)
 
     def receive(self, text_data):
         try:
@@ -25,7 +26,7 @@ class RoomConsumer(WebsocketConsumer):
             if action == "refresh_participants":
                 response = self.get_data()
                 async_to_sync(self.channel_layer.group_send)(
-                    "room",
+                    f"room_{self.room_id}",
                     {
                         "type": "chat.message",
                         "message": json.dumps(response),
@@ -38,7 +39,7 @@ class RoomConsumer(WebsocketConsumer):
                 response = self.save_vote(user_id, vote)
 
                 async_to_sync(self.channel_layer.group_send)(
-                    "room",
+                    f"room_{self.room_id}",
                     {
                         "type": "chat.message",
                         "message": json.dumps(response),
@@ -46,7 +47,7 @@ class RoomConsumer(WebsocketConsumer):
                 )
             else:
                 async_to_sync(self.channel_layer.group_send)(
-                    "room",
+                    f"room_{self.room_id}",
                     {
                         "type": "chat.message",
                         "message": json.dumps({"message": "unknown action"}),
@@ -54,7 +55,7 @@ class RoomConsumer(WebsocketConsumer):
                 )
         except json.JSONDecodeError:
             async_to_sync(self.channel_layer.group_send)(
-                "room",
+                f"room_{self.room_id}",
                 {
                     "type": "chat.message",
                     "message": json.dumps({"message": "Invalid JSON format"}),
@@ -65,10 +66,10 @@ class RoomConsumer(WebsocketConsumer):
         self.send(text_data=event["message"])
 
     def get_meeting(self):
-        return get_object_or_404(Meeting, id=1)
+        return get_object_or_404(Meeting, room_id=self.room_id)
 
-    def get_room(self, meeting_id):
-        return get_object_or_404(Room, current_meeting=meeting_id)
+    def get_room(self):
+        return get_object_or_404(Room, id=self.room_id)
 
     def get_data(self):
         meeting = self.get_meeting()
@@ -77,7 +78,7 @@ class RoomConsumer(WebsocketConsumer):
 
     def save_vote(self, user_name, vote):
         meeting = self.get_meeting()
-        room = self.get_room(meeting.id)
+        room = self.get_room()
 
         if not any(user_name in d for d in room.users):
             return {"error": "Participant doesn't exist"}
