@@ -23,22 +23,23 @@ class StartMeetingView(APIView):
         room_id = request.data.get("room_id")
         task_name = request.data.get("task_name")
 
-        if not room_id or not task_name:
-            return response.error_response(msg="Missing parameters", data=None,
-                                           response_status=status.HTTP_400_BAD_REQUEST)
-
         room = get_object_or_404(Room, id=room_id)
+        serializer = MeetingSerializer(data=request.data, fields=["room", "task_name"])
 
-        if room.current_meeting is None:
-            meeting = Meeting.objects.create(room=room, task_name=task_name)
-            room.current_meeting = meeting
-            room.save()
+        if serializer.is_valid():
+            if room.current_meeting is None:
+                meeting = Meeting.objects.create(room=room, task_name=task_name)
+                serializer = MeetingSerializer(meeting, fields=["id", "room"])
+                room.current_meeting = meeting
+                room.save()
 
-            serializer = MeetingSerializer(meeting, fields=["id", "room"])
-            return response.success_response(msg="Meeting started", data=serializer.data,
-                                             response_status=status.HTTP_201_CREATED)
+                return response.success_response(msg="Meeting started", data=serializer.data,
+                                                 response_status=status.HTTP_201_CREATED)
+            else:
+                return response.error_response(msg="Room session exists", data=None,
+                                               response_status=status.HTTP_400_BAD_REQUEST)
         else:
-            return response.error_response(msg="Room session exists", data=None,
+            return response.error_response(msg="Error", data=serializer.errors,
                                            response_status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -129,19 +130,15 @@ class UpdateMeetingTaskView(APIView):
     """
 
     def post(self, request: Request, meeting_id: int) -> Response:
-        meeting = get_object_or_404(Meeting, id=meeting_id)
         task_name = request.data.get("task_name")
-
-        if not task_name:
-            return response.error_response(msg="Task name is required", data=None,
-                                           response_status=status.HTTP_400_BAD_REQUEST)
-
-        meeting.task_name = task_name
-        meeting.save()
 
         serializer = MeetingSerializer(data=request.data, fields=["task_name"])
 
         if serializer.is_valid():
+            meeting = get_object_or_404(Meeting, id=meeting_id)
+            meeting.task_name = task_name
+            meeting.save()
+
             return response.success_response(msg="Task updated", data={"task_name": task_name},
                                              response_status=status.HTTP_200_OK)
         else:

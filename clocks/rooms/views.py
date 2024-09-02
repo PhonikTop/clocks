@@ -19,7 +19,7 @@ class RoomCreateView(APIView):
     """
 
     def post(self, request: Request, *args, **kwargs) -> Response:
-        serializer = RoomSerializer(data=request.data)
+        serializer = RoomSerializer(data=request.data, fields=["id", "name"])
         if serializer.is_valid():
             room = serializer.save()
             response_serializer = RoomSerializer(instance=room, fields=["id", "name"])

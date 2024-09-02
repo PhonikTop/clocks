@@ -1,9 +1,15 @@
+from meetings.models import Meeting
 from rest_framework import serializers
 
 from .models import Room
 
 
 class RoomSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(max_length=50)
+    is_active = serializers.BooleanField()
+    users = serializers.JSONField()
+    current_meeting_id = serializers.PrimaryKeyRelatedField(queryset=Meeting.objects.all())
+
     class Meta:
         model = Room
         fields = ["id", "name", "is_active", "users", "current_meeting_id"]
