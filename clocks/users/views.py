@@ -29,9 +29,9 @@ class JoinRoomView(APIView):
             return response.error_response(msg="Missing parameters", data=None,
                                            response_status=status.HTTP_400_BAD_REQUEST)
 
-        if role not in ["observer", "participant"]:
-            return response.error_response(msg="Invalid role", data=None,
-                                           response_status=status.HTTP_400_BAD_REQUEST)
+        # if role not in ["observer", "participant"]:
+        #     return response.error_response(msg="Invalid role", data=None,
+        #                                    response_status=status.HTTP_400_BAD_REQUEST)
 
         if not check_nickname_in_db(token):
             cookie: str = request.COOKIES["user"]
@@ -46,7 +46,7 @@ class JoinRoomView(APIView):
                 meeting = Meeting.objects.create(room_id=room, task_name="Введите название таска")
                 room.current_meeting = meeting
                 room.save()
-            print(token)
+
             meeting.votes[token] = None
             meeting.save()
 
