@@ -5,7 +5,7 @@ from .models import Meeting
 
 
 class MeetingSerializer(serializers.ModelSerializer):
-    room = serializers.PrimaryKeyRelatedField(queryset=Room.objects.all())
+    room_id = serializers.PrimaryKeyRelatedField(queryset=Room.objects.all())
     task_name = serializers.CharField(max_length=100)
     votes = serializers.JSONField()
     average_score = serializers.FloatField(allow_null=True, required=False)
@@ -13,7 +13,7 @@ class MeetingSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Meeting
-        fields = ["id", "room", "task_name", "votes", "average_score", "active"]
+        fields = ["id", "room_id", "task_name", "votes", "average_score", "active"]
 
     def __init__(self, *args, **kwargs):
         fields = kwargs.pop("fields", None)

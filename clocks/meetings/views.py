@@ -24,12 +24,12 @@ class StartMeetingView(APIView):
         task_name = request.data.get("task_name")
 
         room = get_object_or_404(Room, id=room_id)
-        serializer = MeetingSerializer(data=request.data, fields=["room", "task_name"])
+        serializer = MeetingSerializer(data=request.data, fields=["room_id", "task_name"])
 
         if serializer.is_valid():
             if room.current_meeting is None:
-                meeting = Meeting.objects.create(room=room, task_name=task_name)
-                serializer = MeetingSerializer(meeting, fields=["id", "room"])
+                meeting = Meeting.objects.create(room_id=room, task_name=task_name)
+                serializer = MeetingSerializer(meeting, fields=["id", "room_id"])
                 room.current_meeting = meeting
                 room.save()
 
@@ -51,7 +51,7 @@ class GetMeetingView(APIView):
     def get(self, request: Request, meeting_id: int) -> Response:
         meeting = get_object_or_404(Meeting, id=meeting_id)
         serializer = MeetingSerializer(meeting,
-                                       fields=["id", "room", "task_name", "votes", "average_score", "active"])
+                                       fields=["id", "room_id", "task_name", "votes", "average_score", "active"])
         return response.success_response(msg="Meeting info", data=serializer.data,
                                          response_status=status.HTTP_200_OK)
 
@@ -68,6 +68,8 @@ class EndMeetingView(APIView):
             return response.error_response(msg="Meeting already completed", data=None,
                                            response_status=status.HTTP_400_BAD_REQUEST)
         meeting.active = False
+        meeting.save()
+
         room = get_object_or_404(Room, current_meeting=meeting_id)
         room.current_meeting = None
         room.save()

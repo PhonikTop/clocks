@@ -103,10 +103,10 @@ class RoomHistoryView(APIView):
         Получение истории сессий в комнате.
         """
         room = get_object_or_404(Room, id=room_id)
-        meetings = Meeting.objects.filter(room=room, active=False)
+        meetings = Meeting.objects.filter(room_id=room, active=False)
 
         serializer = MeetingSerializer(meetings, many=True,
-                                       fields=["id", "room", "task_name", "votes", "average_score", "active"])
+                                       fields=["id", "room_id", "task_name", "votes", "average_score", "active"])
 
         return response.success_response(msg="Room history", data=serializer.data,
                                          response_status=status.HTTP_200_OK)

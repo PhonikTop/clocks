@@ -43,7 +43,7 @@ class JoinRoomView(APIView):
 
             meeting: Meeting = room.current_meeting
             if meeting is None:
-                meeting = Meeting.objects.create(room=room, task_name="Введите название таска")
+                meeting = Meeting.objects.create(room_id=room, task_name="Введите название таска")
                 room.current_meeting = meeting
                 room.save()
             print(token)
