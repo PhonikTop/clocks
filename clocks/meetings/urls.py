@@ -7,13 +7,11 @@ from .views import (
     RestartMeetingView,
     StartMeetingView,
     UpdateMeetingTaskView,
-    VoteView,
 )
 
 urlpatterns = [
     path("", StartMeetingView.as_view(), name="start_meeting"),
     path("<int:meeting_id>", GetMeetingView.as_view(), name="get_meeting"),
-    path("<int:meeting_id>/vote", VoteView.as_view(), name="vote"),
     path("<int:meeting_id>/end", EndMeetingView.as_view(), name="end_meeting"),
     path("<int:meeting_id>/restart", RestartMeetingView.as_view(), name="restart_meeting"),
     path("<int:meeting_id>/task", UpdateMeetingTaskView.as_view(), name="update_meeting_task"),

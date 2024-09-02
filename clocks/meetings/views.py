@@ -56,32 +56,6 @@ class GetMeetingView(APIView):
                                          response_status=status.HTTP_200_OK)
 
 
-class VoteView(APIView):
-    """
-    Отправка голоса участника в текущей сессии.
-    """
-
-    def post(self, request: Request, meeting_id: int) -> Response:
-        meeting = get_object_or_404(Meeting, id=meeting_id)
-        user_name = request.data.get("user")
-        user_vote = request.data.get("vote")
-
-        if not user_name or user_vote is None:
-            return response.error_response(msg="Missing parameters", data=None,
-                                           response_status=status.HTTP_400_BAD_REQUEST)
-
-        room: Room = get_object_or_404(Room, current_meeting_id=meeting_id)
-        if not any(user_name in d for d in room.users):
-            return response.error_response(msg="Participant doesn't exists", data=None,
-                                           response_status=status.HTTP_400_BAD_REQUEST)
-
-        meeting.votes[user_name] = user_vote
-        meeting.save()
-
-        return response.success_response(msg="Vote recorded", data=None,
-                                         response_status=status.HTTP_200_OK)
-
-
 class EndMeetingView(APIView):
     """
     Завершение текущего раунда голосования.
