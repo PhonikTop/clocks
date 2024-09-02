@@ -1,0 +1,9 @@
+services:
+  watchy-api:
+    image: watchy-api
+    container_name: watchy-api
+    hostname: watchy-api
+    env_file:
+      - docker.env
+    ports:
+      - "8002:8002"

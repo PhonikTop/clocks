@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  watchy-api:
+    container_name: watchy-api
+    hostname: watchy
+    build:
+      context: ./clocks
+      dockerfile: Dockerfile
+      target: watchy-api-local
+    env_file:
+      - ./docker.env
+    environment:
+      - DJANGO_SETTINGS_MODULE=settings.settings
+    ports:
+      - "8000:8000"
