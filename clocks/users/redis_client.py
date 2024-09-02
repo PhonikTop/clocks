@@ -10,15 +10,23 @@ redis_client = redis.Redis(
 )
 
 
-def save_new_client_to_redis(cookie_key: str, nickname: str, role: str, ttl: int = 432000) -> None:
-    """Сохранение оригинальной и укороченной ссылки в Redis с учетом cookie_key."""
-    redis_client.hset(cookie_key, mapping={"nickname": nickname, "role": role})
-    print(cookie_key, nickname, role)
-    redis_client.expire(cookie_key, ttl)
+def save_new_client_to_redis(token, cookie: str, nickname: str, role: str, ttl: int = 432000) -> None:
+    """
+    Сохранение данных клиента в Redis с учетом token.
+    """
+    redis_client.hset(token, mapping={"nickname": nickname, "cookie": cookie, "role": role})
+    redis_client.expire(token, ttl)
 
 
-def check_nickname_in_db(cookie_key: str) -> bool:
+def check_nickname_in_db(token: str) -> bool:
     """
     Проверка на существование никнейма в базе.
     """
-    return redis_client.exists(cookie_key) > 0
+    return redis_client.exists(token) > 0
+
+
+def get_client_nickname(token):
+    """
+    Получение никнейма по токену клиента.
+    """
+    return redis_client.hget(token, "nickname")
