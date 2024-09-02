@@ -29,12 +29,12 @@ class JoinRoomView(APIView):
         if role not in ["observer", "participant"]:
             return response.error_response(msg="Invalid role", data=None,
                                            response_status=status.HTTP_400_BAD_REQUEST)
-
-        if not check_nickname_in_db(nickname):
-            save_new_client_to_redis(nickname, "testing_cookie", role)
+        cookie = request.COOKIES["user"]
+        if not check_nickname_in_db(cookie):
+            save_new_client_to_redis(cookie, nickname, role)
 
             room: Room = get_object_or_404(Room, id=room_id)
-            room.users.append({nickname: role})
+            room.users.append({f"{nickname}/&space/&{cookie}": role})
             room.save()
 
             meeting: Meeting = room.current_meeting
