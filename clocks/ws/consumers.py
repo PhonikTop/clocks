@@ -74,7 +74,12 @@ class RoomConsumer(WebsocketConsumer):
     def get_data(self):
         meeting = self.get_meeting()
         serializer = MeetingSerializer(meeting, fields=["votes"])
-        return serializer.data
+        data = serializer.data.copy()
+
+        if "votes" in data:
+            data["votes"] = {k: v for k, v in data["votes"].items() if v is not None}
+
+        return data
 
     def save_vote(self, user_name, vote):
         meeting = self.get_meeting()

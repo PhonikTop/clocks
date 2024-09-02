@@ -43,6 +43,9 @@ class JoinRoomView(APIView):
                 room.current_meeting = meeting
                 room.save()
 
+            meeting.votes[nickname] = None
+            meeting.save()
+
             return response.success_response(msg="User joined", data={"user": nickname, "Meeting": meeting.id},
                                              response_status=status.HTTP_200_OK)
         else:
