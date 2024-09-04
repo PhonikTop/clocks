@@ -37,7 +37,7 @@ class RoomListView(APIView):
     """
 
     def get(self, request: Request, *args, **kwargs) -> Response:
-        rooms = Room.objects.filter(is_active=True)
+        rooms = Room.objects
         serializer = RoomSerializer(instance=rooms, many=True,
                                     fields=["id", "name", "is_active", "users", "current_meeting_id"])
         return response.success_response(msg="Room list", data=serializer.data,

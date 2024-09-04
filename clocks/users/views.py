@@ -29,10 +29,6 @@ class JoinRoomView(APIView):
             return response.error_response(msg="Missing parameters", data=None,
                                            response_status=status.HTTP_400_BAD_REQUEST)
 
-        # if role not in ["observer", "participant"]:
-        #     return response.error_response(msg="Invalid role", data=None,
-        #                                    response_status=status.HTTP_400_BAD_REQUEST)
-
         if not check_nickname_in_db(token):
             cookie: str = request.COOKIES["user"]
             save_new_client_to_redis(token, cookie, nickname, role)
@@ -64,4 +60,4 @@ class CurrentUserView(APIView):
 
     def get(self, request: Request) -> Response:
         return response.success_response(msg="Not implemented", data=None,
-                                         response_status=status.HTTP_201_CREATED)
+                                         response_status=status.HTTP_501_NOT_IMPLEMENTED)
