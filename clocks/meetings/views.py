@@ -1,6 +1,4 @@
 from api.api_utils import APIResponseHandler
-
-# from django.contrib.auth.decorators import permission_required
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.request import Request
@@ -85,14 +83,9 @@ class RestartMeetingView(APIView):
 
     def post(self, request: Request, meeting_id: int) -> Response:
         meeting = get_object_or_404(Meeting.objects.select_related("room"), id=meeting_id)
-
-        Meeting.objects.filter(id=meeting_id).update(
-            active=True,
-            votes={},
-            average_score=0
-        )
-
         room = meeting.room
+
+        meeting.reset_to_default()
 
         if room.current_meeting is None:
             room.current_meeting = meeting_id
