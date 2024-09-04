@@ -13,7 +13,7 @@ class MeetingSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Meeting
-        fields = ["id", "room_id", "task_name", "votes", "average_score", "active"]
+        fields = ["id", "room", "task_name", "votes", "average_score", "active"]
 
     def __init__(self, *args, **kwargs):
         fields = kwargs.pop("fields", None)

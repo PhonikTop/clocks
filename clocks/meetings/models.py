@@ -2,7 +2,7 @@ from django.db import models
 
 
 class Meeting(models.Model):
-    room_id = models.ForeignKey(
+    room = models.ForeignKey(
         "rooms.Room",
         on_delete=models.CASCADE,
         related_name="meetings",
@@ -13,4 +13,4 @@ class Meeting(models.Model):
     active: bool = models.BooleanField(default=True)
 
     def __str__(self) -> str:
-        return f"Meeting for {self.room_id.name} - {self.task_name}"
+        return f"Meeting for {self.room.name} - {self.task_name}"
