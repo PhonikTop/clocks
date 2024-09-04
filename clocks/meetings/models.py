@@ -14,3 +14,11 @@ class Meeting(models.Model):
 
     def __str__(self) -> str:
         return f"Meeting for {self.room.name} - {self.task_name}"
+
+    def reset_to_default(self):
+        self.active = True,
+        self.votes = {},
+        self.average_score = 0
+        self.save()
+
+

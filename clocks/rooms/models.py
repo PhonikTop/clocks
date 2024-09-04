@@ -15,3 +15,9 @@ class Room(models.Model):
 
     def __str__(self) -> str:
         return self.name
+
+    def reset_to_default(self):
+        self.is_active = True
+        self.current_meeting = None
+        self.users = []
+        self.save()
