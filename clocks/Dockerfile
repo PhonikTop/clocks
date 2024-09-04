@@ -1,24 +1,38 @@
+# Базовый образ Python
 FROM python:3.12-slim-bullseye as base
 
-# в этом образе устанавливаем и собираем пакеты
 FROM base AS py-builder
 
-WORKDIR code
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+WORKDIR /clocks
 
 RUN apt update -qq \
     && apt install -y -qq \
         make \
         nano \
-        vim
+        vim \
+        nginx
+
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+RUN python manage.py migrate
+RUN python manage.py collectstatic --noinput
+
 FROM py-builder AS watchy-api-local
 
-ENTRYPOINT ["uvicorn", "settings.asgi:application", "--reload", "--host", "0.0.0.0", "--port", "8000"]
+CMD service nginx start && \
+    daphne -b 0.0.0.0 -p 8001 settings.asgi:application & \
+    uvicorn settings.asgi:application --reload --host 0.0.0.0 --port 8000
 
-FROM py-builder AS api-prod
+FROM py-builder AS watchy-api-prod
 
-ENTRYPOINT ["uvicorn", "settings.asgi:application", "--reload", "--host", "0.0.0.0", "--port", "8000"]
+COPY ../nginx/nginx.conf /etc/nginx/nginx.conf
+
+CMD service nginx start && \
+    daphne -b 0.0.0.0 -p 8001 settings.asgi:application & \
+    uvicorn settings.asgi:application --host 0.0.0.0 --port 8000
