@@ -62,7 +62,7 @@ class EndMeetingView(APIView):
     """
 
     def post(self, request: Request, meeting_id: int) -> Response:
-        meeting = get_object_or_404(Meeting, id=meeting_id)
+        meeting = get_object_or_404(Meeting.objects.select_related("room_id"), id=meeting_id)
 
         if not meeting.active:
             return response.error_response(msg="Meeting already completed", data=None,
@@ -70,7 +70,7 @@ class EndMeetingView(APIView):
         meeting.active = False
         meeting.save()
 
-        room = get_object_or_404(Room, current_meeting=meeting_id)
+        room = meeting.room_id
         room.current_meeting = None
         room.save()
 
@@ -84,14 +84,16 @@ class RestartMeetingView(APIView):
     """
 
     def post(self, request: Request, meeting_id: int) -> Response:
-        meeting = get_object_or_404(Meeting, id=meeting_id)
+        meeting = get_object_or_404(Meeting.objects.select_related("room"), id=meeting_id)
 
-        meeting.active = True
-        meeting.votes = {}
-        meeting.average_score = 0
-        meeting.save()
+        Meeting.objects.filter(id=meeting_id).update(
+            active=True,
+            votes={},
+            average_score=0
+        )
 
-        room = get_object_or_404(Room, current_meeting=meeting_id)
+        room = meeting.room
+
         if room.current_meeting is None:
             room.current_meeting = meeting_id
             room.save()
