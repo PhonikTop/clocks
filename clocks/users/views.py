@@ -9,7 +9,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rooms.models import Room
 
-from .redis_client import check_nickname_in_db, save_new_client_to_redis
+from .redis_client import (
+    check_token_in_db,
+    save_new_client_to_redis,
+)
 
 response = APIResponseHandler()
 
@@ -23,13 +26,11 @@ class JoinRoomView(APIView):
         nickname, room_id, role = map(request.data.get, ["nickname", "room_id", "role"])
         cookie, token = request.COOKIES.get("user"), str(uuid.uuid4())
 
-        print(nickname, room_id, role)
-
         if not all([nickname, room_id, role]):
             return response.error_response(msg="Missing parameters", data=None,
                                            response_status=status.HTTP_400_BAD_REQUEST)
 
-        if check_nickname_in_db(token):
+        if check_token_in_db(token):
             return response.error_response(msg="User exists", data=None,
                                            response_status=status.HTTP_400_BAD_REQUEST)
 
@@ -55,5 +56,13 @@ class CurrentUserView(APIView):
     """
 
     def get(self, request: Request) -> Response:
-        return response.success_response(msg="Not implemented", data=None,
-                                         response_status=status.HTTP_501_NOT_IMPLEMENTED)
+        from .redis_client import get_client_data_by_cookie
+        cookie = request.COOKIES.get("user")
+
+        token, nickname, role = get_client_data_by_cookie(cookie)
+
+        if not token or not nickname or not role:
+            return response.error_response(msg="User not found", data=None, response_status=status.HTTP_404_NOT_FOUND)
+
+        return response.success_response(msg="User info", data={"token": token, "nickname": nickname, "role": role},
+                                         response_status=status.HTTP_200_OK)
