@@ -20,37 +20,33 @@ class JoinRoomView(APIView):
     """
 
     def post(self, request: Request) -> Response:
-        nickname: str = request.data.get("nickname")
-        room_id: int = request.data.get("room_id")
-        role: str = request.data.get("role")
-        token: str = str(uuid.uuid4())
+        nickname, room_id, role = map(request.data.get, ["nickname", "room_id", "role"])
+        cookie, token = request.COOKIES.get("user"), str(uuid.uuid4())
+
+        print(nickname, room_id, role)
 
         if not all([nickname, room_id, role]):
             return response.error_response(msg="Missing parameters", data=None,
                                            response_status=status.HTTP_400_BAD_REQUEST)
 
-        if not check_nickname_in_db(token):
-            cookie: str = request.COOKIES["user"]
-            save_new_client_to_redis(token, cookie, nickname, role)
-
-            room: Room = get_object_or_404(Room, id=room_id)
-            room.users.append({token: role})
-            room.save()
-
-            meeting: Meeting = room.current_meeting
-            if meeting is None:
-                meeting = Meeting.objects.create(room=room, task_name="Введите название таска")
-                room.current_meeting = meeting
-                room.save()
-
-            meeting.votes[token] = None
-            meeting.save()
-
-            return response.success_response(msg="User joined", data={"user": nickname, "Meeting": meeting.id},
-                                             response_status=status.HTTP_200_OK)
-        else:
+        if check_nickname_in_db(token):
             return response.error_response(msg="User exists", data=None,
                                            response_status=status.HTTP_400_BAD_REQUEST)
+
+        save_new_client_to_redis(token, cookie, nickname, role)
+
+        room: Room = get_object_or_404(Room, id=room_id)
+        room.users.append({token: role})
+
+        meeting: Meeting = room.current_meeting or Meeting.objects.create(room=room, task_name="Введите название таска")
+        room.current_meeting = meeting
+
+        room.save()
+        meeting.votes[token] = None
+        meeting.save()
+
+        return response.success_response(msg="User joined", data={"user": nickname, "Meeting": meeting.id},
+                                         response_status=status.HTTP_200_OK)
 
 
 class CurrentUserView(APIView):
