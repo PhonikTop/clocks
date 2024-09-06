@@ -5,7 +5,7 @@ services:
     container_name: watchy-api
     hostname: watchy
     build:
-      context: ./clocks
+      context: .
       dockerfile: Dockerfile
       target: watchy-api-prod
     env_file:

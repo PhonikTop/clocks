@@ -6,20 +6,24 @@ FROM base AS py-builder
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-WORKDIR /clocks
+WORKDIR /Clocks
 
 RUN apt update -qq \
     && apt install -y -qq \
         make \
         nano \
         vim \
-        nginx
+        nginx \
+        tree
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+RUN tree
+
+WORKDIR /Clocks/clocks
 RUN python manage.py migrate
 RUN python manage.py collectstatic --noinput
 
@@ -31,7 +35,7 @@ CMD service nginx start && \
 
 FROM py-builder AS watchy-api-prod
 
-COPY ../nginx/nginx.conf /etc/nginx/nginx.conf
+COPY nginx/nginx.conf /etc/nginx/nginx.conf
 
 CMD service nginx start && \
     daphne -b 0.0.0.0 -p 8001 settings.asgi:application & \
