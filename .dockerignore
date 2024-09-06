@@ -1,0 +1,9 @@
+*.md
+clocks/db.sqlite3
+Dockerfile
+docker-compose.prod.yml
+docker-compose.yml
+redis.conf
+docker.env
+nginx
+pyproject.toml
