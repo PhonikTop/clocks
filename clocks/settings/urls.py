@@ -4,6 +4,9 @@ from django.urls import include, path
 
 
 def Test_Page(request, room_id):
+    """
+    Страница для тестирования Web Socket.
+    """
     return render(request, "index.html", {"room_id": room_id})
 
 
