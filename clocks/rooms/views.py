@@ -1,12 +1,16 @@
 from api.api_utils import APIResponseHandler
-from django.shortcuts import get_object_or_404
 from meetings.models import Meeting
 from meetings.serializers import MeetingSerializer
 from rest_framework import status
+from rest_framework.generics import (
+    CreateAPIView,
+    DestroyAPIView,
+    ListAPIView,
+    RetrieveAPIView,
+)
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from .models import Room
 from .serializers import RoomSerializer
@@ -14,91 +18,87 @@ from .serializers import RoomSerializer
 response = APIResponseHandler()
 
 
-class RoomCreateView(APIView):
+class RoomCreateView(CreateAPIView):
     """
     Создание новой комнаты
     """
     permission_classes = [IsAuthenticated]
+    serializer_class = RoomSerializer
 
-    def post(self, request: Request, *args, **kwargs) -> Response:
-        serializer = RoomSerializer(data=request.data, fields=["id", "name"])
+    def create(self, request: Request, *args, **kwargs) -> Response:
+        serializer = self.get_serializer(data=request.data, fields=["id", "name"])
         if serializer.is_valid():
             room = serializer.save()
-            response_serializer = RoomSerializer(instance=room, fields=["id", "name"])
+            response_serializer = self.get_serializer(instance=room, fields=["id", "name"])
             return response.success_response(msg="Room created", data=response_serializer.data,
                                              response_status=status.HTTP_201_CREATED)
         return response.error_response(msg="Error", data=serializer.errors,
                                        response_status=status.HTTP_400_BAD_REQUEST)
 
 
-class RoomListView(APIView):
+class RoomListView(ListAPIView):
     """
     Получение списка доступных комнат.
     """
+    serializer_class = RoomSerializer
+    lookup_field = "id"
 
-    def get(self, request: Request, *args, **kwargs) -> Response:
-        rooms = Room.objects
-        serializer = RoomSerializer(instance=rooms, many=True,
-                                    fields=["id", "name", "is_active", "users", "current_meeting_id"])
-        return response.success_response(msg="Room list", data=serializer.data,
-                                         response_status=status.HTTP_200_OK)
+    def get_queryset(self):
+        return Room.objects.all()
 
 
-class RoomDetailView(APIView):
+class RoomDetailView(RetrieveAPIView, DestroyAPIView):
     """
     Получение, удаление и управление конкретной комнатой.
     """
+    queryset = Room.objects.all()
+    serializer_class = RoomSerializer
+    lookup_field = "id"
 
     def get_permissions(self):
         if self.request.method == "DELETE":
             return [IsAuthenticated()]
         return [AllowAny()]
 
-    def get(self, request: Request, room_id: int, *args, **kwargs) -> Response:
-        room = get_object_or_404(Room, id=room_id)
-        serializer = RoomSerializer(room)
-        return response.success_response(msg="Room info", data=serializer.data,
-                                         response_status=status.HTTP_200_OK)
-
-    def delete(self, request: Request, room_id: int, *args, **kwargs) -> Response:
-        """
-        Удаление комнаты.
-        """
-        room = get_object_or_404(Room, id=room_id)
+    def delete(self, request: Request, *args, **kwargs) -> Response:
+        room = self.get_object()
         room.delete()
         return response.success_response(msg="Room deleted successfully", data=None,
                                          response_status=status.HTTP_204_NO_CONTENT)
 
 
-class RoomParticipantsView(APIView):
+class RoomParticipantsView(RetrieveAPIView):
     """
     Получение списка участников конкретной комнаты.
     """
+    serializer_class = RoomSerializer
+    lookup_field = "id"
 
-    def get(self, request: Request, room_id: int, *args, **kwargs) -> Response:
-        room = get_object_or_404(Room, id=room_id)
+    def get(self, request: Request, *args, **kwargs) -> Response:
+        room = self.get_object()
         data = [
             {
-                "nickname": nickname,
+                "token": token,
                 "role": "observer" if role == "observer" else "voter",
             }
             for user in room.users
-            for nickname, role in user.items()
+            for token, role in user.items()
         ]
         return response.success_response(msg="Room participants", data=data,
                                          response_status=status.HTTP_200_OK)
 
+    def get_object(self):
+        return Room.objects.get(id=self.kwargs.get("id"))
 
-class RoomHistoryView(APIView):
+
+class RoomHistoryView(ListAPIView):
     """
     Получение истории всех завершенных сессий в комнате.
     """
     permission_classes = [IsAuthenticated]
+    serializer_class = MeetingSerializer
+    lookup_field = "id"
 
-    def get(self, request: Request, room_id: int, *args, **kwargs) -> Response:
-        room = get_object_or_404(Room, id=room_id)
-        meetings = Meeting.objects.filter(room=room, active=False)
-        serializer = MeetingSerializer(meetings, many=True,
-                                       fields=["id", "room", "task_name", "votes", "average_score", "active"])
-        return response.success_response(msg="Room history", data=serializer.data,
-                                         response_status=status.HTTP_200_OK)
+    def get_queryset(self):
+        room = Room.objects.get(id=self.kwargs.get("id"))
+        return Meeting.objects.filter(room=room, active=False)
