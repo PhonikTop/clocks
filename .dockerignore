@@ -7,3 +7,4 @@ redis.conf
 docker.env
 nginx
 pyproject.toml
+static
