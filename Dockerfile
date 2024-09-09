@@ -29,13 +29,17 @@ RUN python manage.py collectstatic --noinput
 
 FROM py-builder AS watchy-api-local
 
+RUN python manage.py migrate
+RUN python manage.py collectstatic --noinput
+
 CMD service nginx start && \
     daphne -b 0.0.0.0 -p 8001 settings.asgi:application & \
     uvicorn settings.asgi:application --reload --host 0.0.0.0 --port 8000
 
 FROM py-builder AS watchy-api-prod
 
-COPY nginx/nginx.conf /etc/nginx/nginx.conf
+RUN python manage.py migrate
+RUN python manage.py collectstatic --noinput
 
 CMD service nginx start && \
     daphne -b 0.0.0.0 -p 8001 settings.asgi:application & \
