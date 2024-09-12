@@ -7,8 +7,6 @@ from rest_framework.generics import (
     UpdateAPIView,
     get_object_or_404,
 )
-from rest_framework.request import Request
-from rest_framework.response import Response
 from rooms.models import Room
 
 from .models import Meeting
@@ -18,131 +16,91 @@ response = APIResponseHandler()
 
 
 class StartMeetingView(CreateAPIView):
-    """
-    Создание новой сессии для голосования в комнате.
-    """
     serializer_class = MeetingSerializer
 
     def perform_create(self, serializer):
-        room_id = self.request.data.get("room")
-        task_name = self.request.data.get("task_name")
+        room = get_object_or_404(Room, id=self.request.data.get("room"))
 
-        room = get_object_or_404(Room, id=room_id)
-
-        if room.current_meeting is not None:
+        if room.current_meeting:
             raise ValidationError({"error": "Room session already exists."})
 
-        meeting = serializer.save(room=room, task_name=task_name)
+        meeting = serializer.save(room=room, task_name=self.request.data.get("task_name"))
         room.current_meeting = meeting
         room.save()
-        return meeting
-
-    def create(self, request, *args, **kwargs):
-        response = super().create(request, *args, **kwargs)
-        return Response({
-            "msg": "Meeting started",
-            "data": response.data
-        }, status=status.HTTP_201_CREATED)
 
 
 class GetMeetingView(RetrieveAPIView):
-    """
-    Получение информации о конкретной сессии.
-    """
     queryset = Meeting.objects.all()
     serializer_class = MeetingSerializer
     lookup_field = "id"
 
-    def retrieve(self, request: Request, *args, **kwargs) -> Response:
-        meeting = self.get_object()
-        serializer = self.get_serializer(meeting,
-                                         fields=["id", "room", "task_name", "votes", "average_score", "active"])
-        return response.success_response(msg="Meeting info", data=serializer.data, response_status=status.HTTP_200_OK)
+    def get_serializer(self, *args, **kwargs):
+        kwargs["fields"] = ["id", "room", "task_name", "votes", "average_score", "active"]
+        return super().get_serializer(*args, **kwargs)
 
 
 class EndMeetingView(UpdateAPIView):
-    """
-    Завершение текущего раунда голосования.
-    """
     queryset = Meeting.objects.all()
     serializer_class = MeetingSerializer
     lookup_field = "id"
 
-    def update(self, request: Request, *args, **kwargs) -> Response:
+    def update(self, request, *args, **kwargs):
         meeting = self.get_object()
 
         if not meeting.active:
-            return response.error_response(msg="Meeting already completed", data=None,
-                                           response_status=status.HTTP_400_BAD_REQUEST)
+            raise ValidationError({"error": "Meeting already completed."})
+
         meeting.active = False
+        meeting.room.current_meeting = None
+        meeting.room.save()
         meeting.save()
 
-        room = meeting.room
-        room.current_meeting = None
-        room.save()
-
-        return response.success_response(msg="Meeting ended", data=None, response_status=status.HTTP_200_OK)
+        return response.success_response(msg="Meeting ended", response_status=status.HTTP_200_OK)
 
 
 class RestartMeetingView(UpdateAPIView):
-    """
-    Перезапуск текущего раунда голосования.
-    """
     queryset = Meeting.objects.all()
     serializer_class = MeetingSerializer
     lookup_field = "id"
 
-    def update(self, request: Request, *args, **kwargs) -> Response:
+    def update(self, request, *args, **kwargs):
         meeting = self.get_object()
-        room = meeting.room
 
         meeting.reset_to_default()
+        if not meeting.room.current_meeting:
+            meeting.room.current_meeting = meeting
+            meeting.room.save()
 
-        if room.current_meeting is None:
-            room.current_meeting = meeting
-            room.save()
-
-        return response.success_response(msg="Meeting Restarted", data=None, response_status=status.HTTP_200_OK)
+        return response.success_response(msg="Meeting Restarted", response_status=status.HTTP_200_OK)
 
 
 class UpdateMeetingTaskView(UpdateAPIView):
-    """
-    Установка задачи для текущей сессии.
-    """
     queryset = Meeting.objects.all()
     serializer_class = MeetingSerializer
     lookup_field = "id"
 
-    def update(self, request: Request, *args, **kwargs) -> Response:
-        task_name = request.data.get("task_name")
-        meeting = self.get_object()
+    def update(self, request, *args, **kwargs):
+        serializer = self.get_serializer(self.get_object(), data={"task_name": request.data.get("task_name")},
+                                         partial=True)
 
-        serializer = self.get_serializer(meeting, data={"task_name": task_name}, partial=True)
         if not serializer.is_valid():
             return response.error_response(msg="Error", data=serializer.errors,
                                            response_status=status.HTTP_400_BAD_REQUEST)
 
         serializer.save()
-
-        return response.success_response(msg="Task updated", data={"task_name": task_name},
+        return response.success_response(msg="Task updated", data={"task_name": request.data.get("task_name")},
                                          response_status=status.HTTP_200_OK)
 
 
 class GetMeetingResultsView(RetrieveAPIView):
-    """
-    Получение результатов конкретной сессии.
-    """
     queryset = Meeting.objects.all()
     serializer_class = MeetingSerializer
     lookup_field = "id"
 
-    def retrieve(self, request: Request, *args, **kwargs) -> Response:
+    def retrieve(self, request, *args, **kwargs):
         meeting = self.get_object()
-
-        if meeting.votes:
-            meeting.average_score = round(sum(int(value) for value in meeting.votes.values()) / len(meeting.votes))
-        else:
-            meeting.average_score = 0
+        meeting.average_score = round(
+            sum(map(int, meeting.votes.values())) / len(meeting.votes)) if meeting.votes else 0
         meeting.save()
 
         serializer = self.get_serializer(meeting, fields=["task_name", "votes", "average_score"])
