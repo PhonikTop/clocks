@@ -24,7 +24,7 @@ class StartMeetingView(CreateAPIView):
         if room.current_meeting:
             raise ValidationError({"error": "Room session already exists."})
 
-        meeting = serializer.save(room=room, task_name=self.request.data.get("task_name"))
+        meeting = serializer.save(room=room, task_name=self.request.data.get("task_name"), active=True)
         room.current_meeting = meeting
         room.save()
 
@@ -32,7 +32,6 @@ class StartMeetingView(CreateAPIView):
 class GetMeetingView(RetrieveAPIView):
     queryset = Meeting.objects.all()
     serializer_class = MeetingSerializer
-    lookup_field = "id"
 
     def get_serializer(self, *args, **kwargs):
         kwargs["fields"] = ["id", "room", "task_name", "votes", "average_score", "active"]
@@ -42,7 +41,6 @@ class GetMeetingView(RetrieveAPIView):
 class EndMeetingView(UpdateAPIView):
     queryset = Meeting.objects.all()
     serializer_class = MeetingSerializer
-    lookup_field = "id"
 
     def update(self, request, *args, **kwargs):
         meeting = self.get_object()
@@ -52,6 +50,7 @@ class EndMeetingView(UpdateAPIView):
 
         meeting.active = False
         meeting.room.current_meeting = None
+        meeting.room.users = []
         meeting.room.save()
         meeting.save()
 
@@ -61,7 +60,6 @@ class EndMeetingView(UpdateAPIView):
 class RestartMeetingView(UpdateAPIView):
     queryset = Meeting.objects.all()
     serializer_class = MeetingSerializer
-    lookup_field = "id"
 
     def update(self, request, *args, **kwargs):
         meeting = self.get_object()
@@ -77,7 +75,6 @@ class RestartMeetingView(UpdateAPIView):
 class UpdateMeetingTaskView(UpdateAPIView):
     queryset = Meeting.objects.all()
     serializer_class = MeetingSerializer
-    lookup_field = "id"
 
     def update(self, request, *args, **kwargs):
         serializer = self.get_serializer(self.get_object(), data={"task_name": request.data.get("task_name")},
@@ -95,7 +92,6 @@ class UpdateMeetingTaskView(UpdateAPIView):
 class GetMeetingResultsView(RetrieveAPIView):
     queryset = Meeting.objects.all()
     serializer_class = MeetingSerializer
-    lookup_field = "id"
 
     def retrieve(self, request, *args, **kwargs):
         meeting = self.get_object()

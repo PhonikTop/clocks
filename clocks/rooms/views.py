@@ -7,6 +7,7 @@ from rest_framework.generics import (
     ListAPIView,
     RetrieveAPIView,
     RetrieveDestroyAPIView,
+    get_object_or_404,
 )
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
@@ -25,13 +26,15 @@ class RoomCreateView(CreateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = RoomSerializer
 
+    def perform_create(self, serializer):
+        serializer.save(is_active=True)
+
 
 class RoomListView(ListAPIView):
     """
     Получение списка доступных комнат.
     """
     serializer_class = RoomSerializer
-    lookup_field = "id"
 
     def get_queryset(self):
         return Room.objects.all()
@@ -43,7 +46,6 @@ class RoomDetailView(RetrieveDestroyAPIView):
     """
     queryset = Room.objects.all()
     serializer_class = RoomSerializer
-    lookup_field = "id"
 
     def get_permissions(self):
         if self.request.method == "DELETE":
@@ -56,7 +58,6 @@ class RoomParticipantsView(RetrieveAPIView):
     Получение списка участников конкретной комнаты.
     """
     serializer_class = RoomSerializer
-    lookup_field = "id"
     queryset = Room.objects.all()
 
     def get_serializer(self, *args, **kwargs):
@@ -81,10 +82,7 @@ class RoomHistoryView(ListAPIView):
     """
     Получение истории всех завершенных сессий в комнате.
     """
-    permission_classes = [IsAuthenticated]
     serializer_class = MeetingSerializer
-    lookup_field = "id"
 
     def get_queryset(self):
-        room = Room.objects.get(id=self.kwargs.get("id"))
-        return Meeting.objects.filter(room=room, active=False)
+        return Meeting.objects.filter(room_id=self.kwargs.get("pk"))
