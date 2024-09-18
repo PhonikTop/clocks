@@ -24,26 +24,26 @@ class JoinRoomView(APIView):
 
     def post(self, request: Request) -> Response:
         nickname, room_id, role = map(request.data.get, ["nickname", "room_id", "role"])
-        cookie, token = request.COOKIES.get("user"), str(uuid.uuid4())
+        cookie = request.COOKIES.get("user")
 
         if not all([nickname, room_id, role]):
             return response.error_response(msg="Missing parameters", data=None,
                                            response_status=status.HTTP_400_BAD_REQUEST)
 
-        if check_token_in_db(token):
+        if check_token_in_db(cookie):
             return response.error_response(msg="User exists", data=None,
                                            response_status=status.HTTP_400_BAD_REQUEST)
 
-        save_new_client_to_redis(token, cookie, nickname, role)
+        save_new_client_to_redis(cookie, nickname, role)
 
         room: Room = get_object_or_404(Room, id=room_id)
-        room.users.append({token: role})
+        room.users.append({cookie: role})
 
         meeting: Meeting = room.current_meeting or Meeting.objects.create(room=room, task_name="Введите название таска")
         room.current_meeting = meeting
 
         room.save()
-        meeting.votes[token] = None
+        meeting.votes[cookie] = None
         meeting.save()
 
         return response.success_response(msg="User joined", data={"user": nickname, "Meeting": meeting.id},
