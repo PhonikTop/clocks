@@ -89,7 +89,10 @@ class RoomConsumer(WebsocketConsumer):
 
         if not any(user_name in d for d in room.users):
             return {"error": "Participant doesn't exist"}
-        else:
-            meeting.votes[user_name] = vote
-            meeting.save()
-            return self.get_data()
+
+        if meeting.votes[user_name] is not None:
+            return {"error": "Participant already voted"}
+
+        meeting.votes[user_name] = vote
+        meeting.save()
+        return self.get_data()
