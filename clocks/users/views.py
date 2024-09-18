@@ -1,5 +1,3 @@
-import uuid
-
 from api.api_utils import APIResponseHandler
 from django.shortcuts import get_object_or_404
 from meetings.models import Meeting
@@ -9,12 +7,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rooms.models import Room
 
-from .redis_client import (
-    check_token_in_db,
-    save_new_client_to_redis,
-)
+from .redis_client import RedisClient
 
 response = APIResponseHandler()
+redis = RedisClient()
 
 
 class JoinRoomView(APIView):
@@ -30,11 +26,11 @@ class JoinRoomView(APIView):
             return response.error_response(msg="Missing parameters", data=None,
                                            response_status=status.HTTP_400_BAD_REQUEST)
 
-        if check_token_in_db(cookie):
+        if redis.check_token_in_db(cookie):
             return response.error_response(msg="User exists", data=None,
                                            response_status=status.HTTP_400_BAD_REQUEST)
 
-        save_new_client_to_redis(cookie, nickname, role)
+        redis.save_new_client_to_redis(cookie, nickname, role)
 
         room: Room = get_object_or_404(Room, id=room_id)
         room.users.append({cookie: role})
@@ -56,10 +52,9 @@ class CurrentUserView(APIView):
     """
 
     def get(self, request: Request) -> Response:
-        from .redis_client import get_client_data_by_cookie
         cookie = request.COOKIES.get("user")
 
-        nickname, role = get_client_data_by_cookie(cookie)
+        nickname, role = redis.get_client_data_by_cookie(cookie).values()
 
         if not all([nickname, role]):
             return response.error_response(msg="User not found", data=None, response_status=status.HTTP_404_NOT_FOUND)
