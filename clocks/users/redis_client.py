@@ -25,23 +25,9 @@ def check_token_in_db(token: str) -> bool:
     return redis_client.exists(token) > 0
 
 
-def get_client_nickname(token: str) -> str:
-    """
-    Получение никнейма по токену клиента.
-    """
-    return redis_client.hget(token, "nickname")
-
-
-def get_client_data_by_cookie(cookie: str) -> tuple[str, str, str]:
+def get_client_data_by_cookie(cookie: str) -> dict[str, str]:
     """
     Получение токена, никнейма и роли по cookie.
     """
 
-    keys = redis_client.keys("*")
-
-    for token in keys:
-        if redis_client.hget(token, "cookie") == cookie:
-            data = redis_client.hmget(token, "nickname", "role")
-            return token, data[0], data[1]
-
-    return None, None, None
+    return redis_client.hgetall(cookie)

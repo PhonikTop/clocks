@@ -59,27 +59,10 @@ class CurrentUserView(APIView):
         from .redis_client import get_client_data_by_cookie
         cookie = request.COOKIES.get("user")
 
-        token, nickname, role = get_client_data_by_cookie(cookie)
+        nickname, role = get_client_data_by_cookie(cookie)
 
-        if not token or not nickname or not role:
+        if not all([nickname, role]):
             return response.error_response(msg="User not found", data=None, response_status=status.HTTP_404_NOT_FOUND)
 
-        return response.success_response(msg="User info", data={"token": token, "nickname": nickname, "role": role},
-                                         response_status=status.HTTP_200_OK)
-
-
-class UserNicknameView(APIView):
-    """
-    Получение информации о текущем пользователе.
-    """
-
-    def get(self, request: Request) -> Response:
-        from .redis_client import get_client_nickname
-        token = request.data.get("token")
-        nickname = get_client_nickname(token)
-
-        if not nickname:
-            return response.error_response(msg="User not found", data=None, response_status=status.HTTP_404_NOT_FOUND)
-
-        return response.success_response(msg="User nickname", data={"nickname": nickname},
+        return response.success_response(msg="User info", data={"token": cookie, "nickname": nickname, "role": role},
                                          response_status=status.HTTP_200_OK)
