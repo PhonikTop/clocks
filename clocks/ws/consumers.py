@@ -66,7 +66,7 @@ class RoomConsumer(WebsocketConsumer):
     def get_meeting(self):
         from meetings.models import Meeting
 
-        return get_object_or_404(Meeting, room=self.room_id)
+        return get_object_or_404(Meeting, room=self.room_id, active=True)
 
     def get_room(self):
         from rooms.models import Room
