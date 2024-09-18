@@ -7,7 +7,6 @@ from rest_framework.generics import (
     ListAPIView,
     RetrieveAPIView,
     RetrieveDestroyAPIView,
-    get_object_or_404,
 )
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
