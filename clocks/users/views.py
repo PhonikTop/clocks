@@ -1,63 +1,52 @@
-from api.api_utils import APIResponseHandler
+from django.http import Http404
 from django.shortcuts import get_object_or_404
 from meetings.models import Meeting
-from rest_framework import status
-from rest_framework.request import Request
-from rest_framework.response import Response
-from rest_framework.views import APIView
+from rest_framework.exceptions import ValidationError
+from rest_framework.generics import CreateAPIView, RetrieveAPIView
 from rooms.models import Room
 
 from .redis_client import RedisClient
+from .serializers import UserInputSerializer
 
-response = APIResponseHandler()
 redis = RedisClient()
 
 
-class JoinRoomView(APIView):
+class JoinRoomView(CreateAPIView):
     """
     Присоединение пользователя к комнате.
     """
+    serializer_class = UserInputSerializer
 
-    def post(self, request: Request) -> Response:
-        nickname, room_id, role = map(request.data.get, ["nickname", "room_id", "role"])
-        cookie = request.COOKIES.get("user")
-
-        if not all([nickname, room_id, role]):
-            return response.error_response(msg="Missing parameters", data=None,
-                                           response_status=status.HTTP_400_BAD_REQUEST)
+    def perform_create(self, serializer):
+        nickname, role = serializer.validated_data["nickname"], serializer.validated_data["role"]
+        cookie = self.request.COOKIES.get("user")
 
         if redis.check_token_in_db(cookie):
-            return response.error_response(msg="User exists", data=None,
-                                           response_status=status.HTTP_400_BAD_REQUEST)
+            raise ValidationError({"error": "User exists"})
 
         redis.save_new_client_to_redis(cookie, nickname, role)
 
-        room: Room = get_object_or_404(Room, id=room_id)
+        room = get_object_or_404(Room, id=self.request.data.get("room_id"))
         room.participants.append({cookie: role})
 
-        meeting: Meeting = room.current_meeting or Meeting.objects.create(room=room, task_name="Введите название таска")
-        room.current_meeting = meeting
-
-        room.save()
+        meeting = room.current_meeting or Meeting.objects.create(room=room, task_name="Введите название таска")
         meeting.votes[cookie] = None
-        meeting.save()
 
-        return response.success_response(msg="User joined", data={"user": nickname, "Meeting": meeting.id},
-                                         response_status=status.HTTP_200_OK)
+        room.current_meeting = meeting
+        room.save()
 
 
-class CurrentUserView(APIView):
+class CurrentUserView(RetrieveAPIView):
     """
     Получение информации о текущем пользователе.
     """
+    serializer_class = UserInputSerializer
 
-    def get(self, request: Request) -> Response:
-        cookie = request.COOKIES.get("user")
-
-        nickname, role = redis.get_client_data_by_cookie(cookie).values()
-
-        if not all([nickname, role]):
-            return response.error_response(msg="User not found", data=None, response_status=status.HTTP_404_NOT_FOUND)
-
-        return response.success_response(msg="User info", data={"token": cookie, "nickname": nickname, "role": role},
-                                         response_status=status.HTTP_200_OK)
+    def get_object(self):
+        cookie = self.request.COOKIES.get("user")
+        if cookie is None:
+            raise Http404("User cookie not found")
+        user_data = redis.get_client_data_by_cookie(cookie)
+        if not all(user_data.values()):
+            raise Http404("User not found")
+        return user_data
