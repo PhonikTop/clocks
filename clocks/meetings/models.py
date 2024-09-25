@@ -16,9 +16,20 @@ class Meeting(models.Model):
         return f"Meeting for {self.room.name} - {self.task_name}"
 
     def reset_to_default(self):
-        self.active = True,
-        self.votes = {},
-        self.average_score = 0
+        self.active = True
+        self.votes = {}
+        self.average_score = None
         self.save()
 
+    def end_meeting(self):
+        self.active = False
+        self.room.current_meeting = None
+        self.room.users = []
+        self.room.save()
+        self.save()
+
+    def get_average_score(self):
+        from .logic import get_average_score
+        self.average_score = get_average_score(self.votes)
+        self.save()
 

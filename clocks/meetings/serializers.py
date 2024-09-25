@@ -3,17 +3,37 @@ from rest_framework import serializers
 from .models import Meeting
 
 
-class MeetingSerializer(serializers.ModelSerializer):
+class MeetingCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Meeting
+        fields = ["id", "room", "task_name"]
+
+
+class MeetingGetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Meeting
         fields = ["id", "room", "task_name", "votes", "average_score", "active"]
 
-    def __init__(self, *args, **kwargs):
-        fields = kwargs.pop("fields", None)
-        super(MeetingSerializer, self).__init__(*args, **kwargs)
 
-        if fields is not None:
-            allowed = set(fields)
-            existing = set(self.fields)
-            for field_name in existing - allowed:
-                self.fields.pop(field_name)
+class MeetingUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Meeting
+        fields = ["task_name"]
+
+
+class MeetingRemoveSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Meeting
+        fields = ["id"]
+
+
+class MeetingResultsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Meeting
+        fields = ["id", "votes", "average_score"]
+
+
+class MeetingHistorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Meeting
+        fields = ["id", "task_name", "votes", "average_score"]
