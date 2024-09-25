@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=100)),
                 ('is_active', models.BooleanField(default=True)),
-                ('users', models.JSONField(default=list)),
+                ('participants', models.JSONField(default=list)),
                 (
                     'current_meeting',
                     models.OneToOneField(

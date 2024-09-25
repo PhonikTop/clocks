@@ -11,7 +11,7 @@ class Room(models.Model):
         on_delete=models.SET_NULL,
         related_name="current_room",
     )
-    users = models.JSONField(default=list)
+    participants = models.JSONField(default=list)
 
     def __str__(self) -> str:
         return self.name
@@ -19,5 +19,5 @@ class Room(models.Model):
     def reset_to_default(self):
         self.is_active = True
         self.current_meeting = None
-        self.users = []
+        self.participants = []
         self.save()

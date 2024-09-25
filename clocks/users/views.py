@@ -33,7 +33,7 @@ class JoinRoomView(APIView):
         redis.save_new_client_to_redis(cookie, nickname, role)
 
         room: Room = get_object_or_404(Room, id=room_id)
-        room.users.append({cookie: role})
+        room.participants.append({cookie: role})
 
         meeting: Meeting = room.current_meeting or Meeting.objects.create(room=room, task_name="Введите название таска")
         room.current_meeting = meeting
