@@ -32,8 +32,7 @@ for app_lookup_path in ("clocks",):
     sys.path.insert(1, os.path.normpath(os.path.join(BASE_DIR, app_lookup_path)))
 
 # Application definition
-
-INSTALLED_APPS = [
+DJANGO_APPS = [
     "grappelli",
     "django.contrib.admin",
     "django.contrib.auth",
@@ -43,11 +42,15 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "channels",
     "rest_framework",
+]
+
+LOCAL_APPS = [
     "rooms",
     "users",
     "meetings",
     "ws"
 ]
+INSTALLED_APPS = DJANGO_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
