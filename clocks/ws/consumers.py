@@ -3,7 +3,8 @@ import json
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
 from django.shortcuts import get_object_or_404
-from meetings.serializers import MeetingSerializer
+
+from clocks.meetings.serializers import MeetingSerializer
 
 
 class RoomConsumer(WebsocketConsumer):
@@ -64,12 +65,12 @@ class RoomConsumer(WebsocketConsumer):
         self.send(text_data=event["message"])
 
     def get_meeting(self):
-        from meetings.models import Meeting
+        from clocks.meetings.models import Meeting
 
         return get_object_or_404(Meeting, room=self.room_id, active=True)
 
     def get_room(self):
-        from rooms.models import Room
+        from clocks.rooms.models import Room
 
         return get_object_or_404(Room, id=self.room_id)
 

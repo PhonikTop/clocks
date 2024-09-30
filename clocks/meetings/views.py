@@ -5,16 +5,16 @@ from rest_framework.generics import (
     UpdateAPIView,
     get_object_or_404,
 )
-from rooms.models import Room
 
-from .models import Meeting
-from .serializers import (
+from clocks.meetings.models import Meeting
+from clocks.meetings.serializers import (
     MeetingCreateSerializer,
     MeetingGetSerializer,
     MeetingRemoveSerializer,
     MeetingResultsSerializer,
     MeetingUpdateSerializer,
 )
+from clocks.rooms.models import Room
 
 
 class StartMeetingView(CreateAPIView):

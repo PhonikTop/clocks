@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Meeting
+from clocks.meetings.models import Meeting
 
 
 class MeetingCreateSerializer(serializers.ModelSerializer):

@@ -1,6 +1,4 @@
 from django.shortcuts import get_list_or_404
-from meetings.models import Meeting
-from meetings.serializers import MeetingHistorySerializer
 from rest_framework.generics import (
     CreateAPIView,
     ListAPIView,
@@ -9,8 +7,10 @@ from rest_framework.generics import (
 )
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
-from .models import Room
-from .serializers import (
+from clocks.meetings.models import Meeting
+from clocks.meetings.serializers import MeetingHistorySerializer
+from clocks.rooms.models import Room
+from clocks.rooms.serializers import (
     RoomDetailSerializer,
     RoomNameSerializer,
     RoomParticipantsSerializer,

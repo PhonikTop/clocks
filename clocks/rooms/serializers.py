@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Room
+from clocks.room.models import Room
 
 
 class RoomNameSerializer(serializers.ModelSerializer):
