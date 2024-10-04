@@ -33,6 +33,12 @@ class MeetingResultsSerializer(serializers.ModelSerializer):
         fields = ["id", "votes", "average_score"]
 
 
+class MeetingVotesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Meeting
+        fields = ["votes"]
+
+
 class MeetingHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Meeting

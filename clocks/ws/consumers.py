@@ -3,7 +3,7 @@ import json
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
 from django.shortcuts import get_object_or_404
-from meetings.serializers import MeetingSerializer
+from meetings.serializers import MeetingVotesSerializer
 
 
 class RoomConsumer(WebsocketConsumer):
@@ -75,7 +75,7 @@ class RoomConsumer(WebsocketConsumer):
 
     def get_data(self):
         meeting = self.get_meeting()
-        serializer = MeetingSerializer(meeting, fields=["votes"])
+        serializer = MeetingVotesSerializer(meeting)
         data = serializer.data.copy()
 
         if "votes" in data:
