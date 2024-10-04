@@ -9,9 +9,7 @@ services:
       dockerfile: Dockerfile
       target: watchy-api-prod
     env_file:
-      - ./docker.env
-    environment:
-      - DJANGO_SETTINGS_MODULE=settings.settings
+      - ./clocks.env
     depends_on:
       - watchy_redis
 
