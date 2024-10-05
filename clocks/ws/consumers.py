@@ -41,9 +41,6 @@ class BaseConsumer(AsyncWebsocketConsumer):
             }
         )
 
-    async def chat_message(self, event):
-        await self.send(text_data=event["message"])
-
     async def get_lookup_url(self):
         return self.scope["url_route"]["kwargs"]["id"]
 
