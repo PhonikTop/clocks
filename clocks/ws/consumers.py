@@ -1,98 +1,78 @@
 import json
 
-from asgiref.sync import async_to_sync
-from channels.generic.websocket import WebsocketConsumer
+from channels.db import database_sync_to_async
+from channels.generic.websocket import AsyncWebsocketConsumer
 from django.shortcuts import get_object_or_404
+from meetings.models import Meeting
 from meetings.serializers import MeetingVotesSerializer
+from rooms.models import Room
 
 
-class RoomConsumer(WebsocketConsumer):
+class BaseConsumer(AsyncWebsocketConsumer):
+    model = None
+    group_prefix = ""
 
-    def connect(self):
-        self.room_id = self.scope["url_route"]["kwargs"]["room_id"]
-        async_to_sync(self.channel_layer.group_add)(f"room_{self.room_id}", self.channel_name)
-        self.accept()
+    async def connect(self):
+        # TODO: Сделать проверку на существование голосования
+        self.object_id = self.scope["url_route"]["kwargs"]["id"]
+        await self.channel_layer.group_add(f"{self.group_prefix}_{self.object_id}", self.channel_name)
+        await self.accept()
 
-    def disconnect(self, close_code):
-        async_to_sync(self.channel_layer.group_discard)(f"room_{self.room_id}", self.channel_name)
+    async def disconnect(self, close_code):
+        await self.channel_layer.group_discard(f"{self.group_prefix}_{self.object_id}", self.channel_name)
 
-    def receive(self, text_data):
+    async def receive(self, text_data):
         try:
             text_data_json = json.loads(text_data)
             action = text_data_json.get("action")
-
-            if action == "refresh_participants":
-                response = self.get_data()
-                async_to_sync(self.channel_layer.group_send)(
-                    f"room_{self.room_id}",
-                    {
-                        "type": "chat.message",
-                        "message": json.dumps(response),
-                    }
-                )
-
-            elif action == "submit_vote":
-                user_id = text_data_json.get("user_id")
-                vote = text_data_json.get("vote")
-                response = self.save_vote(user_id, vote)
-
-                async_to_sync(self.channel_layer.group_send)(
-                    f"room_{self.room_id}",
-                    {
-                        "type": "chat.message",
-                        "message": json.dumps(response),
-                    }
-                )
+            if action:
+                response = await getattr(self, action)(text_data_json)
+                await self.send_group_message(response)
             else:
-                async_to_sync(self.channel_layer.group_send)(
-                    f"room_{self.room_id}",
-                    {
-                        "type": "chat.message",
-                        "message": json.dumps({"message": "unknown action"}),
-                    }
-                )
+                await self.send_group_message({"message": "unknown action"})
         except json.JSONDecodeError:
-            async_to_sync(self.channel_layer.group_send)(
-                f"room_{self.room_id}",
-                {
-                    "type": "chat.message",
-                    "message": json.dumps({"message": "Invalid JSON format"}),
-                }
-            )
+            await self.send_group_message({"message": "Invalid JSON format"})
 
-    def chat_message(self, event):
-        self.send(text_data=event["message"])
+    async def send_group_message(self, message):
+        await self.channel_layer.group_send(
+            f"{self.group_prefix}_{self.object_id}",
+            {
+                "type": "chat.message",
+                "message": json.dumps(message),
+            }
+        )
 
-    def get_meeting(self):
-        from meetings.models import Meeting
+    async def chat_message(self, event):
+        await self.send(text_data=event["message"])
 
-        return get_object_or_404(Meeting, room=self.room_id, active=True)
+    async def get_object(self, model, **filters):
+        return await database_sync_to_async(get_object_or_404)(model, **filters)
 
-    def get_room(self):
-        from rooms.models import Room
+    async def save_object(self, obj):
+        await database_sync_to_async(obj.save)()
 
-        return get_object_or_404(Room, id=self.room_id)
 
-    def get_data(self):
-        meeting = self.get_meeting()
+class RoomConsumer(BaseConsumer):
+    model = Room
+    group_prefix = "room"
+
+    async def refresh_participants(self, _):
+        meeting = await self.get_object(Meeting, room=self.object_id, active=True)
         serializer = MeetingVotesSerializer(meeting)
         data = serializer.data.copy()
-
-        if "votes" in data:
-            data["votes"] = {k: v for k, v in data["votes"].items() if v is not None}
-
+        data["votes"] = {k: v for k, v in data.get("votes", {}).items() if v is not None}
         return data
 
-    def save_vote(self, user_name, vote):
-        meeting = self.get_meeting()
-        room = self.get_room()
+    async def submit_vote(self, data):
+        user_name, vote = data.get("user_id"), data.get("vote")
+        meeting = await self.get_object(Meeting, room=self.object_id, active=True)
+        room = await self.get_object(Room, id=self.object_id)
 
-        if not any(user_name in d for d in room.users):
+        if not any(user_name in d for d in room.participants):
             return {"error": "Participant doesn't exist"}
-
-        if meeting.votes[user_name] is not None:
+        if meeting.votes.get(user_name) is not None:
             return {"error": "Participant already voted"}
 
         meeting.votes[user_name] = vote
-        meeting.save()
-        return self.get_data()
+        await self.save_object(meeting)
+        return await self.refresh_participants({})
