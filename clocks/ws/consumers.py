@@ -13,9 +13,8 @@ class BaseConsumer(AsyncWebsocketConsumer):
     group_prefix = ""
 
     async def connect(self):
-        # TODO: Сделать проверку на существование голосования
-        self.object_id = self.scope["url_route"]["kwargs"]["id"]
-        await self.channel_layer.group_add(f"{self.group_prefix}_{self.object_id}", self.channel_name)
+        self.lookup_url = await self.get_lookup_url()
+        await self.channel_layer.group_add(f"{self.group_prefix}_{self.lookup_url}", self.channel_name)
         await self.accept()
 
     async def disconnect(self, close_code):
@@ -45,6 +44,9 @@ class BaseConsumer(AsyncWebsocketConsumer):
     async def chat_message(self, event):
         await self.send(text_data=event["message"])
 
+    async def get_lookup_url(self):
+        return self.scope["url_route"]["kwargs"]["id"]
+
     async def get_object(self, model, **filters):
         return await database_sync_to_async(get_object_or_404)(model, **filters)
 
@@ -55,6 +57,16 @@ class BaseConsumer(AsyncWebsocketConsumer):
 class RoomConsumer(BaseConsumer):
     model = Room
     group_prefix = "room"
+
+    async def get_lookup_url(self):
+        scope = self.scope["url_route"]["kwargs"]["id"]
+        exists = await database_sync_to_async(
+            lambda: Meeting.objects.filter(room_id=scope, active=True).exists()
+        )()
+        if not exists:
+            msg = "Meeting does not exist"
+            raise AttributeError(msg)
+        return scope
 
     async def refresh_participants(self, _):
         meeting = await self.get_object(Meeting, room=self.object_id, active=True)
