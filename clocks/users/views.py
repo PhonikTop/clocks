@@ -1,5 +1,6 @@
 import uuid
 
+from api.api_utils import Cookies_utils
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from meetings.models import Meeting
@@ -13,6 +14,7 @@ from .redis_client import RedisClient
 from .serializers import UserInputSerializer
 
 redis = RedisClient()
+cookie_utils = Cookies_utils()
 
 
 class JoinRoomView(GenericAPIView):
@@ -27,22 +29,24 @@ class JoinRoomView(GenericAPIView):
 
         nickname, role = serializer.validated_data["nickname"], serializer.validated_data["role"]
         cookie = self.request.COOKIES.get("user")
-
-        response = Response(serializer.data, status=status.HTTP_201_CREATED)
+        token = cookie_utils.cookie_decrypt(cookie) if cookie else str(uuid.uuid4())
 
         if cookie is None:
-            cookie = str(uuid.uuid4())
-            response.set_cookie("user", value=cookie, max_age=432000)
-        if redis.check_token_in_db(cookie):
+            response = Response(serializer.data, status=status.HTTP_201_CREATED)
+            response.set_cookie("user", value=cookie_utils.cookie_encrypt(token), max_age=432000)
+        else:
+            response = Response(serializer.data, status=status.HTTP_200_OK)
+
+        if redis.check_token_in_db(token):
             raise ValidationError({"error": "User exists"})
 
-        redis.save_new_client_to_redis(cookie, nickname, role)
+        redis.save_new_client_to_redis(token, nickname, role)
 
         room = get_object_or_404(Room, id=self.request.data.get("room_id"))
-        room.participants.append({cookie: role})
+        room.participants.append({token: role})
 
         meeting = room.current_meeting or Meeting.objects.create(room=room, task_name="Введите название таска")
-        meeting.votes[cookie] = None
+        meeting.votes[token] = None
 
         room.current_meeting = meeting
         room.save()
@@ -57,10 +61,10 @@ class CurrentUserView(RetrieveAPIView):
     serializer_class = UserInputSerializer
 
     def get_object(self):
-        cookie = self.request.COOKIES.get("user")
-        if cookie is None:
-            raise Http404("User cookie not found")
-        user_data = redis.get_client_data_by_cookie(cookie)
+        token = cookie_utils.cookie_decrypt(str(self.request.COOKIES.get("user")))
+        if token is None:
+            raise ValidationError("User cookie not valid")
+        user_data = redis.get_client_data_by_token(token)
         if not all(user_data.values()):
             raise Http404("User not found")
         return user_data

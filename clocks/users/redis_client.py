@@ -24,9 +24,9 @@ class RedisClient:
         """
         return redis_client.exists(token) > 0
 
-    def get_client_data_by_cookie(self, cookie: str) -> dict[str, str]:
+    def get_client_data_by_token(self, token: str) -> dict[str, str]:
         """
         Получение токена, никнейма и роли по cookie.
         """
 
-        return redis_client.hgetall(cookie)
+        return redis_client.hgetall(token)

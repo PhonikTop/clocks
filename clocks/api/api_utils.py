@@ -1,16 +1,21 @@
-from functools import partial
-
-from rest_framework import status
-from rest_framework.response import Response
+from cryptography.fernet import Fernet, InvalidToken
+from settings.settings import CRYPT_KEY
 
 
-class APIResponseHandler:
+class Cookies_utils:
     def __init__(self):
-        # Создаем частичные функции с предустановленными параметрами
-        self.success_response = partial(self.return_api_response, type_message="success")
-        self.error_response = partial(self.return_api_response, type_message="error")
+        self.key = str(CRYPT_KEY)
+        self.fernet = Fernet(self.key)
 
-    def return_api_response(self, type_message: str, msg: str, data=None, response_status=status.HTTP_200_OK):
-        return Response(
-            {type_message: msg, "data": data}, status=response_status
-        )
+    def cookie_encrypt(self, token: str) -> str:
+        try:
+            return self.fernet.encrypt(token.encode()).decode()
+        except InvalidToken:
+            return None
+
+    def cookie_decrypt(self, encrypted_data) -> str:
+        try:
+            return self.fernet.decrypt(encrypted_data).decode()
+        except InvalidToken:
+            return None
+

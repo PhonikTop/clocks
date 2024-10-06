@@ -1,11 +1,13 @@
 import os
 from pathlib import Path
 
+from .core import get_env_param_bool, get_env_param_str
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = str(os.environ.get("SECRET_KEY"))
-
-DEBUG = bool(os.environ.get("DEBUG"))
+SECRET_KEY = get_env_param_str("SECRET_KEY", "dev")
+DEBUG = get_env_param_bool("DEBUG", False)
+CRYPT_KEY = get_env_param_str("CRYPT_KEY", "sLQFOqh7b1H2abCWF1mF_Mqm0gNTFGO2-7hMdcqEZdg=")
 
 ALLOWED_HOSTS = ["*"]
 
