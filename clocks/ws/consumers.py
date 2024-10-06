@@ -91,3 +91,10 @@ class RoomConsumer(BaseConsumer):
             return meeting.votes
 
         return {"voted": f"{user_name}"}
+
+    async def user_joined(self, event):
+        user = event["user"]
+        role = event["role"]
+        await self.send(text_data=json.dumps({
+            "message": {user: role}
+        }))

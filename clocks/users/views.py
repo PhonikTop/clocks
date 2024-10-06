@@ -1,9 +1,8 @@
 import uuid
 
-from api.api_utils import Cookies_utils
+from api.api_utils import Cookies_utils, send_to_room_group
 from django.http import Http404
 from django.shortcuts import get_object_or_404
-from meetings.models import Meeting
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import GenericAPIView, RetrieveAPIView
@@ -50,6 +49,15 @@ class JoinRoomView(GenericAPIView):
 
         room.current_meeting = meeting
         room.save()
+
+        send_to_room_group(
+            room.id,
+            {
+                "type": "user_joined",
+                "user": nickname,
+                "role": role
+            }
+        )
 
         return response
 
