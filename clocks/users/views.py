@@ -39,15 +39,14 @@ class JoinRoomView(GenericAPIView):
         if redis.check_token_in_db(token):
             raise ValidationError({"error": "User exists"})
 
+        room = get_object_or_404(Room, id=self.request.data.get("room_id"))
+        if room.current_meeting is None:
+            raise ValidationError({"error": "In room no active meeting"})
+
         redis.save_new_client_to_redis(token, nickname, role)
 
-        room = get_object_or_404(Room, id=self.request.data.get("room_id"))
         room.participants.append({token: role})
-
-        meeting = room.current_meeting or Meeting.objects.create(room=room, task_name="Введите название таска")
-        meeting.votes[token] = None
-
-        room.current_meeting = meeting
+        room.current_meeting.votes[token] = None
         room.save()
 
         send_to_room_group(
