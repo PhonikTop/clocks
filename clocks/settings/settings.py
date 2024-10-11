@@ -1,7 +1,20 @@
 import os
+import sys
 from pathlib import Path
 
 from .core import get_env_param_bool, get_env_param_str
+
+SETTINGS_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.join(SETTINGS_DIR, "..")
+
+
+def at_project_root(name):
+    return os.path.normpath(os.path.join(PROJECT_ROOT, name))
+
+
+sys.path.insert(1, PROJECT_ROOT)
+for app_lookup_path in ("clocks",):
+    sys.path.insert(1, at_project_root(app_lookup_path))
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
