@@ -25,22 +25,30 @@ CRYPT_KEY = get_env_param_str("CRYPT_KEY", "sLQFOqh7b1H2abCWF1mF_Mqm0gNTFGO2-7hM
 ALLOWED_HOSTS = ["*"]
 
 # Application definition
-
-INSTALLED_APPS = [
+DJANGO_APPS = [
+    "django.contrib.contenttypes",
+    "grappelli.dashboard",
     "grappelli",
     "django.contrib.admin",
     "django.contrib.auth",
-    "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+]
+
+THIRD_APPS = [
     "channels",
     "rest_framework",
+]
+
+LOCAL_APPS = [
     "rooms",
     "users",
     "meetings",
     "ws"
 ]
+
+INSTALLED_APPS = DJANGO_APPS + THIRD_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
