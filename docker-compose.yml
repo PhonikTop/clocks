@@ -13,6 +13,7 @@ services:
     command: "uvicorn settings.asgi:application --reload --host 0.0.0.0 --port 8000"
     depends_on:
       - watchy_redis
+      - watchy_db
     volumes:
       - static:/Clocks/static
 
@@ -28,6 +29,13 @@ services:
       - REDIS_PASSWORD=password
       - REDIS_PORT=6379
       - REDIS_DATABASES=16
+
+  watchy_db:
+    image: postgres:14-alpine
+    ports:
+      - "5432:5432"
+    env_file:
+      - ./clocks.env
 
   nginx:
     image: nginx:latest

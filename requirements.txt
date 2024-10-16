@@ -7,3 +7,5 @@ django-grappelli~=4.0.1
 uvicorn[standard]
 daphne==2.5.0
 channels_redis
+dj_database_url
+psycopg2-binary
