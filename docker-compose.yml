@@ -7,9 +7,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: watchy-api-local
     env_file:
       - ./clocks.env
+    entrypoint: /Clocks/api_entrypoint.sh
+    command: "uvicorn settings.asgi:application --reload --host 0.0.0.0 --port 8000"
     depends_on:
       - watchy_redis
     volumes:
@@ -42,5 +43,4 @@ services:
 
 volumes:
   redis_data:
-  redis.conf:
   static:
