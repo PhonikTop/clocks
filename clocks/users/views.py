@@ -1,6 +1,6 @@
 import uuid
 
-from api.api_utils import Cookies_utils, send_to_room_group
+from api.api_utils import cookie_decrypt, cookie_encrypt, send_to_room_group
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from rest_framework import status
@@ -16,8 +16,6 @@ from .redis_client import (
 )
 from .serializers import UserInputSerializer
 
-cookie_utils = Cookies_utils()
-
 
 class JoinRoomView(GenericAPIView):
     """
@@ -31,11 +29,11 @@ class JoinRoomView(GenericAPIView):
 
         nickname, role = serializer.validated_data["nickname"], serializer.validated_data["role"]
         cookie = self.request.COOKIES.get("user")
-        token = cookie_utils.cookie_decrypt(cookie) if cookie else str(uuid.uuid4())
+        token = cookie_decrypt(cookie) if cookie else str(uuid.uuid4())
 
         if cookie is None:
             response = Response(serializer.data, status=status.HTTP_201_CREATED)
-            response.set_cookie("user", value=cookie_utils.cookie_encrypt(token), max_age=432000)
+            response.set_cookie("user", value=cookie_encrypt(token), max_age=432000)
         else:
             response = Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -71,7 +69,7 @@ class CurrentUserView(RetrieveAPIView):
     serializer_class = UserInputSerializer
 
     def get_object(self):
-        token = cookie_utils.cookie_decrypt(str(self.request.COOKIES.get("user")))
+        token = cookie_decrypt(str(self.request.COOKIES.get("user")))
         if token is None:
             raise ValidationError("User cookie not valid")
         user_data = get_client_data_by_token(token)
