@@ -6,7 +6,7 @@ import dj_database_url
 
 from .core import get_env_param_bool, get_env_param_str
 
-SETTINGS_DIR = os.path.dirname(os.path.abspath(__file__))
+SETTINGS_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = os.path.join(SETTINGS_DIR, "..")
 
 
@@ -84,7 +84,8 @@ WSGI_APPLICATION = "settings.wsgi.application"
 ASGI_APPLICATION = "settings.asgi.application"
 
 DATABASES = {}
-DATABASES["default"] = db = dj_database_url.parse(f"postgres://{get_env_param_str('POSTGRES_USER')}:{get_env_param_str('POSTGRES_PASSWORD')}@watchy_db:5432/{get_env_param_str('POSTGRES_DB')}")
+DATABASES["default"] = db = dj_database_url.parse(
+    f"postgres://{get_env_param_str('POSTGRES_USER')}:{get_env_param_str('POSTGRES_PASSWORD')}@watchy_db:5432/{get_env_param_str('POSTGRES_DB')}")
 
 AUTH_PASSWORD_VALIDATORS = [
     {
