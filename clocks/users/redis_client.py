@@ -1,32 +1,22 @@
-import os
-
-import redis
-
-redis_client = redis.Redis(
-    host=os.getenv("REDIS_HOST", "watchy_redis"),
-    port=int(os.getenv("REDIS_PORT", 6379)),
-    db=0,
-    decode_responses=True,
-)
+from django.core.cache import cache
 
 
-class RedisClient:
-    def save_new_client_to_redis(self, token, nickname: str, role: str, ttl: int = 432000) -> None:
-        """
-        Сохранение данных клиента в Redis с учетом token.
-        """
-        redis_client.hset(token, mapping={"nickname": nickname, "role": role})
-        redis_client.expire(token, ttl)
+def save_new_client_to_cache(self, token, nickname: str, role: str, ttl: int = 432000) -> None:
+    """
+    Сохранение данных клиента в кэш с использованием token.
+    """
+    cache.set(token, {"nickname": nickname, "role": role}, ttl)
 
-    def check_token_in_db(self, token: str) -> bool:
-        """
-        Проверка на существование никнейма в базе.
-        """
-        return redis_client.exists(token) > 0
 
-    def get_client_data_by_token(self, token: str) -> dict[str, str]:
-        """
-        Получение токена, никнейма и роли по cookie.
-        """
+def check_token_in_cache(self, token: str) -> bool:
+    """
+    Проверка на существование записи в кэше.
+    """
+    return cache.get(token) is not None
 
-        return redis_client.hgetall(token)
+
+def get_client_data_by_token(self, token: str) -> dict[str, str]:
+    """
+    Получение данных клиента (никнейм и роль) по токену из кэша.
+    """
+    return cache.get(token, {})
