@@ -3,9 +3,7 @@ from rest_framework.generics import (
     CreateAPIView,
     RetrieveAPIView,
     UpdateAPIView,
-    get_object_or_404,
 )
-from rooms.models import Room
 
 from .models import Meeting
 from .serializers import (
@@ -21,11 +19,7 @@ class StartMeetingView(CreateAPIView):
     serializer_class = MeetingCreateSerializer
 
     def perform_create(self, serializer):
-        room = get_object_or_404(Room, id=self.request.data.get("room"))
-
-        if room.current_meeting:
-            raise ValidationError({"error": "Room session already exists."})
-
+        room = serializer.validated_data["room"]
         meeting = serializer.save(room=room, task_name=self.request.data.get("task_name"))
         room.current_meeting = meeting
         room.save()

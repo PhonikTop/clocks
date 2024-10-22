@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 from .models import Meeting
 
@@ -7,6 +8,12 @@ class MeetingCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Meeting
         fields = ["id", "room", "task_name"]
+
+    def validate(self, data):
+        room = data.get("room")
+        if room and room.current_meeting:
+            raise ValidationError({"error": "Room session already exists."})
+        return data
 
 
 class MeetingGetSerializer(serializers.ModelSerializer):
