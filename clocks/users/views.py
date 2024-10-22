@@ -24,6 +24,12 @@ class JoinRoomView(GenericAPIView):
     serializer_class = UserInputSerializer
 
     def post(self, request, *args, **kwargs):
+        room_id = self.request.data.get("room_id")
+        room = get_object_or_404(Room.objects.prefetch_related("current_meeting"), id=room_id)
+
+        if not room.current_meeting:
+            raise ValidationError({"error": "In room no active meeting"})
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -31,24 +37,18 @@ class JoinRoomView(GenericAPIView):
         cookie = self.request.COOKIES.get("user")
         token = cookie_decrypt(cookie) if cookie else str(uuid.uuid4())
 
+        response = Response(serializer.data, status=status.HTTP_201_CREATED if cookie is None else status.HTTP_200_OK)
         if cookie is None:
-            response = Response(serializer.data, status=status.HTTP_201_CREATED)
             response.set_cookie("user", value=cookie_encrypt(token), max_age=432000)
-        else:
-            response = Response(serializer.data, status=status.HTTP_200_OK)
 
         if check_token_in_cache(token):
             raise ValidationError({"error": "User exists"})
-
-        room = get_object_or_404(Room, id=self.request.data.get("room_id"))
-        if room.current_meeting is None:
-            raise ValidationError({"error": "In room no active meeting"})
 
         save_new_client_to_cache(token, nickname, role)
 
         room.participants.append({token: role})
         room.current_meeting.votes[token] = None
-        room.save()
+        room.save(update_fields=["participants", "current_meeting"])
 
         send_to_room_group(
             room.id,
