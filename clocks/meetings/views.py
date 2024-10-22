@@ -36,10 +36,6 @@ class EndMeetingView(UpdateAPIView):
 
     def perform_update(self, request, *args, **kwargs):
         meeting = self.get_object()
-
-        if not meeting.active:
-            raise ValidationError({"error": "Meeting already completed."})
-
         meeting.end_meeting()
 
 
