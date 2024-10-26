@@ -1,9 +1,4 @@
 *.md
-Dockerfile
-docker-compose.prod.yml
-docker-compose.yml
-redis.conf
-clocks.env
-nginx
+config/
 pyproject.toml
-static
+openapi.yaml

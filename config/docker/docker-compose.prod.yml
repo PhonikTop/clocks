@@ -5,12 +5,13 @@ services:
     container_name: watchy-api
     hostname: watchy
     build:
-      context: .
+      context: ../..
       dockerfile: Dockerfile
     env_file:
       - ./clocks.env
     entrypoint: /Clocks/api_entrypoint.sh
-    command: "uvicorn settings.asgi:application --reload --host 0.0.0.0 --port 8000"
+      - clocks.env
+    command: "uvicorn settings.asgi:application --host 0.0.0.0 --port 8000"
     depends_on:
       - watchy_redis
       - watchy_db
@@ -26,8 +27,7 @@ services:
     ports:
       - "6379:6379"
     volumes:
-      - redis_data:/root/redis
-      - ./redis.conf:/usr/local/etc/redis/redis.conf:ro
+      - ../redis.conf:/usr/local/etc/redis/redis.conf:ro
     environment:
       - REDIS_PASSWORD=password
     networks:
@@ -38,7 +38,7 @@ services:
     ports:
       - "5432:5432"
     env_file:
-      - ./clocks.env
+      - clocks.env
     restart: always
     networks:
       - watchy_network
@@ -52,8 +52,7 @@ services:
     depends_on:
       - watchy-api
     volumes:
-      - ./nginx/dev.conf:/etc/nginx/conf.d/default.conf:ro
-      - static:/static
+      - ../../config/nginx/dev.conf:/etc/nginx/conf.d/default.conf:ro
     networks:
       - watchy_network
 
