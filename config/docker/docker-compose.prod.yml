@@ -8,9 +8,8 @@ services:
       context: ../..
       dockerfile: Dockerfile
     env_file:
-      - ./clocks.env
-    entrypoint: /Clocks/api_entrypoint.sh
       - clocks.env
+    entrypoint: /scripts/api_entrypoint.sh
     command: "uvicorn settings.asgi:application --host 0.0.0.0 --port 8000"
     depends_on:
       - watchy_redis
