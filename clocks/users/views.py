@@ -69,10 +69,11 @@ class CurrentUserView(RetrieveAPIView):
     serializer_class = UserInputSerializer
 
     def get_object(self):
-        token = cookie_decrypt(str(self.request.COOKIES.get("user")))
+        cookie = str(self.request.COOKIES.get("user") or ValidationError("User cookie is empty"))
+        token = cookie_decrypt(cookie)
         if token is None:
-            raise ValidationError("User cookie not valid")
+            raise ValidationError("User cookie is not valid")
         user_data = get_client_data_by_token(token)
-        if not all(user_data.values()):
+        if not user_data:
             raise Http404("User not found")
         return user_data
