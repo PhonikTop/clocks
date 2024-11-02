@@ -59,9 +59,7 @@ class RoomConsumer(BaseConsumer):
 
     async def get_lookup_id(self):
         scope = self.scope["url_route"]["kwargs"]["id"]
-        exists = await database_sync_to_async(
-            lambda: Meeting.objects.filter(room_id=scope, active=True).exists()
-        )()
+        exists = await Meeting.objects.filter(room_id=scope, active=True).aexists()
         if not exists:
             msg = "Meeting does not exist"
             raise AttributeError(msg)
