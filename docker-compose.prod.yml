@@ -5,7 +5,7 @@ services:
     container_name: watchy-api
     hostname: watchy
     build:
-      context: ../..
+      context: .
       dockerfile: Dockerfile
     env_file:
       - clocks.env
@@ -15,7 +15,7 @@ services:
       - watchy_redis
       - watchy_db
     volumes:
-      - static:/Clocks/static
+      - clocks/static:/Clocks/static
     restart: always
     networks:
       - watchy_network
@@ -26,7 +26,7 @@ services:
     ports:
       - "6379:6379"
     volumes:
-      - ../redis.conf:/usr/local/etc/redis/redis.conf:ro
+      - ./redis.conf:/usr/local/etc/redis/redis.conf:ro
     environment:
       - REDIS_PASSWORD=password
     networks:
@@ -51,14 +51,10 @@ services:
     depends_on:
       - watchy-api
     volumes:
-      - ../../config/nginx/dev.conf:/etc/nginx/conf.d/default.conf:ro
-      - ../../clocks/static:/static
+      - nginx/prod.conf:/etc/nginx/conf.d/default.conf:ro
+      - clocks/static:/static
     networks:
       - watchy_network
-
-volumes:
-  redis_data:
-  static:
 
 networks:
   watchy_network:

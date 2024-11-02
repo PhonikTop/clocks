@@ -13,7 +13,8 @@ RUN apt update -qq \
         make \
         nano \
         vim \
-        nginx
+        nginx \
+        tree
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
