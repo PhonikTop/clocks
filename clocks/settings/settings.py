@@ -6,8 +6,8 @@ import dj_database_url
 
 from .core import get_env_param_bool, get_env_param_str
 
-SETTINGS_DIR = Path(__file__).resolve().parent
-PROJECT_ROOT = os.path.join(SETTINGS_DIR, "..")
+BASE_DIR = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = BASE_DIR.parent
 
 
 def at_project_root(name):
@@ -17,8 +17,6 @@ def at_project_root(name):
 sys.path.insert(1, PROJECT_ROOT)
 for app_lookup_path in ("clocks",):
     sys.path.insert(1, at_project_root(app_lookup_path))
-
-BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = get_env_param_str("SECRET_KEY", "dev")
 DEBUG = get_env_param_bool("DEBUG", False)
@@ -67,7 +65,7 @@ ROOT_URLCONF = "settings.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [os.path.join(BASE_DIR.parent, "templates/")],
+        "DIRS": [os.path.join(BASE_DIR, "templates")],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -85,7 +83,7 @@ ASGI_APPLICATION = "settings.asgi.application"
 
 DATABASES = {}
 DATABASES["default"] = db = dj_database_url.parse(
-    f"postgres://{get_env_param_str('POSTGRES_USER')}:{get_env_param_str('POSTGRES_PASSWORD')}@watchy_db:5432/{get_env_param_str('POSTGRES_DB')}")
+    f"postgres://{get_env_param_str('POSTGRES_USER')}:{get_env_param_str('POSTGRES_PASSWORD')}@watchy-db:5432/{get_env_param_str('POSTGRES_DB')}")
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -106,7 +104,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("watchy_redis", 6379)],
+            "hosts": [("watchy-redis", 6379)],
         },
     },
 }
@@ -114,7 +112,7 @@ CHANNEL_LAYERS = {
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://watchy_redis:6379/0",
+        "LOCATION": "redis://watchy-redis:6379/0",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
             "DECODE_RESPONSES": True,
@@ -131,6 +129,6 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "/static/"
-STATIC_ROOT = os.path.join(BASE_DIR.parent, "static")
+STATIC_ROOT = os.path.join(PROJECT_ROOT, "static")
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

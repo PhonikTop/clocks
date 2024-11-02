@@ -19,6 +19,6 @@ RUN apt update -qq \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+COPY clocks/ /code/clocks
 
-WORKDIR /Clocks/clocks
+WORKDIR /code/clocks
