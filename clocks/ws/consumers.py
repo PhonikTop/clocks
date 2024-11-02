@@ -2,7 +2,7 @@ import json
 
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
-from django.shortcuts import get_object_or_404
+from django.shortcuts import aget_object_or_404
 from meetings.models import Meeting
 from rooms.models import Room
 
@@ -47,7 +47,7 @@ class BaseConsumer(AsyncWebsocketConsumer):
         return self.scope["url_route"]["kwargs"]["id"]
 
     async def get_object(self, model, **filters):
-        return await database_sync_to_async(get_object_or_404)(model, **filters)
+        return await aget_object_or_404(model, **filters)
 
     async def save_object(self, obj):
         await database_sync_to_async(obj.save)()
