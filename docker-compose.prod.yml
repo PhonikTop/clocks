@@ -52,7 +52,7 @@ services:
     depends_on:
       - watchy-api
     volumes:
-      - ./nginx/dev.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - ./clocks/static:/Clocks/static
     networks:
       - watchy_network
