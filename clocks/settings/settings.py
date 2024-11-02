@@ -83,7 +83,7 @@ ASGI_APPLICATION = "settings.asgi.application"
 
 DATABASES = {}
 DATABASES["default"] = db = dj_database_url.parse(
-    f"postgres://{get_env_param_str('POSTGRES_USER')}:{get_env_param_str('POSTGRES_PASSWORD')}@watchy_db:5432/{get_env_param_str('POSTGRES_DB')}")
+    f"postgres://{get_env_param_str('POSTGRES_USER')}:{get_env_param_str('POSTGRES_PASSWORD')}@watchy-db:5432/{get_env_param_str('POSTGRES_DB')}")
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -104,7 +104,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("watchy_redis", 6379)],
+            "hosts": [("watchy-redis", 6379)],
         },
     },
 }
@@ -112,7 +112,7 @@ CHANNEL_LAYERS = {
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://watchy_redis:6379/0",
+        "LOCATION": "redis://watchy-redis:6379/0",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
             "DECODE_RESPONSES": True,

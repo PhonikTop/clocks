@@ -20,6 +20,5 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY clocks/ /code/clocks
-COPY scripts/ /scripts
 
 WORKDIR /code/clocks
