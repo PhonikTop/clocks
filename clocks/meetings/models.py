@@ -1,7 +1,5 @@
 from django.db import models
 
-from .logic import get_average_score
-
 
 class Meeting(models.Model):
     room = models.ForeignKey(
@@ -21,15 +19,4 @@ class Meeting(models.Model):
         self.active = True
         self.votes = {}
         self.average_score = None
-        self.save()
-
-    def end_meeting(self):
-        self.active = False
-        self.room.current_meeting = None
-        self.room.users = []
-        self.room.save()
-        self.save()
-
-    def get_average_score(self):
-        self.average_score = get_average_score(self.votes)
         self.save()

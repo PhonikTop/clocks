@@ -5,6 +5,8 @@ from rest_framework.generics import (
 )
 from rest_framework.response import Response
 
+from .logic import meeting_results, end_meeting
+
 from .models import Meeting
 from .serializers import (
     MeetingCreateSerializer,
@@ -39,7 +41,7 @@ class EndMeetingView(UpdateAPIView):
         serializer = self.get_serializer(meeting, data=request.data, partial=kwargs.pop("partial", False))
         serializer.is_valid(raise_exception=True)
 
-        meeting.end_meeting()
+        end_meeting(meeting)
         return Response(serializer.data)
 
 
@@ -74,7 +76,7 @@ class MeetingResultsView(UpdateAPIView):
         serializer = self.get_serializer(meeting, data=request.data, partial=kwargs.pop("partial", False))
         serializer.is_valid(raise_exception=True)
 
-        meeting.get_average_score()
+        meeting_results(meeting)
         meeting.save()
 
         return Response(serializer.data)

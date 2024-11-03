@@ -1,6 +1,18 @@
-def get_average_score(votes):
-    valid_votes = list(filter(None, votes.values()))
-    average_score = (
+from django.db import transaction
+
+
+def end_meeting(meeting):
+    meeting.active = False
+    meeting.room.current_meeting = None
+    meeting.room.users = []
+    with transaction.atomic():
+        meeting.room.save()
+        meeting.save()
+
+
+def meeting_results(meeting):
+    valid_votes = list(filter(None, meeting.votes.values()))
+    meeting.average_score = (
         round(sum(map(int, valid_votes)) / len(valid_votes)) if valid_votes else 0
     )
-    return average_score
+    meeting.save()
