@@ -59,4 +59,6 @@ class RoomHistoryView(ListAPIView):
     Получение истории всех завершенных сессий в комнате.
     """
     serializer_class = MeetingHistorySerializer
-    queryset = Meeting.objects.filter(active=False)
+
+    def get_queryset(self):
+        return get_list_or_404(Meeting, room_id=self.kwargs.get("pk"))
