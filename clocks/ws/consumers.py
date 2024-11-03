@@ -82,12 +82,12 @@ class RoomConsumer(BaseConsumer):
         meeting.votes[user_name] = vote
         await self.save_object(meeting)
 
-        filtered_votes = {k: v for k, v in meeting.votes.items() if v is not None}
-        if len(filtered_votes) == len(meeting.votes):
-            meeting.active = False
-            await self.save_object(meeting)  # Use async wrapper here
-
-            return meeting.votes
+        # filtered_votes = {k: v for k, v in meeting.votes.items() if v is not None}
+        # if len(filtered_votes) == len(meeting.votes):
+        #     meeting.active = False
+        #     await self.save_object(meeting)
+        #
+        #     return meeting.votes
 
         return {"voted": f"{user_name}"}
 
