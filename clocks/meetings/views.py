@@ -1,9 +1,9 @@
-from rest_framework.exceptions import ValidationError
 from rest_framework.generics import (
     CreateAPIView,
     RetrieveAPIView,
     UpdateAPIView,
 )
+from rest_framework.response import Response
 
 from .models import Meeting
 from .serializers import (
@@ -34,22 +34,30 @@ class EndMeetingView(UpdateAPIView):
     queryset = Meeting.objects.select_related("room").filter(active=True)
     serializer_class = MeetingRemoveSerializer
 
-    def perform_update(self, request, *args, **kwargs):
+    def update(self, request, *args, **kwargs):
         meeting = self.get_object()
+        serializer = self.get_serializer(meeting, data=request.data, partial=kwargs.pop("partial", False))
+        serializer.is_valid(raise_exception=True)
+
         meeting.end_meeting()
+        return Response(serializer.data)
 
 
 class RestartMeetingView(UpdateAPIView):
     queryset = Meeting.objects.all()
     serializer_class = MeetingRemoveSerializer
 
-    def perform_update(self, request, *args, **kwargs):
+    def update(self, request, *args, **kwargs):
         meeting = self.get_object()
+        serializer = self.get_serializer(meeting, data=request.data, partial=kwargs.pop("partial", False))
+        serializer.is_valid(raise_exception=True)
 
         meeting.reset_to_default()
         if not meeting.room.current_meeting:
             meeting.room.current_meeting = meeting
             meeting.room.save()
+
+        return Response(serializer.data)
 
 
 class UpdateMeetingTaskView(UpdateAPIView):
@@ -61,7 +69,12 @@ class MeetingResultsView(UpdateAPIView):
     queryset = Meeting.objects.all()
     serializer_class = MeetingResultsSerializer
 
-    def perform_update(self, request, *args, **kwargs):
+    def update(self, request, *args, **kwargs):
         meeting = self.get_object()
+        serializer = self.get_serializer(meeting, data=request.data, partial=kwargs.pop("partial", False))
+        serializer.is_valid(raise_exception=True)
+
         meeting.get_average_score()
         meeting.save()
+
+        return Response(serializer.data)
