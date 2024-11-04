@@ -45,7 +45,7 @@ class JoinRoomView(GenericAPIView):
 
         save_new_client_to_cache(token, nickname, role)
 
-        room.participants.append({token: role})
+        room.participants[token] = role
         room.current_meeting.votes[token] = None
         room.save(update_fields=["participants", "current_meeting"])
 

@@ -74,7 +74,7 @@ class RoomConsumer(BaseConsumer):
         meeting = await self.get_object(Meeting, room=self.lookup_id, active=True)
         room = await self.get_object(Room, id=self.lookup_id)
 
-        if not any(user_name in d for d in room.participants):
+        if user_name not in room.participants:
             return {"error": "Participant doesn't exist"}
         if meeting.votes.get(user_name) is not None:
             return {"error": "Participant already voted"}
