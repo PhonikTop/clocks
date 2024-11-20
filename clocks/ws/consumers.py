@@ -1,8 +1,10 @@
 import json
 
+from asgiref.sync import sync_to_async
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
 from django.shortcuts import aget_object_or_404
+from meetings.logic import meeting_results
 from meetings.models import Meeting
 from rooms.models import Room
 
@@ -82,12 +84,11 @@ class RoomConsumer(BaseConsumer):
         meeting.votes[user_name] = vote
         await self.save_object(meeting)
 
-        # filtered_votes = {k: v for k, v in meeting.votes.items() if v is not None}
-        # if len(filtered_votes) == len(meeting.votes):
-        #     meeting.active = False
-        #     await self.save_object(meeting)
-        #
-        #     return meeting.votes
+        if len(room.participants) == len(meeting.votes):
+            await sync_to_async(meeting_results)(meeting)
+            await self.save_object(meeting)
+
+            return {"votes": meeting.votes, "average_score": meeting.average_score}
 
         return {"voted": f"{user_name}"}
 
