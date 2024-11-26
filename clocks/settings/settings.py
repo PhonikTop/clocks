@@ -82,8 +82,7 @@ WSGI_APPLICATION = "settings.wsgi.application"
 ASGI_APPLICATION = "settings.asgi.application"
 
 DATABASES = {}
-DATABASES["default"] = db = dj_database_url.parse(
-    f"postgres://{get_env_param_str('POSTGRES_USER')}:{get_env_param_str('POSTGRES_PASSWORD')}@watchy-db:5432/{get_env_param_str('POSTGRES_DB')}")
+DATABASES["default"] = db = dj_database_url.parse(get_env_param_str("DATABASE_URL"))
 
 AUTH_PASSWORD_VALIDATORS = [
     {

@@ -1,11 +1,11 @@
 import os
 
 
-def get_env_param_str(param_name, default_param_str=None, raise_exception=True):
+def get_env_param_str(param_name, default_param_str=None, raise_exception=True) -> str:
     param_str = os.environ.get(param_name) or default_param_str
     if param_str is None and raise_exception:
         raise EnvironmentError(f"Incorrect env param: {param_name}")
-    return param_str
+    return str(param_str)
 
 
 def get_env_param_bool(param_name, default=None, required=True):
