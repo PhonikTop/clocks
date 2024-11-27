@@ -34,7 +34,10 @@ class JoinRoomView(GenericAPIView):
 
         nickname, role = serializer.validated_data["nickname"], serializer.validated_data["role"]
         cookie = self.request.COOKIES.get("user")
-        token = cookie_decrypt(cookie) if cookie else str(uuid.uuid4())
+        try:
+            token = cookie_decrypt(cookie)
+        except AttributeError:
+            token = str(uuid.uuid4())
 
         response = Response(serializer.data, status=status.HTTP_201_CREATED if cookie is None else status.HTTP_200_OK)
         if cookie is None:
