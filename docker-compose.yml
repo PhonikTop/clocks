@@ -14,7 +14,7 @@ services:
       - watchy-redis
       - watchy-db
     volumes:
-      - ./clocks/static:/Clocks/static
+      - ./clocks/static:/code/clocks/static
     restart: always
     networks:
       - watchy_network
@@ -53,7 +53,7 @@ services:
       - watchy-api
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./clocks/static:/Clocks/static
+      - ./clocks/static:/static
     networks:
       - watchy_network
 
