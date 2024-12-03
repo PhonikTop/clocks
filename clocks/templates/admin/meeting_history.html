@@ -37,11 +37,31 @@
     .button:hover {
         background-color: #0056b3;
     }
+    .pagination {
+        margin: 20px 0;
+        text-align: center;
+    }
+    .pagination a, .pagination span {
+        margin: 0 5px;
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        text-decoration: none;
+        color: #007bff;
+    }
+    .pagination a:hover {
+        background-color: #007bff;
+        color: white;
+    }
+    .pagination .current {
+        font-weight: bold;
+        background-color: #007bff;
+        color: white;
+    }
   </style>
 
   <h1>История голосований для комнаты: {{ room.name }}</h1>
 
-  {% if meetings %}
+  {% if page_obj.object_list %}
     <table>
       <thead>
         <tr>
@@ -54,7 +74,7 @@
         </tr>
       </thead>
       <tbody>
-        {% for meeting in meetings %}
+        {% for meeting in page_obj.object_list %}
           <tr>
             <td>{{ meeting.id }}</td>
             <td>{{ meeting.task_name }}</td>
@@ -72,6 +92,25 @@
         {% endfor %}
       </tbody>
     </table>
+    <div class="pagination">
+      {% if page_obj.has_previous %}
+        <a href="?page=1">Первая</a>
+        <a href="?page={{ page_obj.previous_page_number }}">Назад</a>
+      {% endif %}
+
+      {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}
+          <span class="current">{{ num }}</span>
+        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+          <a href="?page={{ num }}">{{ num }}</a>
+        {% endif %}
+      {% endfor %}
+
+      {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}">Вперед</a>
+        <a href="?page={{ page_obj.paginator.num_pages }}">Последняя</a>
+      {% endif %}
+    </div>
   {% else %}
     <p>Нет собраний для данной комнаты.</p>
   {% endif %}

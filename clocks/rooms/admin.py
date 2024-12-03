@@ -1,5 +1,6 @@
 from django.contrib import admin
-from django.shortcuts import render
+from django.core.paginator import Paginator
+from django.shortcuts import get_object_or_404, render
 from django.urls import path
 from django.utils.safestring import mark_safe
 from meetings.models import Meeting
@@ -21,14 +22,17 @@ class RoomAdmin(admin.ModelAdmin):
 
 
 def meeting_history_view(request, room_id):
-    meetings = Meeting.objects.filter(room=room_id)
+    room = get_object_or_404(Room, id=room_id)
+    meetings = Meeting.objects.filter(room=room).order_by("-created")
 
-    context = {
-        "room": room_id,
-        "meetings": meetings
-    }
+    paginator = Paginator(meetings, 10)  # 10 записей на страницу
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
 
-    return render(request, "admin/meeting_history.html", context)
+    return render(request, "admin/meeting_history.html", {
+        "room": room,
+        "page_obj": page_obj,
+    })
 
 
 def get_urls(self):
