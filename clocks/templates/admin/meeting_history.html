@@ -1,0 +1,28 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+    <h1>История голосований для комнаты "{{ room.name }}"</h1>
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Идентификатор</th>
+                <th>Задача</th>
+                <th>Голоса</th>
+                <th>Средний балл</th>
+                <th>Дата создания</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for meeting in meetings %}
+                <tr>
+                    <td>{{ meeting.id }}</td>
+                    <td>{{ meeting.task_name }}</td>
+                    <td>{{ meeting.votes }}</td>
+                    <td>{{ meeting.average_score }}</td>
+                    <td>{{ meeting.created }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

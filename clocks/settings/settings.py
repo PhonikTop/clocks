@@ -27,7 +27,6 @@ ALLOWED_HOSTS = ["*"]
 # Application definition
 DJANGO_APPS = [
     "django.contrib.contenttypes",
-    "grappelli.dashboard",
     "grappelli",
     "django.contrib.admin",
     "django.contrib.auth",
