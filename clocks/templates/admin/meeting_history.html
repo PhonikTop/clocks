@@ -1,28 +1,80 @@
 {% extends "admin/base_site.html" %}
 
 {% block content %}
-    <h1>История голосований для комнаты "{{ room.name }}"</h1>
+  <style>
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0;
+        font-size: 16px;
+        text-align: left;
+    }
+    table th, table td {
+        padding: 12px;
+        border: 1px solid #ddd;
+    }
+    table thead th {
+        background-color: #f4f4f4;
+        font-weight: bold;
+    }
+    ul {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+    ul li {
+        padding: 2px 0;
+    }
+    .button {
+        display: inline-block;
+        margin: 20px 0;
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        text-decoration: none;
+        border-radius: 4px;
+    }
+    .button:hover {
+        background-color: #0056b3;
+    }
+  </style>
 
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Идентификатор</th>
-                <th>Задача</th>
-                <th>Голоса</th>
-                <th>Средний балл</th>
-                <th>Дата создания</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for meeting in meetings %}
-                <tr>
-                    <td>{{ meeting.id }}</td>
-                    <td>{{ meeting.task_name }}</td>
-                    <td>{{ meeting.votes }}</td>
-                    <td>{{ meeting.average_score }}</td>
-                    <td>{{ meeting.created }}</td>
-                </tr>
-            {% endfor %}
-        </tbody>
+  <h1>История голосований для комнаты: {{ room.name }}</h1>
+
+  {% if meetings %}
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Название задачи</th>
+          <th>Голоса</th>
+          <th>Средний балл</th>
+          <th>Создано</th>
+          <th>Обновлено</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for meeting in meetings %}
+          <tr>
+            <td>{{ meeting.id }}</td>
+            <td>{{ meeting.task_name }}</td>
+            <td>
+              <ul>
+                {% for voter, score in meeting.votes.items %}
+                  <li>{{ voter }}: {{ score }}</li>
+                {% endfor %}
+              </ul>
+            </td>
+            <td>{{ meeting.average_score|default:"N/A" }}</td>
+            <td>{{ meeting.created|date:"d M Y H:i" }}</td>
+            <td>{{ meeting.updated|date:"d M Y H:i" }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
     </table>
+  {% else %}
+    <p>Нет собраний для данной комнаты.</p>
+  {% endif %}
+
+  <a href="/admin/rooms/room/" class="button">Вернуться к списку комнат</a>
 {% endblock %}
