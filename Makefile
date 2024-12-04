@@ -1,4 +1,4 @@
-begin: migrate start
+begin: migrate collectstatic start
 
 start:
 	@docker-compose up -d
@@ -22,10 +22,19 @@ migrate:
 	@docker-compose up -d watchy-db
 	@docker-compose run --rm watchy-api python ./manage.py migrate
 
+collectstatic:
+	@docker-compose up -d watchy-db
+	@docker-compose run --rm watchy-api python ./manage.py collectstatic
+
 cli:
 	@docker-compose run --rm watchy-api bash
+
+createsuperuser:
+	@docker-compose run --rm watchy-api python ./manage.py createsuperuser
 
 tail:
 	@docker-compose logs -f
 
-.PHONY: start stop status restart clean build migrate cli tail
+faststart: clean build begin createsuperuser
+
+.PHONY: start stop status restart clean build migrate collectstatic cli createsuperuser tail faststart
