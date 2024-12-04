@@ -72,7 +72,13 @@ class RoomConsumer(BaseConsumer):
         return {k: v for k, v in meeting.votes.items() if v is not None}
 
     async def submit_vote(self, data):
-        user_name, vote = data.get("user_id"), data.get("vote")
+        user_name = data.get("user_id")
+
+        try:
+            vote = int(data.get("vote"))
+        except ValueError:
+            return {"error": "User vote invalid"}
+
         meeting = await self.get_object(Meeting, room=self.lookup_id, active=True)
         room = await self.get_object(Room, id=self.lookup_id)
 
