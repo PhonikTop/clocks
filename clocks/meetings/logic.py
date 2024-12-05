@@ -4,7 +4,7 @@ from django.db import transaction
 def end_meeting(meeting):
     meeting.active = False
     meeting.room.current_meeting = None
-    meeting.room.users = []
+    meeting.room.participants = []
     with transaction.atomic():
         meeting.room.save()
         meeting.save()
