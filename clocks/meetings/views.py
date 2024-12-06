@@ -5,8 +5,7 @@ from rest_framework.generics import (
 )
 from rest_framework.response import Response
 
-from .logic import meeting_results, end_meeting
-
+from .logic import end_meeting, meeting_results
 from .models import Meeting
 from .serializers import (
     MeetingCreateSerializer,

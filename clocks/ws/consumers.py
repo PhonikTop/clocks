@@ -6,6 +6,7 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from django.shortcuts import aget_object_or_404
 from meetings.logic import meeting_results
 from meetings.models import Meeting
+from meetings.redis_client import add_vote, get_votes
 from rooms.models import Room
 
 
@@ -69,7 +70,7 @@ class RoomConsumer(BaseConsumer):
 
     async def refresh_participants(self, _):
         meeting = await self.get_object(Meeting, room=self.lookup_id, active=True)
-        return {k: v for k, v in meeting.votes.items() if v is not None}
+        return meeting.votes
 
     async def submit_vote(self, data):
         user_name = data.get("user_id")
@@ -81,20 +82,20 @@ class RoomConsumer(BaseConsumer):
 
         meeting = await self.get_object(Meeting, room=self.lookup_id, active=True)
         room = await self.get_object(Room, id=self.lookup_id)
+        votes: dict = await sync_to_async(get_votes)(meeting)
 
         if user_name not in room.participants:
             return {"error": "Participant doesn't exist"}
-        if meeting.votes.get(user_name) is not None:
+        if user_name in votes:
             return {"error": "Participant already voted"}
 
-        meeting.votes[user_name] = vote
-        await self.save_object(meeting)
+        votes = await sync_to_async(add_vote)(meeting.id, user_name, vote)
 
-        if len(room.participants) == len(meeting.votes):
+        if len(room.participants) == len(votes):
             await sync_to_async(meeting_results)(meeting)
             await self.save_object(meeting)
 
-            return {"votes": meeting.votes, "average_score": meeting.average_score}
+            return {"votes": votes, "average_score": meeting.average_score}
 
         return {"voted": f"{user_name}"}
 
