@@ -8,6 +8,7 @@ from meetings.logic import meeting_results
 from meetings.models import Meeting
 from meetings.redis_client import add_vote, get_votes
 from rooms.models import Room
+from rooms.redis_client import get_room_participants
 
 
 class BaseConsumer(AsyncWebsocketConsumer):
@@ -81,17 +82,17 @@ class RoomConsumer(BaseConsumer):
             return {"error": "User vote invalid"}
 
         meeting = await self.get_object(Meeting, room=self.lookup_id, active=True)
-        room = await self.get_object(Room, id=self.lookup_id)
+        participants = await sync_to_async(get_room_participants)(self.lookup_id)
         votes: dict = await sync_to_async(get_votes)(meeting)
 
-        if user_name not in room.participants:
+        if user_name not in participants:
             return {"error": "Participant doesn't exist"}
         if user_name in votes:
             return {"error": "Participant already voted"}
 
         votes = await sync_to_async(add_vote)(meeting.id, user_name, vote)
 
-        if len(room.participants) == len(votes):
+        if len(participants) == len(votes):
             await sync_to_async(meeting_results)(meeting)
             await self.save_object(meeting)
 

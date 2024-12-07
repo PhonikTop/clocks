@@ -12,10 +12,5 @@ class RoomNameSerializer(serializers.ModelSerializer):
 class RoomDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Room
-        fields = ["id", "name", "is_active", "participants"]
+        fields = ["id", "name", "is_active"]
 
-
-class RoomParticipantsSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Room
-        fields = ["participants"]

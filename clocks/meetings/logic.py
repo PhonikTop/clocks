@@ -1,11 +1,12 @@
 from django.db import transaction
+from rooms.redis_client import clear_room_participants
 
 from .redis_client import delete_votes, get_votes
 
 
 def end_meeting(meeting):
     meeting.active = False
-    meeting.room.participants = {}
+    clear_room_participants(meeting.room.id)
     with transaction.atomic():
         meeting.room.save()
         meeting.save()

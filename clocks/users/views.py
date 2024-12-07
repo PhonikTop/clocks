@@ -8,6 +8,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.generics import GenericAPIView, RetrieveAPIView
 from rest_framework.response import Response
 from rooms.models import Room
+from rooms.redis_client import add_room_participant
 
 from .redis_client import (
     check_token_in_cache,
@@ -50,9 +51,7 @@ class JoinRoomView(GenericAPIView):
             raise ValidationError({"error": "User exists"})
 
         save_new_client_to_cache(token, nickname, role)
-
-        room.participants[token] = role
-        room.save(update_fields=["participants"])
+        add_room_participant(room.id, token, role)
 
         send_to_room_group(
             room.id,

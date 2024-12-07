@@ -4,16 +4,17 @@ from meetings.serializers import MeetingHistorySerializer
 from rest_framework.generics import (
     CreateAPIView,
     ListAPIView,
-    RetrieveAPIView,
     RetrieveDestroyAPIView,
 )
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from .models import Room
+from .redis_client import get_room_participants
 from .serializers import (
     RoomDetailSerializer,
     RoomNameSerializer,
-    RoomParticipantsSerializer,
 )
 
 
@@ -46,12 +47,18 @@ class RoomDetailView(RetrieveDestroyAPIView):
         return [AllowAny()]
 
 
-class RoomParticipantsView(RetrieveAPIView):
+class RoomParticipantsView(APIView):
     """
     Получение списка участников конкретной комнаты.
     """
-    serializer_class = RoomParticipantsSerializer
-    queryset = Room.objects.all()
+
+    def get(self, request, pk):
+        participants = get_room_participants(pk)
+
+        if not participants:
+            return Response({"detail": "Комната не найдена или нет участников"}, status=404)
+
+        return Response({"participants": participants})
 
 
 class RoomHistoryView(ListAPIView):
