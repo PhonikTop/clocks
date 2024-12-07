@@ -19,4 +19,4 @@ def meeting_results(meeting):
     meeting.votes = votes
     meeting.save()
 
-    delete_votes(meeting)
+    delete_votes(meeting.id)
