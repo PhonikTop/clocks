@@ -10,7 +10,7 @@ from .models import Room
 
 @admin.register(Room)
 class RoomAdmin(admin.ModelAdmin):
-    list_display = ("name", "is_active", "current_meeting", "created", "updated", "view_history")
+    list_display = ("name", "is_active", "created", "updated", "view_history")
     exclude = ("participants",)
 
     # Добавление ссылки на историю голосований

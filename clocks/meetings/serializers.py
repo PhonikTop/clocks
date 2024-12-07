@@ -11,8 +11,8 @@ class MeetingCreateSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         room = data.get("room")
-        if room and room.current_meeting:
-            raise ValidationError({"error": "Room session already exists."})
+        if room and Meeting.objects.filter(room=room, active=True).exists():
+            raise ValidationError({"error": "Room meeting already exists"})
         return data
 
 

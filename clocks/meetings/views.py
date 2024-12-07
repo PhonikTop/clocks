@@ -20,10 +20,8 @@ class StartMeetingView(CreateAPIView):
     serializer_class = MeetingCreateSerializer
 
     def perform_create(self, serializer):
-        room = serializer.validated_data["room"]
-        meeting = serializer.save(room=room, task_name=self.request.data.get("task_name"))
-        room.current_meeting = meeting
-        room.save()
+        serializer.save(room=serializer.validated_data["room"],
+                        task_name=self.request.data.get("task_name"))
 
 
 class GetMeetingView(RetrieveAPIView):
@@ -54,9 +52,6 @@ class RestartMeetingView(UpdateAPIView):
         serializer.is_valid(raise_exception=True)
 
         meeting.reset_to_default()
-        if not meeting.room.current_meeting:
-            meeting.room.current_meeting = meeting
-            meeting.room.save()
 
         return Response(serializer.data)
 

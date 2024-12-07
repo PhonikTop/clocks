@@ -5,7 +5,6 @@ from .redis_client import delete_votes, get_votes
 
 def end_meeting(meeting):
     meeting.active = False
-    meeting.room.current_meeting = None
     meeting.room.participants = {}
     with transaction.atomic():
         meeting.room.save()

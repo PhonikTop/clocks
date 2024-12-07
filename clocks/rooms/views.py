@@ -30,7 +30,7 @@ class RoomListView(ListAPIView):
     Получение списка доступных комнат.
     """
     serializer_class = RoomDetailSerializer
-    queryset = Room.objects.all()
+    queryset = Room.objects.filter(is_active=True)
 
 
 class RoomDetailView(RetrieveDestroyAPIView):

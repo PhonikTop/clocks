@@ -2,6 +2,7 @@ import uuid
 
 from api.api_utils import cookie_decrypt, cookie_encrypt, send_to_room_group
 from django.http import Http404
+from meetings.models import Meeting
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import GenericAPIView, RetrieveAPIView
@@ -26,8 +27,10 @@ class JoinRoomView(GenericAPIView):
     def post(self, request, *args, **kwargs):
         room = self.get_object()
 
-        if not room.current_meeting:
-            raise ValidationError({"error": "In room no active meeting"})
+        current_meeting = Meeting.objects.filter(room=room, active=True).first()
+
+        if not current_meeting:
+            raise ValidationError({"error": "No active meeting in the room"})
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
