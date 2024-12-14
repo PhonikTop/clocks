@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import Room
-from .redis_client import get_room_participants
+from .redis_client import RoomCacheManager
 from .serializers import (
     RoomDetailSerializer,
     RoomNameSerializer,
@@ -53,7 +53,8 @@ class RoomParticipantsView(APIView):
     """
 
     def get(self, request, pk):
-        participants = get_room_participants(pk)
+        room_cache = RoomCacheManager(pk)
+        participants = room_cache.get_room_users()
 
         if not participants:
             return Response({"detail": "Комната не найдена или нет участников"}, status=404)

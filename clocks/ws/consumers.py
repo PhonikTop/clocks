@@ -6,9 +6,8 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from django.shortcuts import aget_object_or_404
 from meetings.logic import meeting_results
 from meetings.models import Meeting
-from meetings.redis_client import add_vote, get_votes
 from rooms.models import Room
-from rooms.redis_client import get_room_participants
+from rooms.redis_client import RoomCacheManager
 
 
 class BaseConsumer(AsyncWebsocketConsumer):
@@ -82,20 +81,21 @@ class RoomConsumer(BaseConsumer):
             return {"error": "User vote invalid"}
 
         meeting = await self.get_object(Meeting, room=self.lookup_id, active=True)
-        participants = await sync_to_async(get_room_participants)(self.lookup_id)
-        votes: dict = await sync_to_async(get_votes)(meeting)
+        room_cache = RoomCacheManager(self.lookup_id)
+        participants = await sync_to_async(room_cache.get_users_by_role)("voter")
+        votes: dict = await sync_to_async(room_cache.get_votes)()
 
         if user_name not in participants:
             return {"error": "Participant doesn't exist"}
         if user_name in votes:
             return {"error": "Participant already voted"}
 
-        votes = await sync_to_async(add_vote)(meeting.id, user_name, vote)
+        await sync_to_async(room_cache.set_vote)(user_name, vote)
 
-        if len(participants) == len(votes):
+        if len(participants) == len(votes) + 1:
+            votes: list = await sync_to_async(room_cache.get_votes)()
+
             await sync_to_async(meeting_results)(meeting)
-            await self.save_object(meeting)
-
             return {"votes": votes, "average_score": meeting.average_score}
 
         return {"voted": f"{user_name}"}

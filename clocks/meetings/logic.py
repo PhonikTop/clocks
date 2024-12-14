@@ -1,22 +1,18 @@
-from django.db import transaction
-from rooms.redis_client import clear_room_participants
-
-from .redis_client import delete_votes, get_votes
+from rooms.redis_client import RoomCacheManager
 
 
 def end_meeting(meeting):
+    meeting_room = RoomCacheManager(meeting.room.id)
     meeting.active = False
-    clear_room_participants(meeting.room.id)
-    with transaction.atomic():
-        meeting.room.save()
-        meeting.save()
+    meeting_room.clear_room()
+    meeting.save()
 
 
 def meeting_results(meeting):
-    votes = get_votes(meeting.id)
-
-    meeting.average_score = round(sum(map(int, votes.values())) / len(votes) or 0)
+    meeting_room = RoomCacheManager(meeting.room.id)
+    votes = meeting_room.get_votes()
+    meeting.average_score = round(
+        sum(item["vote"] for item in votes.values()) / len(votes) or 0
+    )
     meeting.votes = votes
     meeting.save()
-
-    delete_votes(meeting.id)

@@ -1,80 +1,82 @@
 from django.core.cache import cache
 
-DEFAULT_TOKEN_TTL = 60 * 60 * 5
 
+class RoomCacheManager:
+    def __init__(self, room_uuid, ttl=60 * 60 * 5):
+        self.room_key = f"room:{room_uuid}"
+        self.users_key = f"{self.room_key}:users"
+        self.votes_key = f"{self.room_key}:votes"
+        self.ttl = ttl
 
-def add_room_participant(room_id: int, user_uuid: str, role: str) -> None:
-    """
-    Добавляет или обновляет данные пользователя в кеш с указанием TTL.
+    def add_user(self, uuid, role, nickname, vote=None):
+        user_key = f"user:{uuid}:data"
 
-    Args:
-        room_id (int): Уникальный идентификатор комнаты.
-        user_uuid (str): Уникальный идентификатор пользователя (UUID).
-        role (str): Роль пользователя.
+        cache.set(user_key, {"role": role, "nickname": nickname, "vote": vote}, timeout=self.ttl)
 
-    Returns:
-        dict: Обновленный словарь с пользователями, где ключи — UUID пользователей, значения — их роли.
-    """
-    key = f"room_{room_id}"
-    participants = cache.get(key, {})
-    participants[user_uuid] = role
-    cache.set(key, participants, timeout=DEFAULT_TOKEN_TTL)
+        uuids = cache.get(self.users_key, [])
+        uuids.append(uuid)
+        cache.set(self.users_key, uuids, timeout=self.ttl)
 
-    return cache.get(key, {})
+        if vote is not None:
+            votes = cache.get(self.votes_key, {})
+            votes[uuid] = {"nickname": nickname, "vote": vote}
+            cache.set(self.votes_key, votes, timeout=self.ttl)
 
+    def get_user(self, user_uuid):
+        user_key = f"user:{user_uuid}:data"
+        return cache.get(user_key)
 
-def get_room_participants(room_id: int) -> dict:
-    """
-    Получает все голоса для определенного голосования.
+    def remove_user(self, user_uuid):
+        user_key = f"user:{user_uuid}:data"
 
-    Args:
-        room_id (int): Уникальный идентификатор голосования.
+        cache.delete(user_key)
 
-    Returns:
-        dict: Словарь, где ключи — UUID пользователей, значения — их роли.
-              Возвращает пустой словарь, если данных нет.
-    """
-    key = f"room_{room_id}"
-    return cache.get(key, {})
+        uuids = cache.get(self.users_key, [])
+        if uuids and user_uuid in uuids:
+            uuids.remove(user_uuid)
+            cache.set(self.users_key, uuids, timeout=self.ttl)
 
+    def get_room_users(self):
+        uuids = cache.get(self.users_key, [])
+        users_dict = {}
+        for uuid in uuids:
+            user_data = cache.get(f"user:{uuid}:data")
+            users_dict[uuid] = user_data["role"]
+        return users_dict
 
-def clear_room_participants(room_id: int) -> None:
-    """
-    Удаляет данные участников комнаты из кеша.
+    def get_users_by_role(self, role):
+        all_users = self.get_room_users()
+        return [uuid for uuid, user_role in all_users.items() if user_role == role]
 
-    Args:
-        room_id (int): Уникальный идентификатор голосования.
-    """
-    key = f"room_{room_id}"
-    cache.delete(key)
+    def set_vote(self, user_uuid, vote):
+        user_key = f"user:{user_uuid}:data"
+        user_data = cache.get(user_key)
+        if not user_data:
+            raise ValueError("User not found")
 
+        if user_data["role"] != "voter":
+            raise ValueError("User is not allowed to vote")
 
-def delete_participant(room_id: int, user_uuid: str) -> None:
-    """
-    Удаляет данные конкретного пользователя из кеша.
+        user_data["vote"] = vote
+        cache.set(user_key, user_data, timeout=self.ttl)
 
-    Args:
-        room_id (int): Уникальный идентификатор комнаты.
-        user_uuid (str): Уникальный идентификатор пользователя (UUID).
-    """
-    key = f"room_{room_id}"
-    participants = cache.get(key, {})
-    if user_uuid in participants:
-        del participants[user_uuid]
-        cache.set(key, participants, timeout=DEFAULT_TOKEN_TTL)
+        votes = cache.get(self.votes_key, {})
+        votes[user_uuid] = {"nickname": user_data["nickname"], "vote": vote}
+        cache.set(self.votes_key, votes, timeout=self.ttl)
 
+    def get_votes(self):
+        return cache.get(self.votes_key, {})
 
-def get_participant_role(room_id: int, user_uuid: str) -> str:
-    """
-    Возвращает роль определенного участника комнаты.
+    def get_votes_dict(self):
+        votes = cache.get(self.votes_key, {})
+        return {uuid: data["vote"] for uuid, data in votes.items()}
 
-    Args:
-        room_id (int): Уникальный идентификатор комнаты.
-        user_uuid (str): Уникальный идентификатор пользователя (UUID).
+    def clear_votes(self):
+        cache.delete(self.votes_key)
 
-    Returns:
-        str: Роль пользователя. Возвращает пустую строку, если пользователь отсутствует.
-    """
-    key = f"room_{room_id}"
-    participants = cache.get(key, {})
-    return participants.get(user_uuid, "")
+    def clear_room(self):
+        uuids = cache.get(self.users_key, [])
+        for user_uuid in uuids:
+            cache.delete(f"user:{user_uuid}:data")
+        cache.delete(self.users_key)
+        cache.delete(self.votes_key)
