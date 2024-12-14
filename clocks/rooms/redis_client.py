@@ -1,14 +1,36 @@
+from typing import Dict, List, Optional
+
 from django.core.cache import cache
 
 
 class RoomCacheManager:
-    def __init__(self, room_uuid, ttl=60 * 60 * 5):
+    """
+    Менеджер кэша для управления комнатами, пользователями и голосами.
+
+    Ключи в кэше формируются на основе UUID комнаты и пользователей.
+    """
+
+    def __init__(self, room_uuid: str, ttl: int = 60 * 60 * 5):
+        """
+        Инициализация менеджера кэша для конкретной комнаты.
+
+        :param room_uuid: UUID комнаты.
+        :param ttl: Время жизни (в секундах) записей в кэше.
+        """
         self.room_key = f"room:{room_uuid}"
         self.users_key = f"{self.room_key}:users"
         self.votes_key = f"{self.room_key}:votes"
         self.ttl = ttl
 
-    def add_user(self, uuid, role, nickname, vote=None):
+    def add_user(self, uuid: str, role: str, nickname: str, vote: Optional[str] = None) -> None:
+        """
+        Добавляет пользователя в кэш комнаты.
+
+        :param uuid: UUID пользователя.
+        :param role: Роль пользователя.
+        :param nickname: Никнейм пользователя.
+        :param vote: Голос пользователя (если есть).
+        """
         user_key = f"user:{uuid}:data"
 
         cache.set(user_key, {"role": role, "nickname": nickname, "vote": vote}, timeout=self.ttl)
@@ -22,11 +44,22 @@ class RoomCacheManager:
             votes[uuid] = {"nickname": nickname, "vote": vote}
             cache.set(self.votes_key, votes, timeout=self.ttl)
 
-    def get_user(self, user_uuid):
+    def get_user(self, user_uuid: str) -> Optional[Dict[str, Optional[str]]]:
+        """
+        Получает данные пользователя из кэша.
+
+        :param user_uuid: UUID пользователя.
+        :return: Словарь с данными пользователя или None, если пользователь не найден.
+        """
         user_key = f"user:{user_uuid}:data"
         return cache.get(user_key)
 
-    def remove_user(self, user_uuid):
+    def remove_user(self, user_uuid: str) -> None:
+        """
+        Удаляет пользователя из кэша.
+
+        :param user_uuid: UUID пользователя.
+        """
         user_key = f"user:{user_uuid}:data"
 
         cache.delete(user_key)
@@ -36,19 +69,38 @@ class RoomCacheManager:
             uuids.remove(user_uuid)
             cache.set(self.users_key, uuids, timeout=self.ttl)
 
-    def get_room_users(self):
+    def get_room_users(self) -> Dict[str, str]:
+        """
+        Возвращает всех пользователей в комнате с их ролями.
+
+        :return: Словарь с UUID пользователей и их ролями.
+        """
         uuids = cache.get(self.users_key, [])
         users_dict = {}
         for uuid in uuids:
             user_data = cache.get(f"user:{uuid}:data")
-            users_dict[uuid] = user_data["role"]
+            if user_data:
+                users_dict[uuid] = user_data["role"]
         return users_dict
 
-    def get_users_by_role(self, role):
+    def get_users_by_role(self, role: str) -> List[str]:
+        """
+        Получает список UUID пользователей с определённой ролью.
+
+        :param role: Роль пользователей.
+        :return: Список UUID пользователей с указанной ролью.
+        """
         all_users = self.get_room_users()
         return [uuid for uuid, user_role in all_users.items() if user_role == role]
 
-    def set_vote(self, user_uuid, vote):
+    def set_vote(self, user_uuid: str, vote: str) -> None:
+        """
+        Устанавливает голос для пользователя.
+
+        :param user_uuid: UUID пользователя.
+        :param vote: Значение голоса.
+        :raises ValueError: Если пользователь не найден или не имеет права голосовать.
+        """
         user_key = f"user:{user_uuid}:data"
         user_data = cache.get(user_key)
         if not user_data:
@@ -64,17 +116,33 @@ class RoomCacheManager:
         votes[user_uuid] = {"nickname": user_data["nickname"], "vote": vote}
         cache.set(self.votes_key, votes, timeout=self.ttl)
 
-    def get_votes(self):
+    def get_votes(self) -> Dict[str, Dict[str, str]]:
+        """
+        Получает все голоса в комнате.
+
+        :return: Словарь с голосами (UUID пользователя -> данные голоса).
+        """
         return cache.get(self.votes_key, {})
 
-    def get_votes_dict(self):
+    def get_votes_dict(self) -> Dict[str, str]:
+        """
+        Получает все голоса в виде словаря.
+
+        :return: Словарь с голосами (UUID пользователя -> голос).
+        """
         votes = cache.get(self.votes_key, {})
         return {uuid: data["vote"] for uuid, data in votes.items()}
 
-    def clear_votes(self):
+    def clear_votes(self) -> None:
+        """
+        Очищает все голоса в комнате.
+        """
         cache.delete(self.votes_key)
 
-    def clear_room(self):
+    def clear_room(self) -> None:
+        """
+        Полностью очищает данные комнаты, включая пользователей и голоса.
+        """
         uuids = cache.get(self.users_key, [])
         for user_uuid in uuids:
             cache.delete(f"user:{user_uuid}:data")
