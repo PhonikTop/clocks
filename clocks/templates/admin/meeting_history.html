@@ -80,8 +80,8 @@
             <td>{{ meeting.task_name }}</td>
             <td>
               <ul>
-                {% for voter, score in meeting.votes.items %}
-                  <li>{{ voter }}: {{ score }}</li>
+                {% for uuid, user_data in meeting.votes.items %}
+                  <li>{{ user_data.nickname }}: {{ user_data.vote }}</li>
                 {% endfor %}
               </ul>
             </td>
