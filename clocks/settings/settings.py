@@ -20,7 +20,6 @@ for app_lookup_path in ("clocks",):
 
 SECRET_KEY = get_env_param_str("SECRET_KEY", "dev")
 DEBUG = get_env_param_bool("DEBUG", False)
-CRYPT_KEY = get_env_param_str("CRYPT_KEY", "sLQFOqh7b1H2abCWF1mF_Mqm0gNTFGO2-7hMdcqEZdg=")
 
 ALLOWED_HOSTS = ["*"]
 
@@ -98,6 +97,11 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+SESSION_CACHE_ALIAS = "default"
+SESSION_COOKIE_AGE = 60 * 60 * 5
+
+
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
@@ -106,6 +110,14 @@ CHANNEL_LAYERS = {
         },
     },
 }
+
+# REST_FRAMEWORK = {
+#     "DEFAULT_AUTHENTICATION_CLASSES": [
+#         "api.authentication.SessionIDAuthentication",
+#         "rest_framework.authentication.SessionAuthentication",
+#         "rest_framework.authentication.BasicAuthentication",
+#     ],
+# }
 
 CACHES = {
     "default": {

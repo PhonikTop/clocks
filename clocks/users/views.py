@@ -1,6 +1,5 @@
-import uuid
-
-from api.api_utils import cookie_decrypt, cookie_encrypt, send_to_room_group
+from api.api_utils import send_to_room_group
+from api.authentication import SessionIDAuthentication
 from meetings.models import Meeting
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
@@ -16,44 +15,38 @@ class JoinRoomView(GenericAPIView):
     """
     Присоединение пользователя к комнате.
     """
+    authentication_classes = [SessionIDAuthentication]
     serializer_class = UserInputSerializer
     queryset = Room.objects.all()
 
     def post(self, request, *args, **kwargs):
-        room = self.get_object()
-        room_cache = RoomCacheManager(room.id)
-
-        current_meeting = Meeting.objects.filter(room=room, active=True).first()
-
-        if not current_meeting:
-            raise ValidationError({"error": "No active meeting in the room"})
-
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
+        user = request.user
+
         nickname, role = serializer.validated_data["nickname"], serializer.validated_data["role"]
-        cookie = self.request.COOKIES.get("user")
-        try:
-            token = cookie_decrypt(cookie)
-        except AttributeError:
-            token = str(uuid.uuid4())
+        user_uuid = user["uuid"]
 
-        response = Response(serializer.data, status=status.HTTP_201_CREATED if cookie is None else status.HTTP_200_OK)
-        if cookie is None:
-            response.set_cookie("user", value=cookie_encrypt(token), max_age=432000)
+        room = self.get_object()
+        room_cache = RoomCacheManager(room.id)
 
-        if room_cache.get_user(token):
-            raise ValidationError({"error": "User exists"})
+        current_meeting = Meeting.objects.filter(room_id=room.id, active=True).first()
+        if not current_meeting:
+            raise ValidationError({"error": "No active meeting in the room"})
 
-        room_cache.add_user(token, role, nickname)
+        if room_cache.get_user(user_uuid):
+            raise ValidationError({"error": "User already exists in the room"})
+
+        room_cache.add_user(user_uuid, role, nickname)
 
         send_to_room_group(
             room.id,
             {
                 "type": "user_joined",
                 "user": nickname,
-                "role": role
+                "role": role,
             }
         )
 
-        return response
+        return Response({"nickname": nickname, "role": role}, status=status.HTTP_200_OK)

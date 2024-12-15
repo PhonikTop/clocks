@@ -6,7 +6,7 @@ from rest_framework.generics import (
     ListAPIView,
     RetrieveDestroyAPIView,
 )
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -22,7 +22,7 @@ class RoomCreateView(CreateAPIView):
     """
     Создание новой комнаты
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdminUser]
     serializer_class = RoomNameSerializer
 
 
@@ -43,7 +43,7 @@ class RoomDetailView(RetrieveDestroyAPIView):
 
     def get_permissions(self):
         if self.request.method == "DELETE":
-            return [IsAuthenticated()]
+            return [IsAdminUser]
         return [AllowAny()]
 
 
