@@ -1,4 +1,4 @@
-from api.api_utils import send_to_room_group
+from api.api_utils import send_user_joined_message_to_group
 from api.authentication import SessionIDAuthentication
 from meetings.models import Meeting
 from rest_framework import status
@@ -41,13 +41,6 @@ class JoinRoomView(GenericAPIView):
 
         room_cache.add_user(user_uuid, role, nickname)
 
-        send_to_room_group(
-            room.id,
-            {
-                "type": "user_joined",
-                "user": nickname,
-                "role": role,
-            }
-        )
+        send_user_joined_message_to_group(room.id, nickname, role)
 
         return Response({"nickname": nickname, "role": role}, status=status.HTTP_200_OK)
