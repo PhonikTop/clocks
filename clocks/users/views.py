@@ -36,9 +36,6 @@ class JoinRoomView(GenericAPIView):
 
         room_cache = RoomCacheManager(room.id)
 
-        if room_cache.get_user(user_uuid):
-            raise ValidationError({"error": "User already exists in the room"})
-
         room_cache.add_user(user_uuid, role, nickname)
 
         send_user_joined_message_to_group(room.id, nickname, role)

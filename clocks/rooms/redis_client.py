@@ -1,6 +1,7 @@
 from typing import Dict, List, Optional
 
 from django.core.cache import cache
+from rest_framework.exceptions import ValidationError
 
 
 class RoomCacheManager:
@@ -31,6 +32,9 @@ class RoomCacheManager:
         :param nickname: Никнейм пользователя.
         :param vote: Голос пользователя (если есть).
         """
+        if self.get_user(uuid):
+            raise ValidationError({"error": "User already exists in the room"})
+
         user_key = f"user:{uuid}:data"
 
         cache.set(user_key, {"role": role, "nickname": nickname, "vote": vote}, timeout=self.ttl)
