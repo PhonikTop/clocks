@@ -29,11 +29,12 @@ class JoinRoomView(GenericAPIView):
         user_uuid = user["uuid"]
 
         room = self.get_object()
-        room_cache = RoomCacheManager(room.id)
 
         current_meeting = Meeting.objects.filter(room_id=room.id, active=True).first()
         if not current_meeting:
             raise ValidationError({"error": "No active meeting in the room"})
+
+        room_cache = RoomCacheManager(room.id)
 
         if room_cache.get_user(user_uuid):
             raise ValidationError({"error": "User already exists in the room"})
