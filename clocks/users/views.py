@@ -20,19 +20,14 @@ class JoinRoomView(GenericAPIView):
     queryset = Room.objects.all()
 
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+        room = self.get_object()
+        serializer = self.get_serializer(data=request.data, context={"room": room})
         serializer.is_valid(raise_exception=True)
 
         user = request.user
 
         nickname, role = serializer.validated_data["nickname"], serializer.validated_data["role"]
         user_uuid = user["uuid"]
-
-        room = self.get_object()
-
-        current_meeting = Meeting.objects.filter(room_id=room.id, active=True).first()
-        if not current_meeting:
-            raise ValidationError({"error": "No active meeting in the room"})
 
         room_cache = RoomCacheManager(room.id)
 
