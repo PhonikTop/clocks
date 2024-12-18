@@ -37,7 +37,8 @@ class MeetingRemoveSerializer(serializers.ModelSerializer):
 class MeetingResultsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Meeting
-        fields = ["id", "votes", "average_score"]
+        fields = ["id", "votes"]
+        read_only_fields = ["average_score"]
 
 
 class MeetingVotesSerializer(serializers.ModelSerializer):
