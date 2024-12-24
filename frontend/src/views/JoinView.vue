@@ -6,7 +6,7 @@
   </div>
 </template>
 <script>
-import JoinForm from '../components/join/JoinForm.vue'
+import JoinForm from '@/components/join/JoinForm.vue'
 
 export default {
   name: 'HomeView',
@@ -16,9 +16,7 @@ export default {
 }
 </script>
 <style scoped>
-body {
-  font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-}
+@import '@/assets/styles/app.css';
 
 .wrapper {
   display: flex;
