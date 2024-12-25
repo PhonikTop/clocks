@@ -85,7 +85,7 @@ class RoomCacheService(IRoomCacheService):
         for uuid in uuids:
             user_data = cache.get(f"user:{uuid}:data")
             if user_data:
-                users_dict[uuid] = user_data["role"]
+                users_dict[uuid] = {"nickname": user_data["nickname"], "role": user_data["role"]}
         return users_dict
 
     def get_users_by_role(self, role: str) -> List[str]:
