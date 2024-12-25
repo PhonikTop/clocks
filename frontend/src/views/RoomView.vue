@@ -21,6 +21,7 @@ import TotalBlock from '@/components/room/TotalBlock.vue'
 import WaitBlock from '@/components/room/WaitBlock.vue'
 import ObserversWrapper from '@/components/room/ObserversWrapper.vue'
 import UserWrapper from '@/components/room/UserWrapper.vue'
+import api from '@/services/api'
 
 export default {
   name: 'RoomView',
@@ -56,7 +57,16 @@ export default {
           return null
       }
     }
-  }
+  },
+  mounted () {
+    const roomId = this.$route.params.id
+    api.get(`room/${roomId}/participants/`)
+      .then(response => {
+        this.participants = response.data.participants
+      })
+      .catch(error => {
+        console.error('Error fetching participants:', error)
+      })
   }
 }
 </script>
