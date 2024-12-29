@@ -2,23 +2,38 @@
     <div class="start-var">
         <form class="user-form">
             <select name="room_select">
-            <option v-for="room in rooms" :key="room"> {{ room }} </option>
+              <option v-for="room in rooms" :key="room"> {{ room.name }} </option>
             </select>
-            <input id="name" name="nickname" placeholder="Введите имя" type="text" />
+              <input id="name" name="nickname" placeholder="Введите имя" type="text" />
             <div class="obs">
-            <input type="checkbox" name="is_observer" id="observer" />
-            <label for="observer"> Наблюдатель</label>
+              <input type="checkbox" name="is_observer" id="observer" />
+              <label for="observer"> Наблюдатель</label>
             </div>
             <button id="enter">Далее</button>
         </form>
     </div>
 </template>
 <script>
+import api from '@/services/api'
+
 export default {
   data () {
     return {
-      rooms: ['Деньги', 'Улучшение', 'ЫВОФВ', 'Chasiki']
+      rooms: []
     }
+  },
+  methods: {
+    async fetchRooms () {
+      try {
+        const response = await api.get('room/list/')
+        this.rooms = response.data
+      } catch (error) {
+        console.error('Ошибка при загрузке комнат:', error)
+      }
+    }
+  },
+  mounted () {
+    this.fetchRooms()
   }
 }
 </script>
