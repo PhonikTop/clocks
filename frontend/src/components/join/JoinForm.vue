@@ -1,17 +1,19 @@
 <template>
-    <div class="start-var">
-        <form class="user-form">
-            <select name="room_select">
-              <option v-for="room in rooms" :key="room"> {{ room.name }} </option>
-            </select>
-              <input id="name" name="nickname" placeholder="Введите имя" type="text" />
-            <div class="obs">
-              <input type="checkbox" name="is_observer" id="observer" />
-              <label for="observer"> Наблюдатель</label>
-            </div>
-            <button id="enter">Далее</button>
-        </form>
-    </div>
+  <div class="start-var">
+      <form class="user-form">
+          <select v-model="selectedRoom" name="room_select">
+            <option v-for="room in rooms" :key="room.id" :value="room.id">
+              {{ room.name }}
+            </option>
+          </select>
+          <input id="name" name="nickname" placeholder="Введите имя" type="text" v-model="nickname" />
+          <div class="observer">
+            <input type="checkbox" name="is_observer" id="observer" v-model="isObserver" />
+            <label for="observer"> Наблюдатель</label>
+          </div>
+          <button id="enter" type="submit">Далее</button>
+      </form>
+  </div>
 </template>
 <script>
 import api from '@/services/api'
@@ -19,7 +21,10 @@ import api from '@/services/api'
 export default {
   data () {
     return {
-      rooms: []
+      rooms: [],
+      selectedRoom: null,
+      nickname: '',
+      isObserver: false
     }
   },
   methods: {
@@ -43,7 +48,7 @@ export default {
   border: 2.6px solid rgb(21,23,25);
   box-shadow: 0 0 12px rgba(0, 0, 0, 0.5);
   width: 300px;
-  height: 200px;
+  height: auto;
   border-radius: 20px;
   display: flex;
   align-items: center;
@@ -82,7 +87,7 @@ export default {
 
 .user-form button:hover {
   background-color: #333;
-  color:azure;
+  color: azure;
 }
 
 .observer {
