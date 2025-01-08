@@ -1,10 +1,11 @@
 from typing import Dict, List, Optional
 
+from api.interfaces import IRoomCacheService
 from django.core.cache import cache
 from rest_framework.exceptions import ValidationError
 
 
-class RoomCacheManager:
+class RoomCacheService(IRoomCacheService):
     """
     Менеджер кэша для управления комнатами, пользователями и голосами.
 

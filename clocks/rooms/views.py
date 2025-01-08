@@ -10,8 +10,9 @@ from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from rooms.services.room_cache_service import RoomCacheService
+
 from .models import Room
-from .redis_client import RoomCacheManager
 from .serializers import (
     RoomDetailSerializer,
     RoomNameSerializer,
@@ -53,7 +54,7 @@ class RoomParticipantsView(APIView):
     """
 
     def get(self, request, pk):
-        room_cache = RoomCacheManager(pk)
+        room_cache = RoomCacheService(pk)
         participants = room_cache.get_room_users()
 
         if not participants:

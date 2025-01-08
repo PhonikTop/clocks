@@ -1,19 +1,22 @@
-from api.api_utils import send_user_joined_message_to_group
-from api.authentication import SessionIDAuthentication
+import uuid
+
+from api.services.jwt_service import JWTService
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 from rooms.models import Room
-from rooms.redis_client import RoomCacheManager
+from rooms.services.message_senders.django_channel import DjangoChannelMessageSender
+from rooms.services.room_cache_service import RoomCacheService
+from rooms.services.room_message_service import RoomMessageService
 
 from .serializers import UserInputSerializer
+from .services.user_session_service import UserSessionService
 
 
 class JoinRoomView(GenericAPIView):
     """
     Присоединение пользователя к комнате.
     """
-    authentication_classes = [SessionIDAuthentication]
     serializer_class = UserInputSerializer
     queryset = Room.objects.all()
 
@@ -22,15 +25,17 @@ class JoinRoomView(GenericAPIView):
         serializer = self.get_serializer(data=request.data, context={"room": room})
         serializer.is_valid(raise_exception=True)
 
-        user = request.user
-
         nickname, role = serializer.validated_data["nickname"], serializer.validated_data["role"]
-        user_uuid = user["uuid"]
+        user_uuid = str(uuid.uuid4())
 
-        room_cache = RoomCacheManager(room.id)
+        jwt_service = JWTService()
+        room_cache_service = RoomCacheService(room.id)
+        user_session_service = UserSessionService(jwt_service, room_cache_service)
 
-        room_cache.add_user(user_uuid, role, nickname)
+        token = user_session_service.create_user_session(user_uuid, role, nickname)
 
         send_user_joined_message_to_group(room.id, nickname, role)
 
-        return Response({"nickname": nickname, "role": role}, status=status.HTTP_200_OK)
+        room_message_service.notify_user_joined(room.id, nickname, role)
+
+        return Response({"token": token}, status=status.HTTP_200_OK)

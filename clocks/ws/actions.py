@@ -1,7 +1,7 @@
 from asgiref.sync import sync_to_async
 from meetings.logic import meeting_results
 from meetings.models import Meeting
-from rooms.redis_client import RoomCacheManager
+from rooms.services.room_cache_service import RoomCacheService
 
 from .base_action import BaseAction
 from .handlers import ActionHandler
@@ -19,7 +19,7 @@ class SubmitVoteAction(BaseAction):
             return {"error": "Invalid vote format"}
 
         meeting = await self.get_object()
-        room_cache = RoomCacheManager(self.consumer.lookup_id)
+        room_cache = RoomCacheService(self.consumer.lookup_id)
 
         participants, votes = await sync_to_async(
             lambda: (room_cache.get_users_by_role("voter"), room_cache.get_votes())

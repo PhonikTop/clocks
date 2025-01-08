@@ -111,14 +111,6 @@ CHANNEL_LAYERS = {
     },
 }
 
-# REST_FRAMEWORK = {
-#     "DEFAULT_AUTHENTICATION_CLASSES": [
-#         "api.authentication.SessionIDAuthentication",
-#         "rest_framework.authentication.SessionAuthentication",
-#         "rest_framework.authentication.BasicAuthentication",
-#     ],
-# }
-
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
