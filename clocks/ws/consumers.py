@@ -48,5 +48,12 @@ class RoomConsumer(AsyncWebsocketConsumer):
             }
         )
 
+    async def user_joined(self, event):
+        await self.send(text_data=json.dumps({
+            "message": "New player joined.",
+            "nickname": event.get("user", "Unknown user"),
+            "role": event.get("role", "unknown"),
+        }))
+
     async def chat_message(self, event):
         await self.send(text_data=event["message"])
