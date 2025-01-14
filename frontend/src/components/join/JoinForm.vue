@@ -1,6 +1,6 @@
 <template>
   <div class="start-var">
-      <form class="user-form">
+      <form class="user-form" @submit.prevent="joinRoom">
           <select v-model="selectedRoom" name="room_select">
             <option v-for="room in rooms" :key="room.id" :value="room.id">
               {{ room.name }}
@@ -34,6 +34,30 @@ export default {
         this.rooms = response.data
       } catch (error) {
         console.error('Ошибка при загрузке комнат:', error)
+      }
+    },
+    async joinRoom () {
+      if (!this.selectedRoom || !this.nickname.trim()) {
+        alert('Пожалуйста, заполните все поля.')
+        return
+      }
+      const role = this.isObserver ? 'observer' : 'voter'
+      const formData = new FormData()
+      formData.append('nickname', this.nickname)
+      formData.append('role', role)
+
+      try {
+        const response = await api.post(`user/join/${this.selectedRoom}/`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        })
+        const token = response.data.token
+        if (token) {
+          localStorage.setItem('authToken', token)
+        }
+        this.$router.push(`/room/${this.selectedRoom}`)
+      } catch (error) {
+        console.error('Ошибка при присоединении к комнате:', error)
+        alert('Произошла ошибка, попробуйте снова.')
       }
     }
   },
