@@ -1,7 +1,8 @@
 class Room {
-  constructor (conn, participants) {
+  constructor (conn, participants, votes) {
     this.conn = conn
     this.participants = participants
+    this.votes = votes
 
     this.initWebSocket()
   }
@@ -20,7 +21,7 @@ class Room {
       case 'leave_room':
         this.deleteUser(data)
         break
-      case 'make_guess':
+      case 'user_voted':
         this.userGuess(data)
         break
       case 'last_mark':
@@ -44,6 +45,25 @@ class Room {
     const { user_uuid: uuid } = data
     delete this.participants[uuid]
     console.log('Пользователь удален:', uuid)
+  }
+
+  userGuess (data) {
+    const { user } = data
+    this.votes.push(user)
+    console.log(this.votes)
+    console.log(user)
+  }
+
+  userVote (userId, voteValue) {
+    const message = {
+      action: 'submit_vote',
+      user_id: userId,
+      vote: voteValue
+    }
+
+    console.log(JSON.stringify(message))
+
+    this.conn.send(message)
   }
 }
 

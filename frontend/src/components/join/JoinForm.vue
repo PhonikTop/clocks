@@ -51,8 +51,12 @@ export default {
           headers: { 'Content-Type': 'multipart/form-data' }
         })
         const token = response.data.token
+        const userUuid = response.data.user_uuid
         if (token) {
           localStorage.setItem('authToken', token)
+        }
+        if (userUuid) {
+          localStorage.setItem('userUuid', userUuid)
         }
         this.$router.push(`/room/${this.selectedRoom}`)
       } catch (error) {

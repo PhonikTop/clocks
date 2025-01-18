@@ -1,7 +1,9 @@
 <template>
   <div class="content">
     <div class="wrapper">
-      <component :is="activeComponent" v-if="activeComponent" />
+      <component :is="activeComponent" v-if="activeComponent"
+        :room="room"
+      />
       <ObserversWrapper
         v-show="showObserversWrapper"
         :participants="participants"
@@ -41,8 +43,9 @@ export default {
       showObserversWrapper: true,
       showUserWrapper: true,
       participants: {},
-      votes: {},
-      wsClient: null
+      votes: [],
+      wsClient: null,
+      room: null
     }
   },
   computed: {
@@ -75,7 +78,7 @@ export default {
       } catch (error) {
         if (error.response?.status === 403) {
           console.error('Authorization failed:', error)
-          localStorage.removeItem('authToken')
+          localStorage.clear()
           this.$router.push('/')
         } else {
           console.error('Error during authorization check:', error)
@@ -94,7 +97,7 @@ export default {
     async connectWebSocket () {
       const roomId = this.$route.params.id
       this.wsClient = new WebSocketClient(`ws://localhost/ws/room/${roomId}/`) // Замените localhost на ваш реальный адрес
-      this.room = new Room(this.wsClient, this.participants)
+      this.room = new Room(this.wsClient, this.participants, this.votes)
 
       try {
         await this.wsClient.connect()

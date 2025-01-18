@@ -1,12 +1,37 @@
 <template>
-    <div class="guess__block">
-        <label for="guess">Ваша оценка:</label>
-        <div class="guess">
-            <input id="guess" type="text"> ч.
-        </div>
-        <button id="make_guess">ОК</button>
+  <div class="guess__block">
+    <label for="guess">Ваша оценка:</label>
+    <div class="guess">
+      <input v-model="guessValue" id="guess" type="text"> ч.
     </div>
+    <button @click="makeGuess">ОК</button>
+  </div>
 </template>
+
+<script>
+export default {
+  data () {
+    return {
+      guessValue: ''
+    }
+  },
+  props: {
+    room: {
+      type: Object,
+      required: true
+    }
+  },
+  methods: {
+    makeGuess () {
+      const userId = localStorage.getItem('userUuid')
+      const guessValue = this.guessValue
+
+      this.room.userVote(userId, guessValue)
+    }
+  }
+}
+</script>
+
 <style>
 .guess__block label {
   font-size: 1rem;
