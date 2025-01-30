@@ -1,4 +1,5 @@
 from typing import Dict, List, Optional
+from uuid import UUID
 
 from api.interfaces import IRoomCacheService
 from django.core.cache import cache
@@ -24,7 +25,10 @@ class RoomCacheService(IRoomCacheService):
         self.votes_key = f"{self.room_key}:votes"
         self.ttl = ttl
 
-    def add_user(self, uuid: str, role: str, nickname: str, vote: Optional[str] = None) -> None:
+    def _get_user_key(self, uuid: str | UUID) -> str:
+        return f"user:{uuid}:data"
+
+    def add_user(self, uuid: str | UUID, role: UserRoleChoices, nickname: str, vote: Optional[str] = None) -> None:
         """
         Добавляет пользователя в кэш комнаты.
 
@@ -33,10 +37,13 @@ class RoomCacheService(IRoomCacheService):
         :param nickname: Никнейм пользователя.
         :param vote: Голос пользователя (если есть).
         """
-        if self.get_user(uuid):
-            raise ValidationError({"error": "User already exists in the room"})
+        user_uuid = str(uuid)
+        user_key = self._get_user_key(user_uuid)
 
-        user_key = f"user:{uuid}:data"
+        with cache.lock(self.room_key):
+            if self._user_exists(user_uuid):
+                raise ValidationError({"error": "User already exists in the room"})
+
 
         cache.set(user_key, {"role": role, "nickname": nickname, "vote": vote}, timeout=self.ttl)
 
@@ -56,7 +63,8 @@ class RoomCacheService(IRoomCacheService):
         :param user_uuid: UUID пользователя.
         :return: Словарь с данными пользователя или None, если пользователь не найден.
         """
-        user_key = f"user:{user_uuid}:data"
+        user_uuid = str(user_uuid)
+        user_key = self._get_user_key(user_uuid)
         return cache.get(user_key)
 
     def remove_user(self, user_uuid: str) -> None:
@@ -65,7 +73,8 @@ class RoomCacheService(IRoomCacheService):
 
         :param user_uuid: UUID пользователя.
         """
-        user_key = f"user:{user_uuid}:data"
+        user_uuid = str(user_uuid)
+        user_key = self._get_user_key(user_uuid)
 
         cache.delete(user_key)
 
@@ -83,7 +92,7 @@ class RoomCacheService(IRoomCacheService):
         uuids = cache.get(self.users_key, [])
         users_dict = {}
         for uuid in uuids:
-            user_data = cache.get(f"user:{uuid}:data")
+            user_data = cache.get(self._get_user_key(str(uuid)))
             if user_data:
                 users_dict[uuid] = user_data["role"]
         return users_dict
@@ -106,10 +115,14 @@ class RoomCacheService(IRoomCacheService):
         :param vote: Значение голоса.
         :raises ValueError: Если пользователь не найден или не имеет права голосовать.
         """
-        user_key = f"user:{user_uuid}:data"
         user_data = cache.get(user_key)
         if not user_data:
             raise ValueError("User not found")
+        user_uuid = str(user_uuid)
+        user_key = self._get_user_key(user_uuid)
+        user_uuid = str(user_uuid)
+        user_key = self._get_user_key(user_uuid)
+
 
         if user_data["role"] != "voter":
             raise ValueError("User is not allowed to vote")
