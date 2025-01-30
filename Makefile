@@ -12,11 +12,10 @@ status:
 restart: stop start
 
 clean: stop
-ifndef NO_DB_RESET
+ifndef DB_RESET
 	@docker-compose rm --force watchy-db watchy-redis
 endif
 	@docker-compose rm --force watchy-nginx watchy-api
-	@find . -name \*.pyc -delete
 
 build:
 	@docker-compose build
@@ -49,4 +48,4 @@ deploy:
 	@$(MAKE) build
 	@$(MAKE) begin NO_DB_RESET=1
 
-.PHONY: start stop status restart clean build migrate collectstatic cli createsuperuser tail faststart deploy
+.PHONY: start stop status restart clean build migrate collectstatic cli createsuperuser tail faststart deploy   
