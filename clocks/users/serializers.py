@@ -13,11 +13,8 @@ class UserInputSerializer(serializers.Serializer):
 
     def validate(self, data):
         room = self.context.get("room")
-        if not room:
-            raise ValidationError({"error": "Room instance is required in context"})
 
-        current_meeting = Meeting.objects.filter(room_id=room.id, active=True).first()
-        if not current_meeting:
+        if not Meeting.objects.filter(room_id=room.id, active=True).exists():
             raise ValidationError({"error": "No active meeting in the room"})
 
         return data
