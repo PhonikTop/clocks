@@ -8,8 +8,8 @@ from .handlers import ActionHandler
 
 
 class SubmitVoteAction(BaseAction):
-    async def get_queryset(self):
-        return Meeting.objects.filter(room=self.consumer.lookup_id, active=True).select_related()
+    def get_queryset(self):
+        return Meeting.objects.filter(room=self.consumer.lookup_id, active=True)
 
     async def perform_action(self):
         user_id = await self.get_param("user_id")
