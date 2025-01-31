@@ -21,8 +21,12 @@ class SubmitVoteAction(BaseAction):
         meeting = await self.get_object()
         room_cache = RoomCacheService(self.consumer.lookup_id)
 
-        participants, votes = await sync_to_async(
-            lambda: (room_cache.get_users_by_role("voter"), room_cache.get_votes())
+        participants = await sync_to_async(
+            room_cache.get_users_by_role("voter")
+        )()
+
+        votes = await sync_to_async(
+            room_cache.get_votes()
         )()
 
         if user_id not in participants:
