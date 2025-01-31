@@ -18,7 +18,7 @@ class JoinRoomView(GenericAPIView):
     Присоединение пользователя к комнате.
     """
     serializer_class = UserInputSerializer
-    queryset = Room.objects.all()
+    queryset = Room.objects.filter(is_active = True)
 
     def post(self, request, *args, **kwargs):
         room = self.get_object()
