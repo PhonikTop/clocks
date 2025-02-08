@@ -57,7 +57,7 @@ class RoomCacheService(IRoomCacheService):
                 raise ValidationError({"error": "User already exists in the room"})
 
 
-            user_data =  UserData(role, nickname, vote)
+            user_data = UserData(role, nickname, vote)
             cache.set(user_key, user_data.__dict__, timeout=self.ttl)
 
             uuids = cache.get(self.users_key, [])
@@ -153,8 +153,10 @@ class RoomCacheService(IRoomCacheService):
             user_data["vote"] = vote
             cache.set(user_key, user_data, timeout=self.ttl)
 
+            vote_data = VoteData(user_data["nickname"], vote)
+
             votes: Dict[str, VoteData] = cache.get(self.votes_key, {})
-            votes[user_uuid] = {"nickname": user_data["nickname"], "vote": vote}
+            votes[user_uuid] = vote_data
             cache.set(self.votes_key, votes, timeout=self.ttl)
 
     def get_votes(self) -> Dict[str, VoteData]:
