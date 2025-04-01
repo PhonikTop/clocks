@@ -44,7 +44,7 @@ class SubmitVoteAction(BaseAction):
                 "average_score": meeting.average_score,
             }
 
-        return {"status": "Vote recorded", "user": user_id}
+        return {"type": "user_voted", "user": user_id}
 
 
 action_handler = ActionHandler()
