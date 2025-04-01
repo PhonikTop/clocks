@@ -37,6 +37,7 @@ DJANGO_APPS = [
 THIRD_APPS = [
     "channels",
     "rest_framework",
+    "corsheaders",
 ]
 
 LOCAL_APPS = [
@@ -50,6 +51,7 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -121,6 +123,10 @@ CACHES = {
         }
     }
 }
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:8080",
+]
 
 LANGUAGE_CODE = "en-us"
 
