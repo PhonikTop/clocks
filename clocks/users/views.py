@@ -2,6 +2,7 @@ import uuid
 
 from api.services.jwt_service import JWTService
 from rest_framework import status
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 from rooms.models import Room
@@ -40,3 +41,30 @@ class JoinRoomView(GenericAPIView):
         room_message_service.notify_user_joined(room.id, nickname, role)
 
         return Response({"token": token}, status=status.HTTP_200_OK)
+
+class UserInfoView(GenericAPIView):
+    queryset = Room.objects.all()
+
+    def get(self, request, *args, **kwargs):
+
+        auth_header = request.headers.get("Authorization")
+
+        if not auth_header:
+            raise AuthenticationFailed("Токен не предоставлен")
+
+        if not auth_header.startswith("Bearer "):
+            raise AuthenticationFailed("Неверный формат токена")
+
+        token = auth_header.split(" ")[1]
+
+        room = self.get_object()
+
+        jwt_service = JWTService()
+        room_cache_service = RoomCacheService(room.id)
+        user_session_service = UserSessionService(jwt_service, room_cache_service)
+        try:
+            user_data = user_session_service.get_user_session_data(token)
+        except Exception:
+            raise AuthenticationFailed("Token invalid!")
+
+        return Response(user_data, status=status.HTTP_200_OK)
