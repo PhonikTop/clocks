@@ -22,11 +22,11 @@ class SubmitVoteAction(BaseAction):
         room_cache = RoomCacheService(self.consumer.lookup_id)
 
         participants = await sync_to_async(
-            room_cache.get_users_by_role("voter")
-        )()
+            room_cache.get_users_by_role
+        )("voter")
 
         votes = await sync_to_async(
-            room_cache.get_votes()
+            room_cache.get_votes
         )()
 
         if user_id not in participants:
