@@ -22,7 +22,7 @@ class BaseAction:
     async def get_param(self, key, default=None):
         return self.data.get(key, default)
 
-    async def get_queryset(self):
+    def get_queryset(self):
         if self.queryset is not None:
             return self.queryset
         raise NotImplementedError(
@@ -30,7 +30,7 @@ class BaseAction:
         )
 
     async def get_object(self, **filters):
-        queryset = await self.get_queryset()
+        queryset = self.get_queryset()
         return await database_sync_to_async(get_object_or_404)(queryset, **filters)
 
     async def send_message(self, message):
