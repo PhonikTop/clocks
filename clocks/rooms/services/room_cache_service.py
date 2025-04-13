@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from typing import Dict, List, Optional
 from uuid import UUID
 
@@ -7,16 +6,6 @@ from django.core.cache import cache
 from rest_framework.exceptions import ValidationError
 from users.serializers import UserRoleChoices
 
-@dataclass(frozen=True)
-class UserData:
-    role: UserRoleChoices
-    nickname: str
-    vote: Optional[str]
-
-@dataclass(frozen=True)
-class VoteData:
-    nickname: str
-    vote: str
 
 class RoomCacheService(IRoomCacheService):
     """
@@ -57,17 +46,24 @@ class RoomCacheService(IRoomCacheService):
                 raise ValidationError({"error": "User already exists in the room"})
 
 
-            user_data = UserData(role, nickname, vote)
-            cache.set(user_key, user_data.__dict__, timeout=self.ttl)
+            user_data = {
+                "role": role,
+                "nickname": nickname,
+                "vote": vote
+            }
+            cache.set(user_key, user_data, timeout=self.ttl)
 
             uuids = cache.get(self.users_key, [])
             uuids.append(user_uuid)
             cache.set(self.users_key, uuids, timeout=self.ttl)
 
             if vote is not None:
-                votes: Dict[str, VoteData] = cache.get(self.votes_key, {})
-                votes[user_uuid] = VoteData(nickname, vote)
-                cache.set(self.votes_key, {k: v.__dict__ for k, v in votes.items()}, timeout=self.ttl)
+                votes: Dict[str, dict] = cache.get(self.votes_key, {})
+                votes[user_uuid] = {
+                    "nickname": nickname,
+                    "vote": vote
+                }
+                cache.set(self.votes_key, votes, timeout=self.ttl)
 
     def _user_exists(self, user_uuid: str) -> bool:
         """
@@ -79,7 +75,7 @@ class RoomCacheService(IRoomCacheService):
         user_key = self._get_user_key(user_uuid)
         return cache.get(user_key) is not None
 
-    def get_user(self, user_uuid: str | UUID) -> Optional[UserData]:
+    def get_user(self, user_uuid: str | UUID) -> Optional[dict]:
         """
         Получает данные пользователя из кэша.
 
@@ -107,14 +103,14 @@ class RoomCacheService(IRoomCacheService):
                 uuids.remove(user_uuid)
                 cache.set(self.users_key, uuids, timeout=self.ttl)
 
-    def get_room_users(self) -> Dict[str, UserData]:
+    def get_room_users(self) -> Dict[str, dict]:
         """
         Возвращает всех пользователей в комнате с их ролями.
 
         :return: Словарь с UUID пользователей и их данными.
         """
         uuids = cache.get(self.users_key, [])
-        users_dict: Dict[str, UserData] = {}
+        users_dict: Dict[str, dict] = {}
         for uuid in uuids:
             user_data = cache.get(self._get_user_key(str(uuid)))
             if user_data:
@@ -153,13 +149,14 @@ class RoomCacheService(IRoomCacheService):
             user_data["vote"] = vote
             cache.set(user_key, user_data, timeout=self.ttl)
 
-            vote_data = VoteData(user_data["nickname"], vote)
-
-            votes: Dict[str, VoteData] = cache.get(self.votes_key, {})
-            votes[user_uuid] = vote_data
+            votes: Dict[str, dict] = cache.get(self.votes_key, {})
+            votes[user_uuid] = {
+                "nickname": user_data["nickname"],
+                "vote": vote
+            }
             cache.set(self.votes_key, votes, timeout=self.ttl)
 
-    def get_votes(self) -> Dict[str, VoteData]:
+    def get_votes(self) -> Dict[str, dict]:
         """
         Получает все голоса в комнате.
 
