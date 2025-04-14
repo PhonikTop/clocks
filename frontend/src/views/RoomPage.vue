@@ -1,10 +1,12 @@
 <script setup>
+import { onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { computed, reactive, ref } from "vue";
+import { computed, ref } from "vue";
 import VotersList from "@/components/voting/VotersList.vue";
 import ObserversList from "@/components/voting/ObserversList.vue";
 import VotingForm from "@/components/voting/VotingForm.vue";
 import ResultsOverlay from "@/components/voting/ResultsOverlay.vue";
+import useRoom from "@/composables/useRoom";
 
 const route = useRoute();
 const router = useRouter();
@@ -13,12 +15,8 @@ const roomId = computed(() => route.params.room_id);
 const roomState = ref("waiting"); // ['waiting', 'voting', 'waiting_players', 'results']
 
 const taskName = ref("");
-// Mock data
-const participants = reactive({
-  1: { nickname: "User1", role: "voter" },
-  2: { nickname: "User2", role: "voter" },
-  3: { nickname: "Observer1", role: "observer" },
-});
+
+const { participants, fetchParticipants } = useRoom();
 
 const currentUserId = ref("1");
 
@@ -44,6 +42,10 @@ const handleVote = (hours) => {
 };
 
 const leaveRoom = () => router.push({ name: "Login" });
+
+onMounted(async () => {
+  await fetchParticipants(roomId.value);
+});
 </script>
 
 <template>
