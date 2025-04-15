@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted } from "vue";
+import { onMounted, onBeforeMount } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { computed, ref } from "vue";
 import VotersList from "@/components/voting/VotersList.vue";
@@ -7,6 +7,7 @@ import ObserversList from "@/components/voting/ObserversList.vue";
 import VotingForm from "@/components/voting/VotingForm.vue";
 import ResultsOverlay from "@/components/voting/ResultsOverlay.vue";
 import useRoom from "@/composables/useRoom";
+import useUser from "@/composables/useUser";
 
 const route = useRoute();
 const router = useRouter();
@@ -17,7 +18,9 @@ const roomState = ref("waiting"); // ['waiting', 'voting', 'waiting_players', 'r
 const taskName = ref("");
 
 const { participants, fetchParticipants } = useRoom();
+const { error, getCurrentUser } = useUser();
 
+const token = ref(localStorage.getItem("token"));
 const currentUserId = ref("1");
 
 const votes = ref({});
@@ -45,6 +48,13 @@ const leaveRoom = () => router.push({ name: "Login" });
 
 onMounted(async () => {
   await fetchParticipants(roomId.value);
+});
+
+onBeforeMount(async () => {
+  await getCurrentUser(roomId.value, token.value);
+  if (error.value?.status === 403) {
+    router.push({ name: "Login" });
+  }
 });
 </script>
 
