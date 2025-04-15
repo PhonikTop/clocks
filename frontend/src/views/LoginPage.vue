@@ -3,14 +3,19 @@ import { onMounted } from "vue";
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import useRoom from "@/composables/useRoom";
+import useUser from "@/composables/useUser";
 
 const router = useRouter();
 const username = ref("");
+const isObserver = ref(false);
 const roomId = ref("");
 
 const { roomList, fetchRoomList } = useRoom();
+const { joinRoom } = useUser();
 
-const enterRoom = () => {
+const enterRoom = async () => {
+  const role = isObserver.value ? "observer" : "voter";
+  await joinRoom(roomId.value, username.value, role);
   router.push({
     name: "Room",
     params: { room_id: roomId.value },
@@ -38,6 +43,12 @@ onMounted(async () => {
             {{ room.name }}
           </option>
         </select>
+      </div>
+      <div>
+        <label>
+          <input type="checkbox" v-model="isObserver" />
+          Войти как наблюдатель
+        </label>
       </div>
       <button type="submit">Войти</button>
     </form>
