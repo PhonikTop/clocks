@@ -14,6 +14,7 @@ class UserSessionService:
         decoded_data = self.jwt_service.decode_token(token)
         user_uuid = decoded_data["user_uuid"]
         session_data = self.cache_service.get_user(user_uuid)
+        session_data["user_uuid"] = user_uuid
 
         if not session_data:
             raise Exception("Session expired or invalid")
