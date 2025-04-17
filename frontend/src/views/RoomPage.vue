@@ -28,7 +28,9 @@ const currentUserId = ref("1");
 const votes = ref({});
 
 const allVoted = computed(() => {
-  const voters = Object.values(participants).filter((p) => p.role === "voter");
+  const voters = Object.values(participants.value).filter(
+    (p) => p.role === "voter"
+  );
   return Object.keys(votes.value).length === voters.length;
 });
 
