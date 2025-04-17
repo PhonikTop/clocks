@@ -19,11 +19,11 @@ const roomState = ref("waiting"); // ['waiting', 'voting', 'waiting_players', 'r
 const taskName = ref("");
 
 const { participants, fetchParticipants } = useRoom();
-const { error, getCurrentUser } = useUser();
+const { currentUser, error, getCurrentUser } = useUser();
 const { createMeeting } = useMeeting();
 
 const token = ref(localStorage.getItem("token"));
-const currentUserId = ref("1");
+const currentUserId = ref();
 
 const votes = ref({});
 
@@ -60,6 +60,8 @@ onBeforeMount(async () => {
   if (error.value?.status === 403) {
     router.push({ name: "Login" });
   }
+  localStorage.setItem("user_uuid", currentUser.value.user_uuid);
+  currentUserId.value = currentUser.value.user_uuid;
 });
 </script>
 
