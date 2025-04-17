@@ -8,6 +8,7 @@ import VotingForm from "@/components/voting/VotingForm.vue";
 import ResultsOverlay from "@/components/voting/ResultsOverlay.vue";
 import useRoom from "@/composables/useRoom";
 import useUser from "@/composables/useUser";
+import useMeeting from "@/composables/useMeeting";
 
 const route = useRoute();
 const router = useRouter();
@@ -19,6 +20,7 @@ const taskName = ref("");
 
 const { participants, fetchParticipants } = useRoom();
 const { error, getCurrentUser } = useUser();
+const { createMeeting } = useMeeting();
 
 const token = ref(localStorage.getItem("token"));
 const currentUserId = ref("1");
@@ -30,8 +32,9 @@ const allVoted = computed(() => {
   return Object.keys(votes.value).length === voters.length;
 });
 
-const startVoting = () => {
+const startVoting = async () => {
   roomState.value = "voting";
+  await createMeeting(roomId.value, taskName.value);
 };
 
 const handleVote = (hours) => {
