@@ -49,6 +49,18 @@ const handleVote = (hours) => {
   }
 };
 
+const handleRestartMeeting = () => {
+  roomState.value = "voting";
+};
+
+const handleNextMeeting = () => {
+  roomState.value = "waiting";
+};
+
+const handleEndMeeting = () => {
+  router.push({ name: "Login" });
+};
+
 const leaveRoom = () => router.push({ name: "Login" });
 
 onMounted(async () => {
@@ -102,6 +114,11 @@ onBeforeMount(async () => {
     </div>
 
     <!-- Результаты -->
-    <ResultsOverlay v-if="roomState === 'results'" />
+    <ResultsOverlay
+      @restartMeeting="handleRestartMeeting"
+      @nextMeeting="handleNextMeeting"
+      @endMeeting="handleEndMeeting"
+      v-if="roomState === 'results'"
+    />
   </div>
 </template>
