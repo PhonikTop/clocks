@@ -68,6 +68,11 @@ onMounted(async () => {
 });
 
 onBeforeMount(async () => {
+  if (!token.value) {
+    redirectToLogin();
+    return;
+  }
+
   await getCurrentUser(roomId.value, token.value);
   if (error.value?.status === 403) {
     redirectToLogin();
