@@ -1,11 +1,12 @@
 <script setup>
-import { onMounted, onBeforeMount } from "vue";
+import { computed, ref, onBeforeMount } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { computed, ref } from "vue";
+
 import VotersList from "@/components/voting/VotersList.vue";
 import ObserversList from "@/components/voting/ObserversList.vue";
 import VotingForm from "@/components/voting/VotingForm.vue";
 import ResultsOverlay from "@/components/voting/ResultsOverlay.vue";
+
 import useRoom from "@/composables/useRoom";
 import useUser from "@/composables/useUser";
 import useMeeting from "@/composables/useMeeting";
@@ -23,10 +24,9 @@ const { currentUser, error, getCurrentUser } = useUser();
 const { createMeeting } = useMeeting();
 
 const token = ref(localStorage.getItem("token"));
-const currentUserId = ref();
+const currentUserId = ref("");
 
 const votes = ref({});
-
 const allVoted = computed(() => {
   const voters = Object.values(participants.value).filter(
     (p) => p.role === "voter"
