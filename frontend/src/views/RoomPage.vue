@@ -63,10 +63,6 @@ const handleEndMeeting = () => {
 
 const leaveRoom = () => router.push({ name: "Login" });
 
-onMounted(async () => {
-  await fetchParticipants(roomId.value);
-});
-
 onBeforeMount(async () => {
   if (!token.value) {
     redirectToLogin();
@@ -78,8 +74,13 @@ onBeforeMount(async () => {
     redirectToLogin();
     return;
   }
-  localStorage.setItem("user_uuid", currentUser.value.user_uuid);
-  currentUserId.value = currentUser.value.user_uuid;
+
+  if (currentUser.value) {
+    currentUserId.value = currentUser.value.user_uuid;
+    localStorage.setItem("user_uuid", currentUserId.value);
+
+    await fetchParticipants(roomId.value);
+  }
 });
 </script>
 
