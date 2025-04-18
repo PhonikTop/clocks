@@ -20,7 +20,7 @@ const roomState = ref("waiting"); // ['waiting', 'voting', 'waiting_players', 'r
 const taskName = ref("");
 
 const { participants, fetchParticipants } = useRoom();
-const { currentUser, error, getCurrentUser } = useUser();
+const { currentUser, error: userError, getCurrentUser } = useUser();
 const { createMeeting } = useMeeting();
 
 const token = ref(localStorage.getItem("token"));
@@ -74,7 +74,7 @@ onBeforeMount(async () => {
   }
 
   await getCurrentUser(roomId.value, token.value);
-  if (error.value?.status === 403) {
+  if (userError.value?.status === 403) {
     redirectToLogin();
   }
   localStorage.setItem("user_uuid", currentUser.value.user_uuid);
