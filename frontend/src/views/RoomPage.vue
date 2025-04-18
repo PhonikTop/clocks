@@ -31,7 +31,7 @@ const allVoted = computed(() => {
   const voters = Object.values(participants.value).filter(
     (p) => p.role === "voter"
   );
-  return Object.keys(votes.value).length === voters.length;
+  return voters.length > 0 && Object.keys(votes.value).length === voters.length;
 });
 
 const redirectToLogin = () => router.push({ name: "Login" });
@@ -42,13 +42,11 @@ const startVoting = async () => {
 };
 
 const handleVote = (hours) => {
+  if (!currentUserId.value) return;
+
   votes.value[currentUserId.value] = hours;
 
-  if (allVoted.value) {
-    roomState.value = "results";
-  } else {
-    roomState.value = "waiting_players";
-  }
+  roomState.value = allVoted.value ? "results" : "waiting_players";
 };
 
 const handleRestartMeeting = () => {
