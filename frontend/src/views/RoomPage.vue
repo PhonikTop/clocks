@@ -76,6 +76,7 @@ onBeforeMount(async () => {
   await getCurrentUser(roomId.value, token.value);
   if (userError.value?.status === 403) {
     redirectToLogin();
+    return;
   }
   localStorage.setItem("user_uuid", currentUser.value.user_uuid);
   currentUserId.value = currentUser.value.user_uuid;
