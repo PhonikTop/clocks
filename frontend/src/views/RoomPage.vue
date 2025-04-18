@@ -1,10 +1,15 @@
 <script setup>
+import { computed, ref, onBeforeMount } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { computed, reactive, ref } from "vue";
+
 import VotersList from "@/components/voting/VotersList.vue";
 import ObserversList from "@/components/voting/ObserversList.vue";
 import VotingForm from "@/components/voting/VotingForm.vue";
 import ResultsOverlay from "@/components/voting/ResultsOverlay.vue";
+
+import useRoom from "@/composables/useRoom";
+import useUser from "@/composables/useUser";
+import useMeeting from "@/composables/useMeeting";
 
 const route = useRoute();
 const router = useRouter();
@@ -13,37 +18,70 @@ const roomId = computed(() => route.params.room_id);
 const roomState = ref("waiting"); // ['waiting', 'voting', 'waiting_players', 'results']
 
 const taskName = ref("");
-// Mock data
-const participants = reactive({
-  1: { nickname: "User1", role: "voter" },
-  2: { nickname: "User2", role: "voter" },
-  3: { nickname: "Observer1", role: "observer" },
-});
 
-const currentUserId = ref("1");
+const { participants, fetchParticipants } = useRoom();
+const { currentUser, error: userError, getCurrentUser } = useUser();
+const { createMeeting } = useMeeting();
+
+const token = ref(localStorage.getItem("token"));
+const currentUserId = ref("");
 
 const votes = ref({});
-
 const allVoted = computed(() => {
-  const voters = Object.values(participants).filter((p) => p.role === "voter");
-  return Object.keys(votes.value).length === voters.length;
+  const voters = Object.values(participants.value).filter(
+    (p) => p.role === "voter"
+  );
+  return voters.length > 0 && Object.keys(votes.value).length === voters.length;
 });
 
-const startVoting = () => {
+const redirectToLogin = () => router.push({ name: "Login" });
+
+const startVoting = async () => {
   roomState.value = "voting";
+  await createMeeting(roomId.value, taskName.value);
 };
 
 const handleVote = (hours) => {
+  if (!currentUserId.value) return;
+
   votes.value[currentUserId.value] = hours;
 
-  if (allVoted.value) {
-    roomState.value = "results";
-  } else {
-    roomState.value = "waiting_players";
-  }
+  roomState.value = allVoted.value ? "results" : "waiting_players";
+};
+
+const handleRestartMeeting = () => {
+  roomState.value = "voting";
+};
+
+const handleNextMeeting = () => {
+  roomState.value = "waiting";
+};
+
+const handleEndMeeting = () => {
+  redirectToLogin;
 };
 
 const leaveRoom = () => router.push({ name: "Login" });
+
+onBeforeMount(async () => {
+  if (!token.value) {
+    redirectToLogin();
+    return;
+  }
+
+  await getCurrentUser(roomId.value, token.value);
+  if (userError.value?.status === 403) {
+    redirectToLogin();
+    return;
+  }
+
+  if (currentUser.value) {
+    currentUserId.value = currentUser.value.user_uuid;
+    localStorage.setItem("user_uuid", currentUserId.value);
+
+    await fetchParticipants(roomId.value);
+  }
+});
 </script>
 
 <template>
@@ -83,6 +121,11 @@ const leaveRoom = () => router.push({ name: "Login" });
     </div>
 
     <!-- Результаты -->
-    <ResultsOverlay v-if="roomState === 'results'" />
+    <ResultsOverlay
+      @restartMeeting="handleRestartMeeting"
+      @nextMeeting="handleNextMeeting"
+      @endMeeting="handleEndMeeting"
+      v-if="roomState === 'results'"
+    />
   </div>
 </template>

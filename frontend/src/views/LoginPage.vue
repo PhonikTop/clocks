@@ -1,25 +1,30 @@
 <script setup>
+import { onMounted } from "vue";
 import { ref } from "vue";
 import { useRouter } from "vue-router";
+import useRoom from "@/composables/useRoom";
+import useUser from "@/composables/useUser";
 
 const router = useRouter();
 const username = ref("");
+const isObserver = ref(false);
 const roomId = ref("");
 
-const rooms = ref([
-  { id: "1", name: "Room 1" },
-  { id: "2", name: "Room 2" },
-  { id: "3", name: "Room 3" },
-  { id: "4", name: "Room 4" },
-  { id: "5", name: "Room 5" },
-]);
+const { roomList, fetchRoomList } = useRoom();
+const { joinRoom } = useUser();
 
-const enterRoom = () => {
+const enterRoom = async () => {
+  const role = isObserver.value ? "observer" : "voter";
+  await joinRoom(roomId.value, username.value, role);
   router.push({
     name: "Room",
     params: { room_id: roomId.value },
   });
 };
+
+onMounted(async () => {
+  await fetchRoomList();
+});
 </script>
 
 <template>
@@ -34,10 +39,16 @@ const enterRoom = () => {
         <label>ID комнаты:</label>
         <select v-model="roomId" required>
           <option disabled value="">Выберите комнату</option>
-          <option v-for="room in rooms" :key="room.id" :value="room.id">
+          <option v-for="room in roomList" :key="room.id" :value="room.id">
             {{ room.name }}
           </option>
         </select>
+      </div>
+      <div>
+        <label>
+          <input type="checkbox" v-model="isObserver" />
+          Войти как наблюдатель
+        </label>
       </div>
       <button type="submit">Войти</button>
     </form>
