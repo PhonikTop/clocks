@@ -34,6 +34,8 @@ const allVoted = computed(() => {
   return Object.keys(votes.value).length === voters.length;
 });
 
+const redirectToLogin = () => router.push({ name: "Login" });
+
 const startVoting = async () => {
   roomState.value = "voting";
   await createMeeting(roomId.value, taskName.value);
@@ -58,7 +60,7 @@ const handleNextMeeting = () => {
 };
 
 const handleEndMeeting = () => {
-  router.push({ name: "Login" });
+  redirectToLogin;
 };
 
 const leaveRoom = () => router.push({ name: "Login" });
@@ -70,7 +72,7 @@ onMounted(async () => {
 onBeforeMount(async () => {
   await getCurrentUser(roomId.value, token.value);
   if (error.value?.status === 403) {
-    router.push({ name: "Login" });
+    redirectToLogin();
   }
   localStorage.setItem("user_uuid", currentUser.value.user_uuid);
   currentUserId.value = currentUser.value.user_uuid;
