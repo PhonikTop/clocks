@@ -40,6 +40,7 @@ class SubmitVoteAction(BaseAction):
             votes = await sync_to_async(room_cache.get_votes)()
             await sync_to_async(meeting_results)(meeting)
             return {
+                "type": "results",
                 "votes": votes,
                 "average_score": meeting.average_score,
             }
