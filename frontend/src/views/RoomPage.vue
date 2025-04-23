@@ -173,8 +173,15 @@ onMounted(async () => {
 
     <!-- Общая секция участников -->
     <div>
-      <VotersList :participants="participants" :votes="votes" />
-      <ObserversList :participants="participants" />
+      <VotersList
+        :participants="participants"
+        :votes="votes"
+        v-if="roomState !== 'results'"
+      />
+      <ObserversList
+        :participants="participants"
+        v-if="roomState !== 'results'"
+      />
     </div>
 
     <!-- Результаты -->
