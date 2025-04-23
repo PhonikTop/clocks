@@ -186,6 +186,8 @@ onMounted(async () => {
 
     <!-- Результаты -->
     <ResultsOverlay
+      :resultsVotes="resultsVotes"
+      :averageScore="averageScore"
       @restartMeeting="handleRestartMeeting"
       @nextMeeting="handleNextMeeting"
       @endMeeting="handleEndMeeting"
