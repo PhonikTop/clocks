@@ -30,7 +30,7 @@ export default function useRoom() {
 
   const endMeeting = async (meetingId) => {
     try {
-      await api.post(`/meeting/${meetingId}/end`);
+      await api.put(`/meeting/${meetingId}/end`);
     } catch (err) {
       error.value =
         err.response?.data?.message || "Ошибка завершения голосования";
@@ -39,7 +39,9 @@ export default function useRoom() {
 
   const setMeetingTask = async (meetingId, task) => {
     try {
-      await api.post(`/meeting/${meetingId}/task`, task);
+      await api.put(`/meeting/${meetingId}/task`, {
+        task_name: task,
+      });
     } catch (err) {
       error.value = err.response?.data?.message || "Ошибка обновления задачи";
     }
@@ -47,7 +49,7 @@ export default function useRoom() {
 
   const restartMeeting = async (meetingId) => {
     try {
-      const { data } = await api.post(`/meeting/${meetingId}/restart`);
+      const { data } = await api.put(`/meeting/${meetingId}/restart`);
       return data;
     } catch (err) {
       error.value = err.response?.data?.message || "Ошибка перезапуска комнаты";
