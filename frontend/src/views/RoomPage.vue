@@ -58,7 +58,7 @@ const handleNextMeeting = () => {
 };
 
 const handleEndMeeting = () => {
-  redirectToLogin;
+  redirectToLogin();
 };
 
 const leaveRoom = () => router.push({ name: "Login" });
