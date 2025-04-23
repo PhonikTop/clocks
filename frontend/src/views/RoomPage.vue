@@ -19,9 +19,11 @@ const roomId = computed(() => route.params.room_id);
 
 const roomState = ref("waiting"); // ['waiting', 'voting', 'waiting_players', 'results']
 
+const currentMeeting = ref();
 const taskName = ref("");
 
-const { participants, fetchParticipants } = useRoom();
+const { participants, fetchParticipants, currentRoom, fetchRoomDetails } =
+  useRoom();
 const { currentUser, error: userError, getCurrentUser } = useUser();
 const { createMeeting } = useMeeting();
 
@@ -117,6 +119,13 @@ onBeforeMount(async () => {
   if (currentUser.value) {
     currentUserId.value = currentUser.value.user_uuid;
     localStorage.setItem("user_uuid", currentUserId.value);
+
+    await fetchRoomDetails(roomId.value);
+    currentMeeting.value = currentRoom.value.active_meeting_id;
+    localStorage.setItem(
+      "active_meeting_id",
+      currentRoom.value.active_meeting_id
+    );
 
     await fetchParticipants(roomId.value);
   }
