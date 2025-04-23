@@ -25,7 +25,8 @@ const taskName = ref("");
 const { participants, fetchParticipants, currentRoom, fetchRoomDetails } =
   useRoom();
 const { currentUser, error: userError, getCurrentUser } = useUser();
-const { createMeeting } = useMeeting();
+const { createMeeting, endMeeting, restartMeeting } =
+  useMeeting();
 
 const { isConnected, connect, sendMessage, addMessageHandler } =
   useRoomWebSocket(`ws://localhost/ws/room/${roomId.value}/`);
@@ -91,14 +92,17 @@ const sumbitVote = async (vote) => {
 };
 
 const handleRestartMeeting = () => {
+  restartMeeting(currentMeeting.value);
   roomState.value = "voting";
 };
 
 const handleNextMeeting = () => {
+  endMeeting(currentMeeting.value);
   roomState.value = "waiting";
 };
 
 const handleEndMeeting = () => {
+  endMeeting(currentMeeting.value);
   redirectToLogin();
 };
 
