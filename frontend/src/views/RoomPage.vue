@@ -6,6 +6,7 @@ import VotersList from "@/components/voting/VotersList.vue";
 import ObserversList from "@/components/voting/ObserversList.vue";
 import VotingForm from "@/components/voting/VotingForm.vue";
 import ResultsOverlay from "@/components/voting/ResultsOverlay.vue";
+import ConnectionStatus from "@/components/ui/ConnectionStatus.vue";
 
 import useRoom from "@/composables/useRoom";
 import useUser from "@/composables/useUser";
@@ -148,6 +149,7 @@ onMounted(async () => {
 <template>
   <div>
     <header>
+      <ConnectionStatus :status="isConnected" />
       <h1>Комната {{ roomId }}</h1>
       <button @click="leaveRoom">Выйти из комнаты</button>
     </header>
