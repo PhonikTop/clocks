@@ -2,6 +2,8 @@ from asgiref.sync import sync_to_async
 from meetings.logic import meeting_results
 from meetings.models import Meeting
 from rooms.services.room_cache_service import RoomCacheService
+from users.services.user_session_service import UserSessionService
+from api.services.jwt_service import JWTService
 
 from .base_action import BaseAction
 from .handlers import ActionHandler
@@ -12,15 +14,18 @@ class SubmitVoteAction(BaseAction):
         return Meeting.objects.filter(room=self.consumer.lookup_id, active=True)
 
     async def perform_action(self):
-        user_id = await self.get_param("user_id")
+        token = await self.get_param("token")
         try:
             vote = int(await self.get_param("vote"))
         except (ValueError, TypeError):
             return {"error": "Invalid vote format"}
 
         meeting = await self.get_object()
+        jwt_service = JWTService()
         room_cache = RoomCacheService(self.consumer.lookup_id)
+        user_session_service = UserSessionService(jwt_service, room_cache)
 
+        user_id = user_session_service.get_user_session_data(token)["user_uuid"]
         participants = await sync_to_async(
             room_cache.get_users_by_role
         )("voter")

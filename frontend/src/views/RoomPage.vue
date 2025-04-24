@@ -94,7 +94,7 @@ const sumbitVote = async (vote) => {
   await sendMessage({
     action: "submit_vote",
     vote: `${vote}`,
-    user_id: currentUserId.value,
+    token: token.value,
   });
 };
 
