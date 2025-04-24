@@ -6,6 +6,8 @@ import VotersList from "@/components/voting/VotersList.vue";
 import ObserversList from "@/components/voting/ObserversList.vue";
 import VotingForm from "@/components/voting/VotingForm.vue";
 import ResultsOverlay from "@/components/voting/ResultsOverlay.vue";
+import ConnectionStatus from "@/components/ui/ConnectionStatus.vue";
+import ChangeTaskForm from "@/components/voting/ChangeTaskForm.vue";
 
 import useRoom from "@/composables/useRoom";
 import useUser from "@/composables/useUser";
@@ -25,7 +27,7 @@ const taskName = ref("");
 const { participants, fetchParticipants, currentRoom, fetchRoomDetails } =
   useRoom();
 const { currentUser, error: userError, getCurrentUser } = useUser();
-const { createMeeting, endMeeting, restartMeeting } =
+const { createMeeting, endMeeting, restartMeeting, setMeetingTask } =
   useMeeting();
 
 const { isConnected, connect, sendMessage, addMessageHandler } =
@@ -46,6 +48,11 @@ const resultsVotes = ref({});
 const averageScore = ref();
 
 const redirectToLogin = () => router.push({ name: "Login" });
+
+const updateMeetingTaskName = async (newName) => {
+  taskName.value = newName;
+  await setMeetingTask(currentMeeting.value, taskName.value);
+};
 
 const startVoting = async () => {
   roomState.value = "voting";
@@ -148,6 +155,7 @@ onMounted(async () => {
 <template>
   <div>
     <header>
+      <ConnectionStatus :status="isConnected" />
       <h1>Комната {{ roomId }}</h1>
       <button @click="leaveRoom">Выйти из комнаты</button>
     </header>
@@ -166,6 +174,7 @@ onMounted(async () => {
 
     <!-- Состояние: Голосование -->
     <div v-if="roomState === 'voting'">
+      <ChangeTaskForm @roomNameUpdated="updateMeetingTaskName" />
       <VotingForm @vote="handleVote" />
     </div>
 
