@@ -19,11 +19,14 @@ const roomId = computed(() => route.params.room_id);
 
 const roomState = ref("waiting"); // ['waiting', 'voting', 'waiting_players', 'results']
 
+const currentMeeting = ref();
 const taskName = ref("");
 
-const { participants, fetchParticipants } = useRoom();
+const { participants, fetchParticipants, currentRoom, fetchRoomDetails } =
+  useRoom();
 const { currentUser, error: userError, getCurrentUser } = useUser();
-const { createMeeting } = useMeeting();
+const { createMeeting, endMeeting, restartMeeting } =
+  useMeeting();
 
 const { isConnected, connect, sendMessage, addMessageHandler } =
   useRoomWebSocket(`ws://localhost/ws/room/${roomId.value}/`);
@@ -89,14 +92,17 @@ const sumbitVote = async (vote) => {
 };
 
 const handleRestartMeeting = () => {
+  restartMeeting(currentMeeting.value);
   roomState.value = "voting";
 };
 
 const handleNextMeeting = () => {
+  endMeeting(currentMeeting.value);
   roomState.value = "waiting";
 };
 
 const handleEndMeeting = () => {
+  endMeeting(currentMeeting.value);
   redirectToLogin();
 };
 
@@ -117,6 +123,13 @@ onBeforeMount(async () => {
   if (currentUser.value) {
     currentUserId.value = currentUser.value.user_uuid;
     localStorage.setItem("user_uuid", currentUserId.value);
+
+    await fetchRoomDetails(roomId.value);
+    currentMeeting.value = currentRoom.value.active_meeting_id;
+    localStorage.setItem(
+      "active_meeting_id",
+      currentRoom.value.active_meeting_id
+    );
 
     await fetchParticipants(roomId.value);
   }
@@ -164,12 +177,21 @@ onMounted(async () => {
 
     <!-- Общая секция участников -->
     <div>
-      <VotersList :participants="participants" :votes="votes" />
-      <ObserversList :participants="participants" />
+      <VotersList
+        :participants="participants"
+        :votes="votes"
+        v-if="roomState !== 'results'"
+      />
+      <ObserversList
+        :participants="participants"
+        v-if="roomState !== 'results'"
+      />
     </div>
 
     <!-- Результаты -->
     <ResultsOverlay
+      :resultsVotes="resultsVotes"
+      :averageScore="averageScore"
       @restartMeeting="handleRestartMeeting"
       @nextMeeting="handleNextMeeting"
       @endMeeting="handleEndMeeting"
