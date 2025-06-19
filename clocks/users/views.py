@@ -36,9 +36,9 @@ class JoinRoomView(GenericAPIView):
         token = user_session_service.create_user_session(user_uuid, role, nickname)
 
         channel_sender = DjangoChannelMessageSender()
-        room_message_service = RoomMessageService(channel_sender)
+        room_message_service = RoomMessageService(room.id, channel_sender, room_cache_service)
 
-        room_message_service.notify_user_joined(room.id, user_uuid, nickname, role)
+        room_message_service.notify_user_joined(user_uuid)
 
         return Response({"token": token}, status=status.HTTP_200_OK)
 
