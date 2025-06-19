@@ -14,14 +14,21 @@ from .serializers import (
     MeetingResultsSerializer,
     MeetingUpdateSerializer,
 )
+from rooms.services.message_senders.django_channel import DjangoChannelMessageSender
+from rooms.services.room_message_service import RoomMessageService
 
 
 class StartMeetingView(CreateAPIView):
     serializer_class = MeetingCreateSerializer
 
     def perform_create(self, serializer):
-        serializer.save(room=serializer.validated_data["room"],
-                        task_name=self.request.data.get("task_name"))
+        instance = serializer.save(room=serializer.validated_data["room"],
+                                   task_name=self.request.data.get("task_name"))
+
+        channel_sender = DjangoChannelMessageSender()
+        room_message_service = RoomMessageService(instance.room.id, channel_sender)
+
+        room_message_service.notify_meeting_started(instance.id)
 
 
 class GetMeetingView(RetrieveAPIView):
@@ -59,6 +66,13 @@ class RestartMeetingView(UpdateAPIView):
 class UpdateMeetingTaskView(UpdateAPIView):
     queryset = Meeting.objects.all()
     serializer_class = MeetingUpdateSerializer
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        channel_sender = DjangoChannelMessageSender()
+        room_message_service = RoomMessageService(instance.room.id, channel_sender)
+
+        room_message_service.notify_meeting_task_name_changed(instance.task_name)
 
 
 class MeetingResultsView(UpdateAPIView):
