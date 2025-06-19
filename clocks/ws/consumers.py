@@ -1,24 +1,86 @@
 import json
+from urllib.parse import parse_qs
 
 from channels.generic.websocket import AsyncWebsocketConsumer
-from meetings.models import Meeting
+from rooms.models import Room
+from rooms.services.room_message_service import RoomMessageService
+from rooms.services.room_cache_service import RoomCacheService
+from rooms.services.message_senders.django_channel import DjangoChannelMessageSender
+from users.services.user_session_service import UserSessionService
+from api.services.jwt_service import JWTService
+from asgiref.sync import sync_to_async
 
 from .actions import action_handler
-
+from .services.room_online_tracker import RoomOnlineTracker
+from .services.user_channel_tracker import UserChannelTracker
 
 class RoomConsumer(AsyncWebsocketConsumer):
     group_prefix = "room"
 
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._room_cache_service = None
+        self._jwt_service = None
+        self._user_session_service = None
+        self._message_sender = None
+        self._room_message_service = None
+        self.lookup_id = None
+        self.uuid = None
+
+    @property
+    def room_cache(self):
+        if self._room_cache_service is None:
+            self.lookup_id = self.scope["url_route"]["kwargs"]["id"]
+            self._room_cache_service = RoomCacheService(self.lookup_id)
+        return self._room_cache_service
+
+    @property
+    def user_session(self):
+        if self._user_session_service is None:
+            self._jwt_service = JWTService()
+            self._user_session_service = UserSessionService(
+                self._jwt_service,
+                self.room_cache
+            )
+        return self._user_session_service
+
+    @property
+    def message_sender(self):
+        if self._message_sender is None:
+            self._message_sender = DjangoChannelMessageSender()
+        return self._message_sender
+
+    @property
+    def room_message_service(self):
+        if self._room_message_service is None:
+            self._room_message_service = RoomMessageService(
+                self.lookup_id,
+                self.message_sender,
+                self.room_cache
+            )
+        return self._room_message_service
+
     async def connect(self):
         self.lookup_id = await self._get_lookup_id()
-        if self.lookup_id:
-            await self.channel_layer.group_add(self._group_name, self.channel_name)
-            await self.accept()
-        else:
+        self.uuid = await self._get_user_uuid()
+        if not self.lookup_id or not self.uuid:
             await self.close()
+            return
+
+        await self.channel_layer.group_add(self._group_name, self.channel_name)
+        await self.accept()
+
+        UserChannelTracker.add_participant(self.channel_name, self.uuid, self.lookup_id)
+        RoomOnlineTracker.set_user_online(self.uuid, self.lookup_id)
+
+        await sync_to_async(self.room_message_service.send_room_voted_users)()
 
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(self._group_name, self.channel_name)
+        if self.lookup_id or self.uuid:
+            RoomOnlineTracker.set_user_offline(self.uuid, self.lookup_id)
+            UserChannelTracker.remove_participant(self.channel_name)
 
     async def receive(self, text_data):
         try:
@@ -27,7 +89,7 @@ class RoomConsumer(AsyncWebsocketConsumer):
             response = await action_handler.execute(action_name, self, text_data_json)
             await self._send_group_message(response)
         except json.JSONDecodeError:
-            await self._send_group_message({"error": "Invalid JSON format"})
+            await self.send({"error": "Invalid JSON format"})
 
     @property
     def _group_name(self):
@@ -35,9 +97,24 @@ class RoomConsumer(AsyncWebsocketConsumer):
 
     async def _get_lookup_id(self):
         scope_id = self.scope["url_route"]["kwargs"].get("id")
-        if await Meeting.objects.filter(room_id=scope_id, active=True).aexists():
-            return scope_id
+        if await Room.objects.filter(id=scope_id, is_active=True).aexists():
+            return int(scope_id)
         return None
+
+    async def _get_user_uuid(self):
+        query_string = self.scope["query_string"].decode("utf-8", errors="ignore")
+        query_params = parse_qs(query_string)
+        token = query_params.get("token", [None])[0]
+
+        if token is None:
+            return None
+
+        user_data = await sync_to_async(self.user_session.get_user_session_data)(token)
+        uuid_value = user_data["user_uuid"]
+        if not uuid_value:
+            return None
+
+        return uuid_value
 
     async def _send_group_message(self, message):
         await self.channel_layer.group_send(
@@ -51,5 +128,15 @@ class RoomConsumer(AsyncWebsocketConsumer):
     async def user_joined(self, message):
         await self._send_group_message(message)
 
+    async def task_name_changed(self, message):
+        await self._send_group_message(message)
+
+    async def meeting_started(self, message):
+        await self._send_group_message(message)
+
+    async def voted_users_update(self, message):
+        await self._send_group_message(message)
+
     async def chat_message(self, event):
         await self.send(text_data=event["message"])
+
