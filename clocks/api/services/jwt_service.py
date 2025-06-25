@@ -12,7 +12,7 @@ class JWTService(IJWTService):
         self.algorithm = algorithm
 
     def generate_token(self, user_uuid: str) -> str:
-        expiration = datetime.datetime.now(tz=datetime.UTC) + datetime.timedelta(minutes=15)
+        expiration = datetime.datetime.now(tz=datetime.UTC) + datetime.timedelta(hours=5)
         payload = {"user_uuid": user_uuid, "exp": expiration}
         return jwt.encode(payload, self.secret_key, algorithm=self.algorithm)
 
