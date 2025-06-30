@@ -1,9 +1,15 @@
 import axios from "axios";
 
+const csrfToken = document.cookie
+  .split("; ")
+  .find((row) => row.startsWith("csrftoken="))
+  ?.split("=")[1];
+
 const api = axios.create({
-  baseURL: process.env.VUE_APP_API_URL || "http://localhost:80/api/v1/",
+  baseURL: process.env.VUE_APP_API_URL,
   timeout: 20000,
   headers: {
+    "X-CSRFToken": csrfToken,
     "Content-Type": "application/json",
     Accept: "application/json",
   },
