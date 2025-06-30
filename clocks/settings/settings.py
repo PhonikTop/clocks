@@ -13,6 +13,9 @@ PROJECT_ROOT = BASE_DIR.parent
 def at_project_root(name):
     return os.path.normpath(os.path.join(PROJECT_ROOT, name))
 
+def get_list(key, default=None):
+    val = os.getenv(key)
+    return [v.strip() for v in val.split(',')] if val else default or []
 
 sys.path.insert(1, PROJECT_ROOT)
 for app_lookup_path in ("clocks",):
@@ -21,7 +24,7 @@ for app_lookup_path in ("clocks",):
 SECRET_KEY = get_env_param_str("SECRET_KEY", "dev")
 DEBUG = get_env_param_bool("DEBUG", False)
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = get_list("ALLOWED_HOSTS", default=["127.0.0.1", "localhost"])
 
 # Application definition
 DJANGO_APPS = [
