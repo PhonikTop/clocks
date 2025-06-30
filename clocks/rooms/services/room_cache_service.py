@@ -94,14 +94,16 @@ class RoomCacheService(IRoomCacheService):
         """
         user_uuid = str(user_uuid)
         user_key = self._get_user_key(user_uuid)
+        vote = self.get_user(user_uuid)["vote"]
+        if vote is not None:
+            self.remove_user_vote(user_uuid)
 
-        with cache.lock(self.room_key):
-            cache.delete(user_key)
+        cache.delete(user_key)
 
-            uuids = cache.get(self.users_key, [])
-            if uuids and user_uuid in uuids:
-                uuids.remove(user_uuid)
-                cache.set(self.users_key, uuids, timeout=self.ttl)
+        uuids = cache.get(self.users_key, [])
+        if uuids and user_uuid in uuids:
+            uuids.remove(user_uuid)
+            cache.set(self.users_key, uuids, timeout=self.ttl)
 
     def get_room_users(self) -> Dict[str, dict]:
         """
