@@ -25,6 +25,7 @@ SECRET_KEY = get_env_param_str("SECRET_KEY", "dev")
 DEBUG = get_env_param_bool("DEBUG", False)
 
 ALLOWED_HOSTS = get_list("ALLOWED_HOSTS", default=["127.0.0.1", "localhost"])
+CSRF_TRUSTED_ORIGINS = get_list("CSRF_TRUSTED_ORIGINS", default=[])
 
 # Application definition
 DJANGO_APPS = [
