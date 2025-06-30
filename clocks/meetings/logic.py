@@ -1,10 +1,11 @@
 from rooms.services.room_cache_service import RoomCacheService
-
+from ws.services.room_online_tracker import RoomOnlineTracker
 
 def end_meeting(meeting):
     meeting_room = RoomCacheService(meeting.room.id)
     meeting.active = False
     meeting_room.clear_room()
+    RoomOnlineTracker.clean_room_participant(meeting.room.id)
     meeting.save()
 
 
