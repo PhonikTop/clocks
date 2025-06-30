@@ -2,6 +2,9 @@ from typing import Dict
 
 from django.core.cache import cache
 
+from rooms.services.room_message_service import RoomMessageService
+from rooms.services.message_senders.django_channel import DjangoChannelMessageSender
+
 from rooms.services.room_cache_service import RoomCacheService
 
 
@@ -21,19 +24,25 @@ class RoomOnlineTracker:
 
     @classmethod
     def set_user_offline(cls, user_uuid: str, room_id: int) -> None:
+        message_sender = DjangoChannelMessageSender()
+        room_message_service = RoomMessageService(room_id, message_sender)
         room_cache_service = RoomCacheService(room_id)
 
         room_cache_service.transfer_user(user_uuid, f"{room_id}_offline")
         cls._set_user_status(user_uuid, room_id, False)
+        room_message_service.notify_user_offline(user_uuid)
 
     @classmethod
     def set_user_online(cls, user_uuid: str, room_id: int) -> None:
+        message_sender = DjangoChannelMessageSender()
+        room_message_service = RoomMessageService(room_id, message_sender)
         room_cache_service = RoomCacheService(f"{room_id}_offline")
 
         if room_cache_service.get_user(user_uuid) is not None:
             room_cache_service.transfer_user(user_uuid, room_id)
 
         cls._set_user_status(user_uuid, room_id, True)
+        room_message_service.notify_user_online(user_uuid)
 
     @classmethod
     def get_room_participants(cls, room_id: int) -> Dict[str, bool]:
