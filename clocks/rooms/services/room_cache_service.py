@@ -156,6 +156,28 @@ class RoomCacheService(IRoomCacheService):
             }
             cache.set(self.votes_key, votes, timeout=self.ttl)
 
+    def remove_user_vote(self, user_uuid: str | UUID) -> None:
+        """
+        Удаляет голос конкретного пользователя.
+
+        :param user_uuid: UUID пользователя.
+        :raises ValueError: Если пользователь не найден.
+        """
+        user_uuid = str(user_uuid)
+        user_key = self._get_user_key(user_uuid)
+
+        user_data = cache.get(user_key)
+        if not user_data:
+            raise ValueError("User not found")
+
+        if user_data.get("vote") is None:
+            return
+
+        votes: Dict[str, dict] = cache.get(self.votes_key, {})
+        if user_uuid in votes:
+            del votes[user_uuid]
+            cache.set(self.votes_key, votes, timeout=self.ttl)
+
     def get_votes(self) -> Dict[str, dict]:
         """
         Получает все голоса в комнате.
