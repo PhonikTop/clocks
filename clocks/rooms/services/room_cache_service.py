@@ -75,6 +75,23 @@ class RoomCacheService(IRoomCacheService):
         user_key = self._get_user_key(user_uuid)
         return cache.get(user_key) is not None
 
+    def transfer_user(self, user_uuid: str | UUID, target_room_uuid: str | int) -> None:
+        target_room_uuid = str(target_room_uuid)
+        target_service = RoomCacheService(target_room_uuid, ttl=self.ttl)
+
+        user_data = self.get_user(user_uuid)
+        if not user_data:
+            raise ValidationError({"error": "User not found in source room"})
+
+        self.remove_user(user_uuid)
+
+        target_service.add_user(
+            uuid=user_uuid,
+            role=user_data["role"],
+            nickname=user_data["nickname"],
+            vote=user_data.get("vote")
+        )
+
     def get_user(self, user_uuid: str | UUID) -> Optional[dict]:
         """
         Получает данные пользователя из кэша.
