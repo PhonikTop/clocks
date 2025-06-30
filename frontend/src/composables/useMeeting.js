@@ -20,7 +20,7 @@ export default function useRoom() {
 
   const getMeeting = async (meetingId) => {
     try {
-      const { data } = await api.get(`/meeting/${meetingId}/`);
+      const { data } = await api.get(`/meeting/${meetingId}`);
       meetingRoom.value = data;
     } catch (err) {
       error.value =
