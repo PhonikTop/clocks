@@ -5,13 +5,24 @@ export function useRoomWebSocket(url) {
   const error = ref(null);
   const messageHandlers = ref({});
 
+  const reconnectAttempts = ref(0);
+  const maxReconnectAttempts = 5;
+  const reconnectFailed = ref(false);
+
   let socket = null;
+  let reconnectTimer = null;
+  let isActive = true;
 
   const connect = () => {
+    reconnectFailed.value = false;
+
+    if (socket) disconnect();
+
     socket = new WebSocket(url);
 
     socket.onopen = () => {
       isConnected.value = true;
+      reconnectAttempts.value = 0;
     };
 
     socket.onmessage = (event) => {
@@ -38,7 +49,25 @@ export function useRoomWebSocket(url) {
   };
 
   const reconnect = () => {
-    setTimeout(connect, 3000);
+    if (reconnectTimer) {
+      clearTimeout(reconnectTimer);
+      reconnectTimer = null;
+    }
+
+    if (!isActive) return;
+    if (reconnectAttempts.value >= maxReconnectAttempts) {
+      reconnectFailed.value = true;
+      error.value = new Error(
+        `Max reconnect attempts reached (${maxReconnectAttempts})`
+      );
+      return;
+    }
+
+    reconnectAttempts.value++;
+    reconnectTimer = setTimeout(
+      connect,
+      3000 * Math.pow(2, reconnectAttempts.value - 1)
+    );
   };
 
   const sendMessage = (message) => {
@@ -60,19 +89,33 @@ export function useRoomWebSocket(url) {
       socket.close();
       socket = null;
     }
+    if (reconnectTimer) {
+      clearTimeout(reconnectTimer);
+      reconnectTimer = null;
+    }
+  };
+
+  const resetReconnectLimit = () => {
+    reconnectAttempts.value = 0;
+    reconnectFailed.value = false;
   };
 
   onUnmounted(() => {
+    isActive = false;
     disconnect();
   });
 
   return {
     isConnected,
     error,
+    reconnectAttempts,
+    maxReconnectAttempts,
+    reconnectFailed,
     connect,
     disconnect,
     sendMessage,
     addMessageHandler,
     removeMessageHandler,
+    resetReconnectLimit,
   };
 }
