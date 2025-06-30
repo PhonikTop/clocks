@@ -25,6 +25,13 @@ class RoomMessageService:
     def _group_name(self):
         return f"room_{self.room_id}"
 
+    def notify_meeting_restart(self):
+        message = {
+            "type": "meeting_change_status",
+            "status": RoomStatusType.RESTART.value
+        }
+        self.message_sender.send(self._group_name, message)
+
     def notify_user_joined(self, uuid: str) -> str | None:
         """
         Уведомляет о присоединении пользователя к комнате.
