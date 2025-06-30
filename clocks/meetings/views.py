@@ -16,6 +16,7 @@ from .serializers import (
 )
 from rooms.services.message_senders.django_channel import DjangoChannelMessageSender
 from rooms.services.room_message_service import RoomMessageService
+from rooms.services.room_cache_service import RoomCacheService
 
 
 class StartMeetingView(CreateAPIView):
@@ -60,8 +61,10 @@ class RestartMeetingView(UpdateAPIView):
         channel_sender = DjangoChannelMessageSender()
         room_message_service = RoomMessageService(meeting.room.id, channel_sender)
 
+        room_cache_service = RoomCacheService(meeting.room.id)
 
         meeting.reset_to_default()
+        room_cache_service.clear_votes()
 
         room_message_service.notify_meeting_restart()
 
