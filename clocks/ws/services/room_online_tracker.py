@@ -2,6 +2,8 @@ from typing import Dict
 
 from django.core.cache import cache
 
+from rooms.services.room_cache_service import RoomCacheService
+
 
 class RoomOnlineTracker:
     _CACHE_PREFIX = "online"
@@ -19,10 +21,18 @@ class RoomOnlineTracker:
 
     @classmethod
     def set_user_offline(cls, user_uuid: str, room_id: int) -> None:
+        room_cache_service = RoomCacheService(room_id)
+
+        room_cache_service.transfer_user(user_uuid, f"{room_id}_offline")
         cls._set_user_status(user_uuid, room_id, False)
 
     @classmethod
     def set_user_online(cls, user_uuid: str, room_id: int) -> None:
+        room_cache_service = RoomCacheService(f"{room_id}_offline")
+
+        if room_cache_service.get_user(user_uuid) is not None:
+            room_cache_service.transfer_user(user_uuid, room_id)
+
         cls._set_user_status(user_uuid, room_id, True)
 
     @classmethod
@@ -32,9 +42,10 @@ class RoomOnlineTracker:
 
     @classmethod
     def clean_room_participant(cls, room_id: int) -> None:
+        offline_room_cache_service = RoomCacheService(f"{room_id}_offline")
         room_key = cls._make_key(room_id)
-        with cache.lock(room_key):
-            cache.set(room_key, {}, cls._DEFAULT_TTL)
+        offline_room_cache_service.clear_room()
+        cache.set(room_key, {}, cls._DEFAULT_TTL)
 
     @classmethod
     def refresh_ttl(cls, room_id: int) -> None:
