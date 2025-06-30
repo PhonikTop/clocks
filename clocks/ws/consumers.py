@@ -71,16 +71,16 @@ class RoomConsumer(AsyncWebsocketConsumer):
         await self.channel_layer.group_add(self._group_name, self.channel_name)
         await self.accept()
 
-        UserChannelTracker.add_participant(self.channel_name, self.uuid, self.lookup_id)
-        RoomOnlineTracker.set_user_online(self.uuid, self.lookup_id)
+        await sync_to_async(UserChannelTracker.add_participant)(self.channel_name, self.uuid, self.lookup_id)
+        await sync_to_async(RoomOnlineTracker.set_user_online)(self.uuid, self.lookup_id)
 
         await sync_to_async(self.room_message_service.send_room_voted_users)()
 
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(self._group_name, self.channel_name)
         if self.lookup_id or self.uuid:
-            RoomOnlineTracker.set_user_offline(self.uuid, self.lookup_id)
-            UserChannelTracker.remove_participant(self.channel_name)
+            await sync_to_async(RoomOnlineTracker.set_user_offline)(self.uuid, self.lookup_id)
+            await sync_to_async(UserChannelTracker.remove_participant)(self.channel_name)
 
     async def receive(self, text_data):
         try:
