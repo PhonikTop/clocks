@@ -137,6 +137,12 @@ class RoomConsumer(AsyncWebsocketConsumer):
     async def voted_users_update(self, message):
         await self._send_group_message(message)
 
+    async def user_online(self, message):
+        await self._send_group_message(message)
+
+    async def user_offline(self, message):
+        await self._send_group_message(message)
+
     async def chat_message(self, event):
         await self.send(text_data=event["message"])
 
