@@ -57,8 +57,13 @@ class RestartMeetingView(UpdateAPIView):
         meeting = self.get_object()
         serializer = self.get_serializer(meeting, data=request.data, partial=kwargs.pop("partial", False))
         serializer.is_valid(raise_exception=True)
+        channel_sender = DjangoChannelMessageSender()
+        room_message_service = RoomMessageService(meeting.room.id, channel_sender)
+
 
         meeting.reset_to_default()
+
+        room_message_service.notify_meeting_restart()
 
         return Response(serializer.data)
 
