@@ -1,5 +1,5 @@
 from asgiref.sync import sync_to_async
-from meetings.logic import meeting_results
+from meetings.logic import meeting_results, end_meeting_without_clearing_room
 from meetings.models import Meeting
 from rooms.services.room_cache_service import RoomCacheService
 from rooms.services.room_message_service import RoomStatusType
@@ -31,18 +31,16 @@ class SubmitVoteAction(BaseAction):
             room_cache.get_users_by_role
         )("voter")
 
+        if user_id not in participants:
+            return {"error": "Participant not found"}
+
+        await sync_to_async(room_cache.set_vote)(user_id, vote)
+
         votes = await sync_to_async(
             room_cache.get_votes
         )()
 
-        if user_id not in participants:
-            return {"error": "Participant not found"}
-        if user_id in votes:
-            return {"error": "Participant already voted"}
-
-        await sync_to_async(room_cache.set_vote)(user_id, vote)
-
-        if len(participants) == len(votes) + 1:
+        if len(participants) == len(votes):
             votes = await sync_to_async(room_cache.get_votes)()
             await sync_to_async(meeting_results)(meeting)
             return {
