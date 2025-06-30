@@ -9,6 +9,13 @@ def end_meeting(meeting):
     meeting.save()
 
 
+def end_meeting_without_clearing_room(meeting):
+    meeting_room = RoomCacheService(meeting.room.id)
+    meeting.active = False
+    meeting_room.clear_votes()
+    meeting.save()
+
+
 def meeting_results(meeting):
     meeting_room = RoomCacheService(meeting.room.id)
     votes = meeting_room.get_votes()
