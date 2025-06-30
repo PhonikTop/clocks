@@ -53,9 +53,9 @@ class RoomCacheService(IRoomCacheService):
             }
             cache.set(user_key, user_data, timeout=self.ttl)
 
-            uuids = cache.get(self.users_key, [])
-            uuids.append(user_uuid)
-            cache.set(self.users_key, uuids, timeout=self.ttl)
+            uuids = set(cache.get(self.users_key, []))
+            uuids.add(user_uuid)
+            cache.set(self.users_key, list(uuids), timeout=self.ttl)
 
             if vote is not None:
                 votes: Dict[str, dict] = cache.get(self.votes_key, {})
