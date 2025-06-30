@@ -2,6 +2,7 @@ from asgiref.sync import sync_to_async
 from meetings.logic import meeting_results
 from meetings.models import Meeting
 from rooms.services.room_cache_service import RoomCacheService
+from rooms.services.room_message_service import RoomStatusType
 from users.services.user_session_service import UserSessionService
 from api.services.jwt_service import JWTService
 
@@ -52,6 +53,26 @@ class SubmitVoteAction(BaseAction):
 
         return {"type": "user_voted", "user": user_id}
 
+class ChangeMeetingStatus(BaseAction):
+    def get_queryset(self):
+        return Meeting.objects.filter(room=self.consumer.lookup_id, active=True)
+
+    async def perform_action(self):
+        meeting = await self.get_object()
+
+        new_status = await self.get_param("status")
+        if new_status not in [s.value for s in RoomStatusType]:
+            return None
+
+        if new_status == RoomStatusType.NEXT.value:
+            await sync_to_async(end_meeting_without_clearing_room)(meeting)
+
+        return {
+            "type": "meeting_change_status",
+            "status": new_status
+        }
+
 
 action_handler = ActionHandler()
 action_handler.register("submit_vote", SubmitVoteAction)
+action_handler.register("change_meeting_status", ChangeMeetingStatus)

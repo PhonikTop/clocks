@@ -1,8 +1,13 @@
+from enum import Enum
 from typing import Optional
 
 from .message_senders.base import MessageSender
 from .room_cache_service import RoomCacheService
 
+class RoomStatusType(Enum):
+    RESTART = "restart"
+    END = "ended"
+    NEXT = "next"
 
 class RoomMessageService:
     def __init__(self, room_id: int, message_sender: MessageSender, room_cache_service: Optional[RoomCacheService] = None):
