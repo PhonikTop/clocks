@@ -1,51 +1,45 @@
 begin: migrate collectstatic start
 
 start:
-	@docker-compose up -d
+	@docker compose up -d
 
 stop:
-	@docker-compose stop
+	@docker compose stop
 
 status:
-	@docker-compose ps
+	@docker compose ps
 
-restart: stop start
+restart:
+	@docker compose restart
 
 clean: stop
-ifndef DB_RESET
-	@docker-compose rm --force watchy-db watchy-redis
+ifndef KEEP_DB
+	@docker compose rm --force watchy-db watchy-redis
 endif
-	@docker-compose rm --force watchy-nginx watchy-api
+	@docker compose rm --force watchy-nginx watchy-api
 
 build:
-	@docker-compose build
+	@docker compose build
 
 migrate:
-ifndef NO_DB_RESET
-	@docker-compose up -d watchy-db
-	@docker-compose run --rm watchy-api python ./manage.py migrate
+ifndef SKIP_MIGRATE
+	@docker compose up -d watchy-db
+	@docker compose run --rm watchy-api python ./manage.py migrate
 endif
 
 collectstatic:
-ifndef NO_COLLECTSTATIC
-	@docker-compose up -d watchy-db
-	@docker-compose run --rm watchy-api python ./manage.py collectstatic
+ifndef SKIP_COLLECTSTATIC
+	@docker compose up -d watchy-db
+	@docker compose run --rm watchy-api python ./manage.py collectstatic --noinput
 endif
 
-cli:
-	@docker-compose run --rm watchy-api bash
-
 createsuperuser:
-	@docker-compose run --rm watchy-api python ./manage.py createsuperuser
+	@docker compose run --rm watchy-api python ./manage.py createsuperuser --noinput
 
 tail:
-	@docker-compose logs -f
+	@docker compose logs -f
 
-faststart: clean build begin createsuperuser
+faststart: clean build collectstatic migrate start createsuperuser
 
-deploy:
-	@$(MAKE) clean NO_DB_RESET=1
-	@$(MAKE) build
-	@$(MAKE) begin NO_DB_RESET=1
 
-.PHONY: start stop status restart clean build migrate collectstatic cli createsuperuser tail faststart deploy   
+.PHONY: start stop status restart clean build migrate collectstatic cli createsuperuser tail faststart
