@@ -6,7 +6,7 @@
     Создайте файл `clocks.env` со следующим содержимым:
     
     ```env
-    DEBUG=1
+    DEBUG=0
     SECRET_KEY=your-secret-key
     DJANGO_SETTINGS_MODULE=settings.settings
     POSTGRES_USER=your-database-user
