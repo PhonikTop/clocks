@@ -260,3 +260,4 @@ pnpm-debug.log*
 *.njsproj
 *.sln
 *.sw?
+clocks.env
