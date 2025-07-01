@@ -27,10 +27,10 @@ const voters = computed(() =>
       <span class="nickname">{{ participant.nickname }}</span>
       <span
         class="vote-indicator"
-        :class="{ 'has-voted': votes[id] }"
+        :class="{ 'has-voted': votes.includes(id) }"
         aria-label="Статус голосования"
       >
-        {{ votes[id] ? "✓" : "⌛" }}
+        {{ votes.includes(id) ? "✓" : "⌛" }}
       </span>
     </div>
   </div>
