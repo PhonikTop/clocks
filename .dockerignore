@@ -3,7 +3,5 @@ Dockerfile
 docker-compose.prod.yml
 docker-compose.yml
 redis.conf
-clocks.env
-nginx
 pyproject.toml
 static
