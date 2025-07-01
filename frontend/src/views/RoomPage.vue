@@ -27,25 +27,36 @@ const taskName = ref("");
 const { participants, fetchParticipants, currentRoom, fetchRoomDetails } =
   useRoom();
 const { currentUser, error: userError, getCurrentUser } = useUser();
-const { createMeeting, endMeeting, restartMeeting, setMeetingTask } =
-  useMeeting();
-
-const { isConnected, connect, sendMessage, addMessageHandler } =
-  useRoomWebSocket(`ws://localhost/ws/room/${roomId.value}/`);
+const {
+  meetingRoom,
+  getMeeting,
+  createMeeting,
+  endMeeting,
+  restartMeeting,
+  setMeetingTask,
+} = useMeeting();
 
 const token = ref(localStorage.getItem("token"));
 const currentUserId = ref("");
 
-const votes = ref({});
+const { isConnected, connect, sendMessage, addMessageHandler } =
+  useRoomWebSocket(
+    `${process.env.VUE_APP_WS_BASE_URL}room/${roomId.value}/?token=${token.value}`
+  );
+
+const votes = ref([]);
 const allVoted = computed(() => {
   const voters = Object.values(participants.value).filter(
     (p) => p.role === "voter"
   );
-  return voters.length > 0 && Object.keys(votes.value).length === voters.length;
+  return voters.length > 0 && votes.value.length === voters.length;
 });
 
 const resultsVotes = ref({});
 const averageScore = ref();
+
+const userRole = ref();
+const userNickname = ref();
 
 const redirectToLogin = () => router.push({ name: "Login" });
 
@@ -64,7 +75,9 @@ const handleVote = (hours) => {
 
   sumbitVote(hours);
 
-  votes.value[currentUserId.value] = hours;
+  if (!votes.value.includes(currentUserId.value)) {
+    votes.value.push(currentUserId.value);
+  }
 
   roomState.value = allVoted.value ? "results" : "waiting_players";
 };
@@ -79,7 +92,9 @@ const setupHandlers = () => {
   });
 
   addMessageHandler("user_voted", (msg) => {
-    votes.value[msg.user] = 1;
+    if (!votes.value.includes(msg.user)) {
+      votes.value.push(msg.user);
+    }
   });
 
   addMessageHandler("results", (msg) => {
@@ -87,6 +102,35 @@ const setupHandlers = () => {
     resultsVotes.value = msg.votes;
     averageScore.value = msg.average_score;
     console.log(resultsVotes.value);
+  });
+
+  addMessageHandler("task_name_changed", (msg) => {
+    taskName.value = msg.new_task_name;
+  });
+
+  addMessageHandler("meeting_started", async (msg) => {
+    await getMeeting(msg.id);
+    currentMeeting.value = msg.id;
+    localStorage.setItem("active_meeting_id", msg.id);
+    taskName.value = meetingRoom.value.task_name;
+    roomState.value = "voting";
+  });
+
+  addMessageHandler("voted_users_update", (msg) => {
+    votes.value = msg.voted_users;
+  });
+
+  addMessageHandler("meeting_change_status", async (msg) => {
+    if (msg.status == "restart") {
+      roomState.value = "voting";
+      votes.value = [];
+    } else if (msg.status == "next") {
+      roomState.value = "waiting";
+      currentMeeting.value = null;
+      votes.value = [];
+    } else if (msg.status == "ended") {
+      redirectToLogin();
+    }
   });
 };
 
@@ -98,19 +142,25 @@ const sumbitVote = async (vote) => {
   });
 };
 
-const handleRestartMeeting = () => {
-  restartMeeting(currentMeeting.value);
-  roomState.value = "voting";
+const changeMeetingStatus = async (new_status) => {
+  await sendMessage({
+    action: "change_meeting_status",
+    status: `${new_status}`,
+  });
 };
 
-const handleNextMeeting = () => {
-  endMeeting(currentMeeting.value);
-  roomState.value = "waiting";
+const handleRestartMeeting = () => {
+  restartMeeting(currentMeeting.value);
+  changeMeetingStatus("restart");
+};
+
+const handleNextMeeting = async () => {
+  changeMeetingStatus("next");
 };
 
 const handleEndMeeting = () => {
   endMeeting(currentMeeting.value);
-  redirectToLogin();
+  changeMeetingStatus("ended");
 };
 
 const leaveRoom = () => router.push({ name: "Login" });
@@ -129,14 +179,19 @@ onBeforeMount(async () => {
 
   if (currentUser.value) {
     currentUserId.value = currentUser.value.user_uuid;
+    userRole.value = currentUser.value.role;
+    userNickname.value = currentUser.value.nickname;
     localStorage.setItem("user_uuid", currentUserId.value);
 
     await fetchRoomDetails(roomId.value);
-    currentMeeting.value = currentRoom.value.active_meeting_id;
-    localStorage.setItem(
-      "active_meeting_id",
-      currentRoom.value.active_meeting_id
-    );
+    if (currentRoom.value.active_meeting_id != null) {
+      currentMeeting.value = currentRoom.value.active_meeting_id;
+      localStorage.setItem(
+        "active_meeting_id",
+        currentRoom.value.active_meeting_id
+      );
+      roomState.value = "voting";
+    }
 
     await fetchParticipants(roomId.value);
   }
@@ -157,6 +212,7 @@ onMounted(async () => {
     <header>
       <ConnectionStatus :status="isConnected" />
       <h1>Комната {{ roomId }}</h1>
+      <h1 v-if="roomState !== 'waiting'">{{ taskName }}</h1>
       <button @click="leaveRoom">Выйти из комнаты</button>
     </header>
 
