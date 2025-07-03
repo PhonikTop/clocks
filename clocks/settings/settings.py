@@ -42,6 +42,7 @@ THIRD_APPS = [
     "channels",
     "rest_framework",
     "corsheaders",
+    "drf_spectacular"
 ]
 
 LOCAL_APPS = [
@@ -128,9 +129,18 @@ CACHES = {
     }
 }
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8080",
-]
+CORS_ALLOWED_ORIGINS = get_list("CORS_ALLOWED_ORIGINS", default=["127.0.0.1:3000", "localhost:3000"])
+
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Watchy API',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+}
+
 
 LANGUAGE_CODE = "en-us"
 
