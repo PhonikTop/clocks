@@ -1,4 +1,3 @@
-from django.shortcuts import get_list_or_404
 from meetings.models import Meeting
 from meetings.serializers import MeetingHistorySerializer
 from rest_framework.generics import (
@@ -140,13 +139,3 @@ class RoomParticipantsView(APIView):
             return Response({"detail": "Комната не найдена или нет участников"}, status=404)
 
         return Response({"participants": participants})
-
-
-class RoomHistoryView(ListAPIView):
-    """
-    Получение истории всех завершенных сессий в комнате.
-    """
-    serializer_class = MeetingHistorySerializer
-
-    def get_queryset(self):
-        return get_list_or_404(Meeting, room_id=self.kwargs.get("pk"))
