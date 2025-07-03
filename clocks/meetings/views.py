@@ -1,15 +1,17 @@
+from drf_spectacular.utils import (
+    OpenApiExample,
+    OpenApiResponse,
+    extend_schema,
+)
 from rest_framework.generics import (
     CreateAPIView,
     RetrieveAPIView,
     UpdateAPIView,
 )
 from rest_framework.response import Response
-
-from drf_spectacular.utils import (
-    extend_schema,
-    OpenApiResponse,
-    OpenApiExample,
-)
+from rooms.services.message_senders.django_channel import DjangoChannelMessageSender
+from rooms.services.room_cache_service import RoomCacheService
+from rooms.services.room_message_service import RoomMessageService
 
 from .logic import end_meeting, meeting_results
 from .models import Meeting
@@ -20,9 +22,6 @@ from .serializers import (
     MeetingResultsSerializer,
     MeetingUpdateSerializer,
 )
-from rooms.services.message_senders.django_channel import DjangoChannelMessageSender
-from rooms.services.room_message_service import RoomMessageService
-from rooms.services.room_cache_service import RoomCacheService
 
 MEETING_TAG = ["Meetings"]
 
@@ -75,7 +74,7 @@ class GetMeetingView(RetrieveAPIView):
 @extend_schema(
     summary="Завершение встречи",
     description="Завершает активную встречу и отправляет уведомления участникам",
-    methods = ['put'],
+    methods = ["put"],
     request=None,
     responses={
         200: MeetingRemoveSerializer,
@@ -87,7 +86,7 @@ class GetMeetingView(RetrieveAPIView):
 class EndMeetingView(UpdateAPIView):
     queryset = Meeting.objects.select_related("room").filter(active=True)
     serializer_class = MeetingRemoveSerializer
-    http_method_names = ['put']
+    http_method_names = ["put"]
 
     def update(self, request, *args, **kwargs):
         meeting = self.get_object()
@@ -101,7 +100,7 @@ class EndMeetingView(UpdateAPIView):
 @extend_schema(
     summary="Перезапуск встречи",
     description="Сбрасывает состояние встречи, очищает голоса и уведомляет участников",
-    methods = ['put'],
+    methods = ["put"],
     request=None,
     responses={
         200: MeetingRemoveSerializer,
@@ -113,7 +112,7 @@ class EndMeetingView(UpdateAPIView):
 class RestartMeetingView(UpdateAPIView):
     queryset = Meeting.objects.all()
     serializer_class = MeetingRemoveSerializer
-    http_method_names = ['put']
+    http_method_names = ["put"]
 
     def update(self, request, *args, **kwargs):
         meeting = self.get_object()
@@ -135,7 +134,7 @@ class RestartMeetingView(UpdateAPIView):
 @extend_schema(
     summary="Обновление задачи встречи",
     description="Изменяет название текущей задачи встречи и отправляет уведомление",
-    methods = ['put'],
+    methods = ["put"],
     responses={
         200: MeetingUpdateSerializer,
         400: OpenApiResponse(description="Некорректное название задачи"),
@@ -146,7 +145,7 @@ class RestartMeetingView(UpdateAPIView):
 class UpdateMeetingTaskView(UpdateAPIView):
     queryset = Meeting.objects.all()
     serializer_class = MeetingUpdateSerializer
-    http_method_names = ['put']
+    http_method_names = ["put"]
 
     def perform_update(self, serializer):
         instance = serializer.save()
@@ -159,7 +158,7 @@ class UpdateMeetingTaskView(UpdateAPIView):
 @extend_schema(
     summary="Подведение итогов встречи",
     description="Подводит итоги встречи, сохраняет их и возвращает результат",
-    methods = ['put'],
+    methods = ["put"],
     request=None,
     responses={
         200: MeetingResultsSerializer,
@@ -185,7 +184,7 @@ class UpdateMeetingTaskView(UpdateAPIView):
 class MeetingResultsView(UpdateAPIView):
     queryset = Meeting.objects.all()
     serializer_class = MeetingResultsSerializer
-    http_method_names = ['put']
+    http_method_names = ["put"]
 
     def update(self, request, *args, **kwargs):
         meeting = self.get_object()

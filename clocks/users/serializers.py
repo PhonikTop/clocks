@@ -1,10 +1,10 @@
-from meetings.models import Meeting
-from rest_framework import serializers
 from django.db import models
+from rest_framework import serializers
+
 
 class UserRoleChoices(models.TextChoices):
-    OBSERVER = 'observer', 'Observer'
-    VOTER = 'voter', 'Voter'
+    OBSERVER = "observer", "Observer"
+    VOTER = "voter", "Voter"
 
 class UserInputSerializer(serializers.Serializer):
     nickname = serializers.CharField(max_length=25)

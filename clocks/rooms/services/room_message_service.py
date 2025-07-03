@@ -4,6 +4,7 @@ from typing import Optional
 from .message_senders.base import MessageSender
 from .room_cache_service import RoomCacheService
 
+
 class RoomStatusType(Enum):
     RESTART = "restart"
     END = "ended"

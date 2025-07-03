@@ -1,11 +1,9 @@
 from typing import Dict
 
 from django.core.cache import cache
-
-from rooms.services.room_message_service import RoomMessageService
 from rooms.services.message_senders.django_channel import DjangoChannelMessageSender
-
 from rooms.services.room_cache_service import RoomCacheService
+from rooms.services.room_message_service import RoomMessageService
 
 
 class RoomOnlineTracker:

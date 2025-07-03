@@ -1,7 +1,7 @@
+from meetings.models import Meeting
 from rest_framework import serializers
 
 from .models import Room
-from meetings.models import Meeting
 
 
 class RoomNameSerializer(serializers.ModelSerializer):

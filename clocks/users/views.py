@@ -1,6 +1,13 @@
 import uuid
 
 from api.services.jwt_service import JWTService
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import (
+    OpenApiExample,
+    OpenApiParameter,
+    OpenApiResponse,
+    extend_schema,
+)
 from rest_framework import status
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.generics import GenericAPIView
@@ -10,15 +17,7 @@ from rooms.services.message_senders.django_channel import DjangoChannelMessageSe
 from rooms.services.room_cache_service import RoomCacheService
 from rooms.services.room_message_service import RoomMessageService
 
-from drf_spectacular.utils import (
-    extend_schema,
-    OpenApiResponse,
-    OpenApiExample,
-    OpenApiParameter,
-)
-from drf_spectacular.types import OpenApiTypes
-
-from .serializers import UserInputSerializer, UserFullInfoSerializer
+from .serializers import UserFullInfoSerializer, UserInputSerializer
 from .services.user_session_service import UserSessionService
 
 USER_TAG=["Users"]

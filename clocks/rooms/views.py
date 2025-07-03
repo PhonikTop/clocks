@@ -1,5 +1,5 @@
-from meetings.models import Meeting
-from meetings.serializers import MeetingHistorySerializer
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiExample, OpenApiResponse, extend_schema
 from rest_framework.generics import (
     CreateAPIView,
     ListAPIView,
@@ -17,9 +17,6 @@ from .serializers import (
     RoomNameSerializer,
 )
 
-from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiExample
-from drf_spectacular.types import OpenApiTypes
-
 ROOM_TAG = ["Rooms"]
 
 @extend_schema(
@@ -31,8 +28,8 @@ ROOM_TAG = ["Rooms"]
     },
     examples=[
         OpenApiExample(
-            'Пример запроса',
-            value={'name': 'Room A'},
+            "Пример запроса",
+            value={"name": "Room A"},
             request_only=True
         )
     ],
@@ -95,7 +92,7 @@ class RoomDetailView(RetrieveDestroyAPIView):
     },
     examples=[
         OpenApiExample(
-            'Пример успешного ответа',
+            "Пример успешного ответа",
             value={
                 "participants": {
                     "5e44c567-da6a-42ec-b01f-821b97c211ce": {
@@ -120,12 +117,12 @@ class RoomDetailView(RetrieveDestroyAPIView):
                     }
                 }
             },
-            status_codes=['200']
+            status_codes=["200"]
         ),
         OpenApiExample(
-            'Пример ошибки отсутствия комнаты или участников в ней',
-            value={'detail': 'Комната не найдена или нет участников'},
-            status_codes=['404']
+            "Пример ошибки отсутствия комнаты или участников в ней",
+            value={"detail": "Комната не найдена или нет участников"},
+            status_codes=["404"]
         )
     ],
     tags=ROOM_TAG,

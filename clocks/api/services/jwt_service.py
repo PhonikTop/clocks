@@ -2,8 +2,9 @@ import datetime
 from typing import Dict
 
 import jwt
-from api.interfaces import IJWTService
 from django.conf import settings
+
+from api.interfaces import IJWTService
 
 
 class JWTService(IJWTService):

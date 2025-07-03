@@ -15,7 +15,7 @@ def at_project_root(name):
 
 def get_list(key, default=None):
     val = os.getenv(key)
-    return [v.strip() for v in val.split(',')] if val else default or []
+    return [v.strip() for v in val.split(",")] if val else default or []
 
 sys.path.insert(1, PROJECT_ROOT)
 for app_lookup_path in ("clocks",):
@@ -132,13 +132,13 @@ CACHES = {
 CORS_ALLOWED_ORIGINS = get_list("CORS_ALLOWED_ORIGINS", default=["127.0.0.1:3000", "localhost:3000"])
 
 REST_FRAMEWORK = {
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'Watchy API',
-    'VERSION': '1.0.0',
-    'SERVE_INCLUDE_SCHEMA': False,
+    "TITLE": "Watchy API",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
 }
 
 
