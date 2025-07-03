@@ -1,6 +1,5 @@
 from meetings.models import Meeting
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
 from django.db import models
 
 class UserRoleChoices(models.TextChoices):
@@ -10,3 +9,9 @@ class UserRoleChoices(models.TextChoices):
 class UserInputSerializer(serializers.Serializer):
     nickname = serializers.CharField(max_length=25)
     role = serializers.ChoiceField(choices=UserRoleChoices.choices)
+
+class UserFullInfoSerializer(serializers.Serializer):
+    role = serializers.ChoiceField(choices=UserRoleChoices.choices)
+    nickname = serializers.CharField(max_length=25)
+    vote = serializers.IntegerField(allow_null=True)
+    user_uuid = serializers.UUIDField()

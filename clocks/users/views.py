@@ -10,14 +10,38 @@ from rooms.services.message_senders.django_channel import DjangoChannelMessageSe
 from rooms.services.room_cache_service import RoomCacheService
 from rooms.services.room_message_service import RoomMessageService
 
-from .serializers import UserInputSerializer
+from drf_spectacular.utils import (
+    extend_schema,
+    OpenApiResponse,
+    OpenApiExample,
+    OpenApiParameter,
+)
+from drf_spectacular.types import OpenApiTypes
+
+from .serializers import UserInputSerializer, UserFullInfoSerializer
 from .services.user_session_service import UserSessionService
 
+USER_TAG=["Users"]
 
+@extend_schema(
+    summary="Присоединение пользователя к комнате.",
+    description="Присоединяет пользователя к комнате и отправляет уведомление участникам этой комнаты через WebSocket.",
+    request=UserInputSerializer,
+    responses={
+        200: OpenApiTypes.OBJECT,
+    },
+    examples=[
+        OpenApiExample(
+            name="JWT-токен пользователя",
+            value={"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX3V1aWQiOiI0MWQyZWQyYS1hMTlmLTRkMWItYjE1Mi04NmNiYjBhMDlhOTUiLCJleHAiOjI1MzM5MjQ4NDE0OX0.SfmkZ_ngO2JZErPJtVGNPR9kdDEQr1k-0eu0CJ9vuHg"},
+            summary="JWT токен пользователя",
+            response_only=True,
+            status_codes=["200"]
+        )
+    ],
+    tags=USER_TAG
+)
 class JoinRoomView(GenericAPIView):
-    """
-    Присоединение пользователя к комнате.
-    """
     serializer_class = UserInputSerializer
     queryset = Room.objects.filter(is_active = True)
 
@@ -42,6 +66,29 @@ class JoinRoomView(GenericAPIView):
 
         return Response({"token": token}, status=status.HTTP_200_OK)
 
+@extend_schema(
+    summary="Получение информации о пользователе",
+    description="Получение информации о пользователе на основе JWT токена из заголовка Authorization.",
+    parameters=[
+        OpenApiParameter(
+            name="Authorization",
+            type=str,
+            location="header",
+            description='JWT токен в формате "Bearer <token>"',
+            required=True
+        )
+    ],
+    responses={
+        200: OpenApiResponse(
+            description="Данные сессии пользователя успешно получены.",
+            response=UserFullInfoSerializer,
+        ),
+        401: OpenApiResponse(
+            description="Ошибка аутентификации. Токен не предоставлен, неправильный формат или недействительный токен.",
+        ),
+    },
+    tags=USER_TAG
+)
 class UserInfoView(GenericAPIView):
     queryset = Room.objects.all()
 
