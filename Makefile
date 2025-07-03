@@ -1,45 +1,52 @@
-begin: migrate collectstatic start
+ENV ?= dev
 
-start:
-	@docker compose up -d
+COMPOSE_FILE = docker-compose.$(ENV).yml
 
-stop:
-	@docker compose stop
+CHECK_COMPOSE_FILE:
+	@if [ ! -f "$(COMPOSE_FILE)" ]; then \
+		echo "Error: $(COMPOSE_FILE) not found"; \
+		exit 1; \
+	fi
 
-status:
-	@docker compose ps
+start: CHECK_COMPOSE_FILE
+	@docker compose -f $(COMPOSE_FILE) up -d
 
-restart:
-	@docker compose restart
+stop: CHECK_COMPOSE_FILE
+	@docker compose -f $(COMPOSE_FILE) stop
 
-clean: stop
+status: CHECK_COMPOSE_FILE
+	@docker compose -f $(COMPOSE_FILE) ps
+
+restart: CHECK_COMPOSE_FILE
+	@docker compose -f $(COMPOSE_FILE) restart
+
+clean: CHECK_COMPOSE_FILE stop
 ifndef KEEP_DB
-	@docker compose rm --force watchy-db watchy-redis
+	@docker compose -f $(COMPOSE_FILE) rm --force watchy-db watchy-redis
 endif
-	@docker compose rm --force watchy-nginx watchy-api
+	@docker compose -f $(COMPOSE_FILE) rm --force watchy-nginx watchy-api
 
-build:
-	@docker compose build
+build: CHECK_COMPOSE_FILE
+	@docker compose -f $(COMPOSE_FILE) build
 
-migrate:
+migrate: CHECK_COMPOSE_FILE
 ifndef SKIP_MIGRATE
-	@docker compose up -d watchy-db
-	@docker compose run --rm watchy-api python ./manage.py migrate
+	@docker compose -f $(COMPOSE_FILE) up -d watchy-db
+	@docker compose -f $(COMPOSE_FILE) run --rm watchy-api python ./manage.py migrate
 endif
 
-collectstatic:
+collectstatic: CHECK_COMPOSE_FILE
 ifndef SKIP_COLLECTSTATIC
-	@docker compose up -d watchy-db
-	@docker compose run --rm watchy-api python ./manage.py collectstatic --noinput
+	@docker compose -f $(COMPOSE_FILE) up -d watchy-db
+	@docker compose -f $(COMPOSE_FILE) run --rm watchy-api python ./manage.py collectstatic --noinput
 endif
 
-createsuperuser:
-	@docker compose run --rm watchy-api python ./manage.py createsuperuser --noinput
+createsuperuser: CHECK_COMPOSE_FILE
+	@docker compose -f $(COMPOSE_FILE) run --rm watchy-api python ./manage.py createsuperuser --noinput
 
-tail:
-	@docker compose logs -f
+tail: CHECK_COMPOSE_FILE
+	@docker compose -f $(COMPOSE_FILE) logs -f
 
-faststart: clean build collectstatic migrate start createsuperuser
+faststart: CHECK_COMPOSE_FILE clean build collectstatic migrate start createsuperuser
 
-
-.PHONY: start stop status restart clean build migrate collectstatic cli createsuperuser tail faststart
+.PHONY: start stop status restart clean build migrate collectstatic createsuperuser tail faststart CHECK_COMPOSE_FILE
