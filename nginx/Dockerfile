@@ -3,7 +3,7 @@ WORKDIR /app
 COPY ./frontend/package.json ./frontend/package-lock.json* ./
 RUN npm install
 COPY frontend/ ./
-COPY clocks.env .
+COPY .env.prod ./.env
 RUN npm run lint --fix
 RUN npm run build
 

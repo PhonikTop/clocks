@@ -23,7 +23,7 @@ services:
     image: node:18
     working_dir: /app
     env_file:
-      - clocks.env
+      - .env.dev
     volumes:
       - ./frontend:/app
       - /app/node_modules
