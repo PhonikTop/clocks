@@ -1,6 +1,6 @@
 [tool.ruff]
-extend-exclude = ["alembic"]
-respect-gitignore = false
+extend-exclude = ["alembic", "migrations"]
+respect-gitignore = true
 
 [tool.ruff.lint.isort]
 split-on-trailing-comma = true
