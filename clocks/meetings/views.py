@@ -13,6 +13,8 @@ from rooms.services.message_senders.django_channel import DjangoChannelMessageSe
 from rooms.services.room_cache_service import RoomCacheService
 from rooms.services.room_message_service import RoomMessageService
 
+from ws.services.room_online_tracker import RoomOnlineTracker
+
 from .logic import end_meeting, meeting_results
 from .models import Meeting
 from .serializers import (
@@ -125,6 +127,7 @@ class RestartMeetingView(UpdateAPIView):
 
         meeting.reset_to_default()
         room_cache_service.clear_votes()
+        RoomOnlineTracker().clean_room_offline_participants(meeting.room.id)
 
         room_message_service.notify_meeting_restart()
 
