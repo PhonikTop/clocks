@@ -89,7 +89,6 @@ class RoomCacheService(IRoomCacheService):
             uuid=user_uuid,
             role=user_data["role"],
             nickname=user_data["nickname"],
-            vote=user_data.get("vote")
         )
 
     def get_user(self, user_uuid: str | UUID) -> Optional[dict]:
