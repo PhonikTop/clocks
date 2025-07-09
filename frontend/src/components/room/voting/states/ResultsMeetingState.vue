@@ -6,9 +6,8 @@ defineProps({
     required: true,
   },
   averageScore: {
-    type: Number,
-    required: true,
-    validator: (value) => Number.isInteger(value),
+    type: [Number, null],
+    default: null,
   },
 });
 </script>

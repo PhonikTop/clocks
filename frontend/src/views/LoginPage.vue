@@ -2,8 +2,8 @@
 import { onMounted } from "vue";
 import { ref } from "vue";
 import { useRouter } from "vue-router";
-import useRoom from "@/composables/useRoom";
-import useUser from "@/composables/useUser";
+import useRoom from "@/composables/api/useRoomAPI";
+import useUser from "@/composables/api/useUserAPI";
 
 const router = useRouter();
 const username = ref("");
