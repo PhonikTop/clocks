@@ -128,8 +128,8 @@ class RoomDetailView(RetrieveDestroyAPIView):
     tags=ROOM_TAG,
 )
 class RoomParticipantsView(APIView):
-    def get(self, request, id):
-        room_cache = RoomCacheService(id)
+    def get(self, request, pk):
+        room_cache = RoomCacheService(pk)
         participants = room_cache.get_room_users()
 
         if not participants:
