@@ -48,7 +48,7 @@ class RoomOnlineTracker:
         return cache.get(room_key, {})
 
     @classmethod
-    def clean_room_participant(cls, room_id: int) -> None:
+    def clean_room_offline_participants(cls, room_id: int) -> None:
         offline_room_cache_service = RoomCacheService(f"{room_id}_offline")
         room_key = cls._make_key(room_id)
         offline_room_cache_service.clear_room()

@@ -6,7 +6,7 @@ def end_meeting(meeting):
     meeting_room = RoomCacheService(meeting.room.id)
     meeting.active = False
     meeting_room.clear_room()
-    RoomOnlineTracker.clean_room_participant(meeting.room.id)
+    RoomOnlineTracker.clean_room_offline_participants(meeting.room.id)
     meeting.save()
 
 
