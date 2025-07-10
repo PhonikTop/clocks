@@ -123,6 +123,7 @@ onMounted(async () => {
   <div class="min-h-screen bg-base-200 flex flex-col items-center p-4 sm:p-6 gap-6">
     <RoomHeader
       :room-id="roomId"
+      :task-name="taskName"
       :room-name="roomName"
       :is-connected="isConnected"
       :room-state="roomState"

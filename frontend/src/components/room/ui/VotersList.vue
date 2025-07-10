@@ -40,7 +40,6 @@ const voters = computed(() =>
           <span class="text-base">{{ participant.nickname }}</span>
         </div>
 
-        <!-- ПРАВИЛЬНО: оборачиваем ВЕСЬ badge в Transition с уникальным key -->
         <Transition
           mode="out-in"
           enter-active-class="transition transform duration-500"
