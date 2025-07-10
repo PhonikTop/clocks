@@ -23,8 +23,8 @@ class RoomOnlineTracker:
     @classmethod
     def set_user_offline(cls, user_uuid: str, room_id: int) -> None:
         message_sender = DjangoChannelMessageSender()
-        room_message_service = RoomMessageService(room_id, message_sender)
         room_cache_service = RoomCacheService(room_id)
+        room_message_service = RoomMessageService(room_id, message_sender, room_cache_service )
 
         room_cache_service.transfer_user(user_uuid, f"{room_id}_offline")
         cls._set_user_status(user_uuid, room_id, False)
@@ -33,11 +33,12 @@ class RoomOnlineTracker:
     @classmethod
     def set_user_online(cls, user_uuid: str, room_id: int) -> None:
         message_sender = DjangoChannelMessageSender()
-        room_message_service = RoomMessageService(room_id, message_sender)
-        room_cache_service = RoomCacheService(f"{room_id}_offline")
+        room_cache_service = RoomCacheService(room_id)
+        room_message_service = RoomMessageService(room_id, message_sender, room_cache_service )
+        room_offline_cache_service = RoomCacheService(f"{room_id}_offline")
 
-        if room_cache_service.get_user(user_uuid) is not None:
-            room_cache_service.transfer_user(user_uuid, room_id)
+        if room_offline_cache_service.get_user(user_uuid) is not None:
+            room_offline_cache_service.transfer_user(user_uuid, room_id)
 
         cls._set_user_status(user_uuid, room_id, True)
         room_message_service.notify_user_online(user_uuid)

@@ -49,16 +49,20 @@ class RoomMessageService:
         self.message_sender.send(self._group_name, message)
 
     def notify_user_offline(self, user_uuid):
+        user_data = self.room_cache_service.get_user(user_uuid)
+
         message = {
             "type": "user_offline",
-            "user": user_uuid
+            "user": {user_uuid: user_data}
         }
         self.message_sender.send(self._group_name, message)
 
     def notify_user_online(self, user_uuid):
+        user_data = self.room_cache_service.get_user(user_uuid)
+
         message = {
             "type": "user_online",
-            "user": user_uuid
+            "user": {user_uuid: user_data}
         }
         self.message_sender.send(self._group_name, message)
 
