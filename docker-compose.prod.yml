@@ -34,7 +34,7 @@ services:
     image: postgres:latest
     container_name: watchy-db
     env_file:
-      - clocks.env
+      - .env.prod
     restart: always
     networks:
       - watchy_network
