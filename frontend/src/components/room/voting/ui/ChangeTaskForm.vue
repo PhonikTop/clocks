@@ -13,8 +13,15 @@ const handleSubmit = () => {
 </script>
 
 <template>
-  <form @submit.prevent="handleSubmit">
-    <input v-model="localTaskName" type="text" placeholder="Название комнаты" />
-    <button type="submit">Сохранить</button>
+  <form @submit.prevent="handleSubmit" class="flex flex-col sm:flex-row items-stretch gap-3">
+    <input
+      v-model="localTaskName"
+      type="text"
+      placeholder="Название комнаты"
+      class="input input-bordered w-full"
+    />
+    <button type="submit" class="btn btn-primary">
+      Сохранить
+    </button>
   </form>
 </template>

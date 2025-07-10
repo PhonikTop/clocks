@@ -6,7 +6,7 @@ const csrfToken = document.cookie
   ?.split("=")[1];
 
 const api = axios.create({
-  baseURL: process.env.VUE_APP_API_URL,
+  baseURL: import.meta.env.VITE_API_URL,
   timeout: 20000,
   headers: {
     "X-CSRFToken": csrfToken,

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onBeforeMount, onMounted } from "vue";
+import { ref, onBeforeMount, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import RoomHeader from "@/components/room/ui/RoomHeader.vue";
@@ -9,16 +9,22 @@ import ResultsMeetingState from "@/components/room/voting/states/ResultsMeetingS
 import ParticipantsSection from "@/components/room/ui/ParticipantsSection.vue";
 
 import useRoomState from "@/composables/room/useRoomState";
-import useMeetingManager from "@/composables/room/api/useMeetingManager";
+import useMeetingManager from "@/composables/room/useMeetingManager";
 import useRoomWebSocketHandler from "@/composables/room/useRoomWebSocketHandler";
 import useRoomParticipants from "@/composables/room/useRoomParticipants";
 import { useRoomWebSocket } from "@/composables/api/useWebSocket";
+
+import useRoom from "@/composables/api/useRoomAPI"
 
 import useMeeting from "@/composables/api/useMeetingAPI";
 
 const route = useRoute();
 const router = useRouter();
-const roomId = route.params.room_id 
+const roomId = ref(route.params.room_id);
+
+const roomName = ref("");
+
+const { fetchRoomDetails, currentRoom } = useRoom()
 
 const { roomState, ROOM_STATES, taskName, votes, resultsVotes, averageScore } =
   useRoomState();
@@ -26,11 +32,10 @@ const { roomState, ROOM_STATES, taskName, votes, resultsVotes, averageScore } =
 const {
   participants,
   currentUser,
-  currentUserId,
   fetchParticipants,
   getCurrentUser,
   userError,
-} = useRoomParticipants(roomId);
+} = useRoomParticipants(roomId.value);
 
 const token = ref(localStorage.getItem("token"));
 
@@ -40,7 +45,7 @@ const redirectToLogin = () => router.push({ name: "Login" });
 
 const { isConnected, connect, sendMessage, addMessageHandler } =
   useRoomWebSocket(
-    `${process.env.VUE_APP_WS_BASE_URL}room/${roomId.value}/?token=${token.value}`
+    `${import.meta.env.VITE_WS_BASE_URL}room/${roomId.value}/?token=${token.value}`
   );
 
 const { currentMeeting } = useRoomWebSocketHandler(
@@ -87,9 +92,12 @@ onBeforeMount(async () => {
     if (currentUser.value) {
       userRole.value = currentUser.value.role;
     }
-  } catch (err) {
+  } catch {
     redirectToLogin();
   }
+  await fetchRoomDetails(roomId.value);
+  roomName.value = currentRoom.value.name;
+
   await fetchParticipants();
 });
 
@@ -100,7 +108,7 @@ onMounted(async () => {
     console.error("Ошибка подключения:", err);
   }
   if (currentMeeting.value == null) {
-    const meeting = await getRoomMeeting(roomId);
+    const meeting = await getRoomMeeting(roomId.value);
     if (meeting?.id != null) {
       currentMeeting.value = meeting.id;
       localStorage.setItem("active_meeting_id", meeting.id);
@@ -112,40 +120,60 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div>
+  <div class="min-h-screen bg-base-200 flex flex-col items-center p-4 sm:p-6 gap-6">
     <RoomHeader
       :room-id="roomId"
-      :task-name="taskName"
+      :room-name="roomName"
       :is-connected="isConnected"
       :room-state="roomState"
       @leave-room="redirectToLogin"
     />
 
-    <WaitingMeetingState
-      v-if="roomState === ROOM_STATES.WAITING"
-      v-model:task-name="taskName"
-      @start-voting="(taskName) => meetingActions.startVoting(roomId, taskName)"
-    />
+    <div v-if="roomState === ROOM_STATES.WAITING" class="w-full max-w-2xl">
+      <WaitingMeetingState
+        v-model:task-name="taskName"
+        @start-voting="(taskName) => meetingActions.startVoting(roomId, taskName)"
+      />
+    </div>
 
-    <VotingMeetingState
+    <div
       v-else-if="roomState === ROOM_STATES.VOTING && userRole === 'voter'"
-      @vote="handleVote"
-      @update-task="meetingActions.updateMeetingTaskName"
-    />
+      class="w-full max-w-md"
+    >
+      <VotingMeetingState
+        @vote="handleVote"
+        @update-task="meetingActions.updateMeetingTaskName"
+      />
+    </div>
 
-    <ParticipantsSection
+    <div
       v-if="roomState !== ROOM_STATES.RESULTS"
-      :participants="participants"
-      :votes="votes"
-    />
+      class="w-full max-w-3xl fixed bottom-10"
+    >
+      <ParticipantsSection
+        :participants="participants"
+        :votes="votes"
+      />
+    </div>
 
-    <ResultsMeetingState
-      v-if="roomState === ROOM_STATES.RESULTS"
-      :results-votes="resultsVotes"
-      :average-score="averageScore"
-      @restart-meeting="meetingActions.handleRestartMeeting"
-      @next-meeting="meetingActions.handleNextMeeting"
-      @end-meeting="meetingActions.handleEndMeeting"
-    />
+    <Transition
+      appear
+      enter-active-class="transition-all duration-700 ease-out"
+      enter-from-class="opacity-0 translate-y-6"
+      enter-to-class="opacity-100 translate-y-0"
+    >
+      <div
+        v-if="roomState === ROOM_STATES.RESULTS"
+        class="w-full max-w-3xl"
+      >
+        <ResultsMeetingState
+          :results-votes="resultsVotes"
+          :average-score="averageScore"
+          @restart-meeting="meetingActions.handleRestartMeeting"
+          @next-meeting="meetingActions.handleNextMeeting"
+          @end-meeting="meetingActions.handleEndMeeting"
+        />
+      </div>    
+    </Transition>
   </div>
 </template>

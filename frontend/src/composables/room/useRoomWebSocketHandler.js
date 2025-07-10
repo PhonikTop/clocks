@@ -29,6 +29,26 @@ export default function useRoomWebSocketHandler(
       }
     });
 
+    addMessageHandler("user_online", (msg) => {
+      if (!msg?.user) return;
+      const userId = Object.keys(msg.user)[0];
+
+      if (!participants.value[userId]) {
+        Object.assign(participants.value, msg.user);
+      }
+    });
+
+    addMessageHandler("user_offline", (msg) => {
+      if (!msg?.user) return;
+      const userId = Object.keys(msg.user)[0];
+
+      console.log(userId);
+
+      if (participants.value[userId]) {
+        delete participants.value[userId];
+      }
+    });
+
     addMessageHandler("results", (msg) => {
       if (!msg?.votes || !msg?.average_score) return;
       roomState.value = ROOM_STATES.RESULTS;

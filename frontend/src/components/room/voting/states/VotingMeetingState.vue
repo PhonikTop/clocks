@@ -10,8 +10,8 @@ defineEmits(["vote", "update-task"]);
 </script>
 
 <template>
-  <div class="voting-state">
-    <ChangeTaskForm @room-name-updated="$emit('update-task', $event)" />
+  <div class="flex flex-col gap-6">
+    <ChangeTaskForm @submitted="$emit('update-task', $event)" />
     <VotingForm :disabled="hasVoted" @vote="$emit('vote', $event)" />
     <p v-if="hasVoted">Вы уже проголосовали!</p>
   </div>

@@ -1,0 +1,29 @@
+@import "tailwindcss";
+@plugin "daisyui";
+
+@plugin "daisyui/theme" {
+  name: "lofi";
+  default: false;
+  prefersdark: true;
+  color-scheme: "light";
+  --color-primary:   #4F46E5;
+  --color-secondary: #A855F7;
+  --color-accent:    #22D3EE;
+  --color-neutral:   #F3F4F6;
+  --color-info:    #0EA5E9;
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-error:   #EF4444;
+  --color-primary-dark:   #4338CA;
+  --color-secondary-dark: #9333EA;
+  --color-accent-dark:    #06B6D4;
+  --color-neutral-dark:   #E5E7EB;
+  --radius-selector: 1rem;
+  --radius-field: 1rem;
+  --radius-box: 1rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 1;
+  --noise: 0;
+}

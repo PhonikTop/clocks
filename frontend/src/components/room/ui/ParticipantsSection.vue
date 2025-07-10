@@ -9,7 +9,7 @@ defineProps({
 </script>
 
 <template>
-  <div class="participants-section">
+  <div class="flex flex-col sm:p-6 gap-6">
     <VotersList :participants="participants" :votes="votes" />
     <ObserversList :participants="participants" />
   </div>

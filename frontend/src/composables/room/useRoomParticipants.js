@@ -15,12 +15,12 @@ export default function useRoomParticipants(roomId) {
   const currentUserId = computed(() => currentUser.value?.user_uuid || "");
 
   const fetchParticipants = async () => {
-    await fetchRoomParticipants(roomId.value);
+    await fetchRoomParticipants(roomId);
   };
 
   const getCurrentUser = async () => {
     const token = localStorage.getItem("token");
-    await fetchCurrentUser(roomId.value, token);
+    await fetchCurrentUser(roomId, token);
   };
 
   return {

@@ -10,7 +10,6 @@ const routes = [
     path: "/room/:room_id(\\d+)",
     name: "Room",
     component: () => import("@/views/RoomPage.vue"),
-    props: true,
   },
   {
     path: "/:pathMatch(.*)*",
@@ -19,7 +18,7 @@ const routes = [
 ];
 
 const router = createRouter({
-  history: createWebHistory(process.env.BASE_URL),
+  history: createWebHistory(),
   routes,
 });
 
