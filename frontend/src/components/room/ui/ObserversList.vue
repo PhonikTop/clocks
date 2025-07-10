@@ -18,10 +18,10 @@ const observers = computed(() =>
 </script>
 
 <template>
-  <div class="card bg-base-100 shadow-md p-4">
+  <div class="card bg-base-100 shadow-md p-4 h-auto max-h-[20vh]">
     <h2 class="text-lg font-semibold mb-3">Наблюдающие</h2>
 
-    <div v-if="observers.length" class="space-y-2">
+    <div v-if="observers.length" class="space-y-2 overflow-y-auto">
       <div
         v-for="[id, participant] in observers"
         :key="id"
