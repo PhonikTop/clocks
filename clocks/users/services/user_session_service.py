@@ -1,3 +1,5 @@
+import time
+
 from api.services.jwt_service import JWTService
 from rooms.services.room_cache_service import RoomCacheService
 
@@ -11,13 +13,21 @@ class UserSessionService:
         self.cache_service.add_user(user_uuid, role, nickname)
         return self.jwt_service.generate_token(user_uuid)
 
-    def get_user_session_data(self, token: str) -> dict:
+    def get_user_session_data(self, token: str, max_retries: int = 5, delay: float = 0.1) -> dict:
         decoded_data = self.jwt_service.decode_token(token)
         user_uuid = decoded_data["user_uuid"]
-        session_data = self.cache_service.get_user(user_uuid)
+
+        session_data = None
+        for attempt in range(max_retries):
+            session_data = self.cache_service.get_user(user_uuid)
+            if isinstance(session_data, dict):
+                break
+            time.sleep(delay)
+
+        if not isinstance(session_data, dict):
+            raise Exception(
+                f"Session data for token {token} is invalid: {session_data}"
+            )
+
         session_data["user_uuid"] = user_uuid
-
-        if not session_data:
-            raise Exception("Session expired or invalid")
-
         return session_data
