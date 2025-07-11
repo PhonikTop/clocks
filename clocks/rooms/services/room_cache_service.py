@@ -35,7 +35,6 @@ class RoomCacheService:
         :param uuid: UUID пользователя.
         :param role: Роль пользователя.
         :param nickname: Никнейм пользователя.
-        :param vote: Голос пользователя (если есть).
         """
         user_uuid = str(uuid)
         user_key = self._get_user_key(user_uuid)
@@ -48,7 +47,6 @@ class RoomCacheService:
             user_data = {
                 "role": role,
                 "nickname": nickname,
-                "vote": vote
             }
             cache.set(user_key, user_data, timeout=self.ttl)
 
@@ -109,11 +107,6 @@ class RoomCacheService:
         """
         user_uuid = str(user_uuid)
         user_key = self._get_user_key(user_uuid)
-        vote = self.get_user(user_uuid)["vote"]
-        if vote is not None:
-            self.remove_user_vote(user_uuid)
-
-        cache.delete(user_key)
 
         uuids = cache.get(self.users_key, [])
         if uuids and user_uuid in uuids:
@@ -121,6 +114,8 @@ class RoomCacheService:
             cache.set(self.users_key, uuids, timeout=self.ttl)
 
     def get_room_users(self) -> Dict[str, dict]:
+        cache.delete(user_key)
+
         """
         Возвращает всех пользователей в комнате с их ролями.
 
@@ -153,18 +148,14 @@ class RoomCacheService:
         :raises ValueError: Если пользователь не найден или не имеет права голосовать.
         """
         user_uuid = str(user_uuid)
-        user_key = self._get_user_key(user_uuid)
 
         with cache.lock(self.room_key):
-            user_data = cache.get(user_key)
+            user_data = self.get_user(user_uuid)
             if not user_data:
                 raise ValueError("User not found")
 
             if user_data["role"] != "voter":
                 raise ValueError("User is not allowed to vote")
-
-            user_data["vote"] = vote
-            cache.set(user_key, user_data, timeout=self.ttl)
 
             votes: Dict[str, dict] = cache.get(self.votes_key, {})
             votes[user_uuid] = {
@@ -181,14 +172,10 @@ class RoomCacheService:
         :raises ValueError: Если пользователь не найден.
         """
         user_uuid = str(user_uuid)
-        user_key = self._get_user_key(user_uuid)
 
-        user_data = cache.get(user_key)
+        user_data = self.get_user(user_uuid)
         if not user_data:
             raise ValueError("User not found")
-
-        if user_data.get("vote") is None:
-            return
 
         votes: Dict[str, dict] = cache.get(self.votes_key, {})
         if user_uuid in votes:
