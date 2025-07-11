@@ -1,6 +1,6 @@
 from channels.db import database_sync_to_async
 from django.shortcuts import get_object_or_404
-import json
+from json import dumps
 
 class BaseAction:
     queryset = None
@@ -34,4 +34,4 @@ class BaseAction:
         return await database_sync_to_async(get_object_or_404)(queryset, **filters)
 
     async def send_message(self, event):
-        await self.consumer.send(text_data=json.dumps(event))
+        await self.consumer.send(text_data=dumps(event))

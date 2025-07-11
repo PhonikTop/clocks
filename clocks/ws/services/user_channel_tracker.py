@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Dict, Optional, Set
+from typing import Dict, Set
 
 from django.core.cache import cache
 
