@@ -28,7 +28,7 @@ class RoomCacheService:
     def _get_user_key(self, uuid: str | UUID) -> str:
         return f"user:{uuid}:data"
 
-    def add_user(self, uuid: str | UUID, role: UserRoleChoices, nickname: str, vote: Optional[str] = None) -> None:
+    def add_user(self, uuid: str | UUID, role: UserRoleChoices, nickname: str, vote: str | None = None) -> None:
         """
         Добавляет пользователя в кэш комнаты.
 
@@ -90,7 +90,7 @@ class RoomCacheService:
             nickname=user_data["nickname"],
         )
 
-    def get_user(self, user_uuid: str | UUID) -> Optional[dict]:
+    def get_user(self, user_uuid: str | UUID) -> dict | None:
         """
         Получает данные пользователя из кэша.
 

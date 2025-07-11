@@ -11,7 +11,7 @@ class RoomStatusType(Enum):
     NEXT = "next"
 
 class RoomMessageService:
-    def __init__(self, room_id: int, message_sender: MessageSender, room_cache_service: Optional[RoomCacheService] = None):
+    def __init__(self, room_id: int, message_sender: MessageSender, room_cache_service: RoomCacheService | None = None):
         self.room_id = room_id
         self.message_sender = message_sender
         self._room_cache_service = room_cache_service

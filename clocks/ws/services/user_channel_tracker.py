@@ -50,7 +50,7 @@ class UserChannelTracker:
         cache.delete(chan_key)
 
     @classmethod
-    def get_participant_info(cls, channel_name: str) -> Optional[Dict[str, str]]:
+    def get_participant_info(cls, channel_name: str) -> Dict[str, str] | None:
         chan_key = cls._make_key(KeyType.CHANNEL, channel_name)
         return cache.get(chan_key)
 
