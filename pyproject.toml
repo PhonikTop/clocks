@@ -1,5 +1,5 @@
 [tool.ruff]
-extend-exclude = ["alembic", "migrations"]
+extend-exclude = ["alembic", "migrations", "settings"]
 respect-gitignore = true
 
 [tool.ruff.lint.isort]
