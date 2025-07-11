@@ -185,7 +185,7 @@ class UpdateMeetingTaskView(UpdateAPIView):
     tags=MEETING_TAG,
 )
 class MeetingResultsView(UpdateAPIView):
-    queryset = Meeting.objects.all()
+    queryset = Meeting.objects.all().filter(active=True)
     serializer_class = MeetingResultsSerializer
     http_method_names = ["put"]
 
