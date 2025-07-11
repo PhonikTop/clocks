@@ -1,8 +1,7 @@
 from enum import Enum
-from typing import Optional
 
 from .message_senders.base import MessageSender
-from .room_cache_service import RoomCacheService
+from .room_cache_service import RoomCacheService, UserData
 
 
 class RoomStatusType(Enum):
@@ -40,7 +39,7 @@ class RoomMessageService:
         Args:
             uuid (str) : Идентификатор пользователя.
         """
-        user_data = self.room_cache_service.get_user(uuid)
+        user_data: UserData = self.room_cache_service.get_user(uuid)
 
         message = {
             "type": "user_joined",
@@ -49,7 +48,7 @@ class RoomMessageService:
         self.message_sender.send(self._group_name, message)
 
     def notify_user_offline(self, user_uuid):
-        user_data = self.room_cache_service.get_user(user_uuid)
+        user_data: UserData = self.room_cache_service.get_user(user_uuid)
 
         message = {
             "type": "user_offline",
@@ -58,7 +57,7 @@ class RoomMessageService:
         self.message_sender.send(self._group_name, message)
 
     def notify_user_online(self, user_uuid):
-        user_data = self.room_cache_service.get_user(user_uuid)
+        user_data: UserData = self.room_cache_service.get_user(user_uuid)
 
         message = {
             "type": "user_online",

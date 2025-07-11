@@ -12,7 +12,6 @@ from rest_framework.response import Response
 from rooms.services.message_senders.django_channel import DjangoChannelMessageSender
 from rooms.services.room_cache_service import RoomCacheService
 from rooms.services.room_message_service import RoomMessageService
-
 from rooms.services.room_online_tracker import RoomOnlineTracker
 
 from .logic import end_meeting, meeting_results

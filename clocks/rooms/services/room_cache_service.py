@@ -1,10 +1,14 @@
-from typing import Dict, List
+from typing import Dict, List, TypedDict
 from uuid import UUID
 
 from django.core.cache import cache
 from rest_framework.exceptions import ValidationError
 from users.serializers import UserRoleChoices
 
+
+class UserData(TypedDict):
+    role: UserRoleChoices
+    nickname: str | None
 
 class RoomCacheService:
     """
@@ -28,7 +32,11 @@ class RoomCacheService:
     def _get_user_key(self, uuid: str | UUID) -> str:
         return f"user:{uuid}:data"
 
-    def add_user(self, uuid: str | UUID, role: UserRoleChoices, nickname: str, vote: str | None = None) -> None:
+    def _update_ttl_list(self, keys: List[str]) -> None:
+        for key in keys:
+            cache.touch(key, timeout=self.ttl)
+
+    def add_user(self, uuid: str | UUID, role: UserRoleChoices, nickname: str | None = None) -> None:
         """
         Добавляет пользователя в кэш комнаты.
 
@@ -41,10 +49,10 @@ class RoomCacheService:
 
         with cache.lock(self.room_key):
             if self._user_exists(user_uuid):
-                raise ValidationError({"error": "User already exists in the room"})
+                raise ValueError("User already exists")
 
 
-            user_data = {
+            user_data: UserData= {
                 "role": role,
                 "nickname": nickname,
             }
@@ -54,13 +62,7 @@ class RoomCacheService:
             uuids.add(user_uuid)
             cache.set(self.users_key, list(uuids), timeout=self.ttl)
 
-            if vote is not None:
-                votes: Dict[str, dict] = cache.get(self.votes_key, {})
-                votes[user_uuid] = {
-                    "nickname": nickname,
-                    "vote": vote
-                }
-                cache.set(self.votes_key, votes, timeout=self.ttl)
+            self._update_ttl_list(list(uuids))
 
     def _user_exists(self, user_uuid: str) -> bool:
         """
@@ -76,7 +78,7 @@ class RoomCacheService:
         target_room_uuid = str(target_room_uuid)
         target_service = RoomCacheService(target_room_uuid, ttl=self.ttl)
 
-        user_data = self.get_user(user_uuid)
+        user_data: UserData = self.get_user(user_uuid)
         if not user_data:
             raise ValidationError({"error": "User not found in source room"})
 
@@ -88,7 +90,7 @@ class RoomCacheService:
             nickname=user_data["nickname"],
         )
 
-    def get_user(self, user_uuid: str | UUID) -> dict | None:
+    def get_user(self, user_uuid: str | UUID) -> UserData | None:
         """
         Получает данные пользователя из кэша.
 
@@ -113,20 +115,27 @@ class RoomCacheService:
             uuids.remove(user_uuid)
             cache.set(self.users_key, uuids, timeout=self.ttl)
 
-    def get_room_users(self) -> Dict[str, dict]:
         cache.delete(user_key)
 
+    def get_room_users(self) -> Dict[str, UserData]:
         """
         Возвращает всех пользователей в комнате с их ролями.
 
         :return: Словарь с UUID пользователей и их данными.
         """
         uuids = cache.get(self.users_key, [])
-        users_dict: Dict[str, dict] = {}
+
+        if not uuids:
+            return {}
+
+        user_keys = [self._get_user_key(uuid) for uuid in uuids]
+        cached_data = cache.get_many(user_keys)
+
+        users_dict = {}
         for uuid in uuids:
-            user_data = cache.get(self._get_user_key(str(uuid)))
-            if user_data:
-                users_dict[uuid] = user_data
+            user_key = self._get_user_key(uuid)
+            if user_key in cached_data and cached_data[user_key]:
+                users_dict[uuid] = cached_data[user_key]
         return users_dict
 
     def get_users_by_role(self, role: UserRoleChoices) -> List[str]:
@@ -154,7 +163,7 @@ class RoomCacheService:
             if not user_data:
                 raise ValueError("User not found")
 
-            if user_data["role"] != "voter":
+            if user_data["role"] != UserRoleChoices.VOTER.value:
                 raise ValueError("User is not allowed to vote")
 
             votes: Dict[str, dict] = cache.get(self.votes_key, {})
