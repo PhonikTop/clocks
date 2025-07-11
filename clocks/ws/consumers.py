@@ -117,36 +117,24 @@ class RoomConsumer(AsyncWebsocketConsumer):
 
         return uuid_value
 
-    async def _send_group_message(self, message):
-        await self.channel_layer.group_send(
-            self._group_name,
-            {
-                "type": "chat.message",
-                "message": json.dumps(message),
-            }
-        )
+    async def user_joined(self, event):
+        await self.send(text_data=json.dumps(event))
 
-    async def user_joined(self, message):
-        await self._send_group_message(message)
+    async def task_name_changed(self, event):
+        await self.send(text_data=json.dumps(event))
 
-    async def task_name_changed(self, message):
-        await self._send_group_message(message)
+    async def meeting_started(self, event):
+        await self.send(text_data=json.dumps(event))
 
-    async def meeting_started(self, message):
-        await self._send_group_message(message)
+    async def voted_users_update(self, event):
+        await self.send(text_data=json.dumps(event))
 
-    async def voted_users_update(self, message):
-        await self._send_group_message(message)
+    async def meeting_change_status(self, event):
+        await self.send(text_data=json.dumps(event))
 
-    async def meeting_change_status(self, message):
-        await self._send_group_message(message)
+    async def user_online(self, event):
+        await self.send(text_data=json.dumps(event))
 
-    async def user_online(self, message):
-        await self._send_group_message(message)
-
-    async def user_offline(self, message):
-        await self._send_group_message(message)
-
-    async def chat_message(self, event):
-        await self.send(text_data=event["message"])
+    async def user_offline(self, event):
+        await self.send(text_data=json.dumps(event))
 
