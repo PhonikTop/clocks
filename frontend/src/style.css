@@ -11,9 +11,12 @@
   --color-accent:    #22D3EE;
   --color-neutral:   #F3F4F6;
   --color-info:    #0EA5E9;
+  --color-info-content: oklch(100% 0 0);
   --color-success: #10B981;
   --color-warning: #F59E0B;
+  --color-warning-content: oklch(100% 0 0);
   --color-error:   #EF4444;
+  --color-error-content: oklch(100% 0 0);
   --color-primary-dark:   #4338CA;
   --color-secondary-dark: #9333EA;
   --color-accent-dark:    #06B6D4;
