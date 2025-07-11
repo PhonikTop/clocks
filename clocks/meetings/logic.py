@@ -1,5 +1,5 @@
 from rooms.services.room_cache_service import RoomCacheService
-from ws.services.room_online_tracker import RoomOnlineTracker
+from rooms.services.room_online_tracker import RoomOnlineTracker
 
 
 def end_meeting(meeting):

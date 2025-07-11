@@ -11,7 +11,7 @@ from rooms.services.room_message_service import RoomMessageService
 from users.services.user_session_service import UserSessionService
 
 from .actions import action_handler
-from .services.room_online_tracker import RoomOnlineTracker
+from rooms.services.room_online_tracker import RoomOnlineTracker
 from .services.user_channel_tracker import UserChannelTracker
 
 
