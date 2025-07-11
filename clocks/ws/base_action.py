@@ -33,5 +33,5 @@ class BaseAction:
         queryset = self.get_queryset()
         return await database_sync_to_async(get_object_or_404)(queryset, **filters)
 
-    async def send_message(self, message):
-        await self.consumer._send_group_message(message)
+    async def send_message(self, event):
+        await self.consumer.send(text_data=json.dumps(event))

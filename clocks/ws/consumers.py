@@ -88,7 +88,7 @@ class RoomConsumer(AsyncWebsocketConsumer):
             text_data_json = json.loads(text_data)
             action_name = text_data_json.get("action")
             response = await action_handler.execute(action_name, self, text_data_json)
-            await self._send_group_message(response)
+            await self.send(text_data=json.dumps(response))
         except json.JSONDecodeError:
             await self.send({"error": "Invalid JSON format"})
 
