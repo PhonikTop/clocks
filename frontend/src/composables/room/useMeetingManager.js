@@ -16,13 +16,15 @@ const { fetchRoomDetails, currentRoom } = useRoom();
 export default function useMeetingManager(
   roomState,
   sendMessage,
-  currentMeeting
+  currentMeeting,
+  notify
 ) {
   const startVoting = async (roomId, taskName) => {
     try {
       roomState.value = ROOM_STATES.VOTING;
       await createMeeting(roomId, taskName);
     } catch (err) {
+      notify.error("Произошла ошибка во время начала голосования")
       console.error("Ошибка начала голосования:", err);
       roomState.value = ROOM_STATES.WAITING;
     }
@@ -49,7 +51,8 @@ export default function useMeetingManager(
         status: `${new_status}`,
       });
     } catch (err) {
-      console.error("Ошибка изменения статуса встречи:", err);
+      notify.error("Произошла ошибка во время статуса голосования")
+      console.error("Ошибка изменения статуса голосования:", err);
     }
   };
 

@@ -12,6 +12,7 @@ export default function useRoomWebSocketHandler(
   resultsVotes,
   averageScore,
   taskName,
+  notify,
   redirectToLogin
 ) {
   const currentMeeting = ref(null);
@@ -42,8 +43,6 @@ export default function useRoomWebSocketHandler(
       if (!msg?.user) return;
       const userId = Object.keys(msg.user)[0];
 
-      console.log(userId);
-
       if (participants.value[userId]) {
         delete participants.value[userId];
       }
@@ -59,6 +58,7 @@ export default function useRoomWebSocketHandler(
     addMessageHandler("task_name_changed", (msg) => {
       if (!msg?.new_task_name) return;
       taskName.value = msg.new_task_name;
+      notify.info("Описание задачи было измененно")
     });
 
     addMessageHandler("meeting_started", async (msg) => {

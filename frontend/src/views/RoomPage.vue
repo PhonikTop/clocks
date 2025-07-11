@@ -13,6 +13,7 @@ import useMeetingManager from "@/composables/room/useMeetingManager";
 import useRoomWebSocketHandler from "@/composables/room/useRoomWebSocketHandler";
 import useRoomParticipants from "@/composables/room/useRoomParticipants";
 import { useRoomWebSocket } from "@/composables/api/useWebSocket";
+import { useNotify } from '@/composables/useNotify.js'
 
 import useRoom from "@/composables/api/useRoomAPI"
 
@@ -23,6 +24,8 @@ const router = useRouter();
 const roomId = ref(route.params.room_id);
 
 const roomName = ref("");
+
+const notify = useNotify();
 
 const { fetchRoomDetails, currentRoom } = useRoom()
 
@@ -56,6 +59,7 @@ const { currentMeeting } = useRoomWebSocketHandler(
   resultsVotes,
   averageScore,
   taskName,
+  notify,
   redirectToLogin
 );
 
@@ -64,7 +68,8 @@ const { meetingRoom } = useMeeting();
 const { getRoomMeeting, ...meetingActions } = useMeetingManager(
   roomState,
   sendMessage,
-  currentMeeting
+  currentMeeting,
+  notify
 );
 
 const handleVote = (voteValue) => {
@@ -75,6 +80,7 @@ const handleVote = (voteValue) => {
       token: token.value,
     });
   } catch (err) {
+    notify.error("Произошла ошибка во время отправки голоса")
     console.error("Ошибка отправки голоса:", err);
   }
 };
@@ -106,6 +112,7 @@ onMounted(async () => {
     await connect();
   } catch (err) {
     console.error("Ошибка подключения:", err);
+    notify.error("Ошибка подключения к WebSocket!")
   }
   if (currentMeeting.value == null) {
     const meeting = await getRoomMeeting(roomId.value);
