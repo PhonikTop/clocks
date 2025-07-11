@@ -1,8 +1,9 @@
-from api.interfaces import IJWTService, IRoomCacheService
+from api.services.jwt_service import JWTService
+from rooms.services.room_cache_service import RoomCacheService
 
 
 class UserSessionService:
-    def __init__(self, jwt_service: IJWTService, cache_service: IRoomCacheService):
+    def __init__(self, jwt_service: JWTService, cache_service: RoomCacheService):
         self.jwt_service = jwt_service
         self.cache_service = cache_service
 

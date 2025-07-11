@@ -4,10 +4,8 @@ from typing import Dict
 import jwt
 from django.conf import settings
 
-from api.interfaces import IJWTService
 
-
-class JWTService(IJWTService):
+class JWTService:
     def __init__(self, secret_key: str = settings.SECRET_KEY, algorithm: str = "HS256"):
         self.secret_key = secret_key
         self.algorithm = algorithm

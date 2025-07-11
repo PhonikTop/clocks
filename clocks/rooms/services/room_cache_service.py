@@ -1,13 +1,12 @@
 from typing import Dict, List, Optional
 from uuid import UUID
 
-from api.interfaces import IRoomCacheService
 from django.core.cache import cache
 from rest_framework.exceptions import ValidationError
 from users.serializers import UserRoleChoices
 
 
-class RoomCacheService(IRoomCacheService):
+class RoomCacheService:
     """
     Менеджер кэша для управления комнатами, пользователями и голосами.
 
