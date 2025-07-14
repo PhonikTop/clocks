@@ -20,7 +20,7 @@ class UserSessionService:
         user_uuid = decoded_data["user_uuid"]
 
         session_data = None
-        for attempt in range(max_retries):
+        for _attempt in range(max_retries):
             session_data = self.cache_service.get_user(user_uuid)
             if isinstance(session_data, dict):
                 break

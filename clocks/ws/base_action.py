@@ -1,6 +1,8 @@
+from json import dumps
+
 from channels.db import database_sync_to_async
 from django.shortcuts import get_object_or_404
-from json import dumps
+
 
 class BaseAction:
     queryset = None
