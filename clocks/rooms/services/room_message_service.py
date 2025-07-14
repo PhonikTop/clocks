@@ -1,7 +1,7 @@
 from enum import Enum
 
-from .message_senders.base import MessageSender
-from .room_cache_service import RoomCacheService, UserData
+from rooms.services.message_senders.base import MessageSender
+from rooms.services.room_cache_service import RoomCacheService, UserData
 
 
 class RoomStatusType(Enum):

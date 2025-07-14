@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from .models import Meeting
+from meetings.models import Meeting
 
 
 class MeetingCreateSerializer(serializers.ModelSerializer):

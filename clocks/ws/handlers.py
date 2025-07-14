@@ -1,4 +1,4 @@
-from .base_action import BaseAction
+from ws.base_action import BaseAction
 
 
 class ActionHandler:

@@ -14,9 +14,9 @@ from rooms.services.room_cache_service import RoomCacheService
 from rooms.services.room_message_service import RoomMessageService
 from rooms.services.room_online_tracker import RoomOnlineTracker
 
-from .logic import end_meeting, meeting_results
-from .models import Meeting
-from .serializers import (
+from meetings.logic import end_meeting, meeting_results
+from meetings.models import Meeting
+from meetings.serializers import (
     MeetingCreateSerializer,
     MeetingGetSerializer,
     MeetingRemoveSerializer,

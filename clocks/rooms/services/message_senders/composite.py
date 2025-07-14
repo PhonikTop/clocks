@@ -1,4 +1,4 @@
-from .base import MessageSender
+from rooms.services.message_senders.base import MessageSender
 
 
 class CompositeMessageSender(MessageSender):

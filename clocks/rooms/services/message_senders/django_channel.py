@@ -1,7 +1,7 @@
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 
-from .base import MessageSender
+from rooms.services.message_senders.base import MessageSender
 
 
 class DjangoChannelMessageSender(MessageSender):

@@ -4,7 +4,7 @@ from pathlib import Path
 
 import dj_database_url
 
-from .core import get_env_param_bool, get_env_param_str
+from settings.core import get_env_param_bool, get_env_param_str
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 PROJECT_ROOT = BASE_DIR.parent

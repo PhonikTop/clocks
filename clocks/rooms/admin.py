@@ -5,7 +5,7 @@ from django.urls import path
 from django.utils.safestring import mark_safe
 from meetings.models import Meeting
 
-from .models import Room
+from rooms.models import Room
 
 
 @admin.register(Room)

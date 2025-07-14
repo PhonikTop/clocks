@@ -7,7 +7,8 @@ from rooms.services.room_message_service import RoomStatusType
 from users.enums import UserRole
 from users.services.user_session_service import UserSessionService
 
-from .base_action import BaseAction
+from ws.base_action import BaseAction
+
 from .handlers import ActionHandler
 
 

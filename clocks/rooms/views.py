@@ -9,13 +9,12 @@ from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from rooms.services.room_cache_service import RoomCacheService
-
-from .models import Room
-from .serializers import (
+from rooms.models import Room
+from rooms.serializers import (
     RoomDetailSerializer,
     RoomNameSerializer,
 )
+from rooms.services.room_cache_service import RoomCacheService
 
 ROOM_TAG = ["Rooms"]
 

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .enums import UserRole
+from users.enums import UserRole
 
 
 class UserInputSerializer(serializers.Serializer):

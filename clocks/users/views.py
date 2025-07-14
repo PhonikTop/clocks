@@ -17,9 +17,9 @@ from rooms.services.message_senders.django_channel import DjangoChannelMessageSe
 from rooms.services.room_cache_service import RoomCacheService
 from rooms.services.room_message_service import RoomMessageService
 
-from .enums import UserRole
-from .serializers import UserFullInfoSerializer, UserInputSerializer
-from .services.user_session_service import UserSessionService
+from users.enums import UserRole
+from users.serializers import UserFullInfoSerializer, UserInputSerializer
+from users.services.user_session_service import UserSessionService
 
 USER_TAG=["Users"]
 

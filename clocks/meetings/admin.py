@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Meeting
+from meetings.models import Meeting
 
 
 @admin.register(Meeting)

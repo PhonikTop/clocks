@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import (
+from meetings.views import (
     EndMeetingView,
     GetMeetingView,
     MeetingResultsView,

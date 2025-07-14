@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import JoinRoomView, UserInfoView
+from users.views import JoinRoomView, UserInfoView
 
 urlpatterns = [
     path("join/<int:pk>/", JoinRoomView.as_view(), name="join_room"),
