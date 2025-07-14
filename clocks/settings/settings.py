@@ -4,7 +4,7 @@ from pathlib import Path
 
 import dj_database_url
 
-from settings.core import get_env_param_bool, get_env_param_str
+from settings.core import get_env_param_bool, get_env_param_str, get_env_param_list
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 PROJECT_ROOT = BASE_DIR.parent
@@ -13,10 +13,6 @@ PROJECT_ROOT = BASE_DIR.parent
 def at_project_root(name):
     return os.path.normpath(os.path.join(PROJECT_ROOT, name))
 
-def get_list(key, default=None):
-    val = os.getenv(key)
-    return [v.strip() for v in val.split(",")] if val else default or []
-
 sys.path.insert(1, PROJECT_ROOT)
 for app_lookup_path in ("clocks",):
     sys.path.insert(1, at_project_root(app_lookup_path))
@@ -24,8 +20,8 @@ for app_lookup_path in ("clocks",):
 SECRET_KEY = get_env_param_str("SECRET_KEY", "dev")
 DEBUG = get_env_param_bool("DEBUG", False)
 
-ALLOWED_HOSTS = get_list("ALLOWED_HOSTS", default=["127.0.0.1", "localhost"])
-CSRF_TRUSTED_ORIGINS = get_list("CSRF_TRUSTED_ORIGINS", default=[])
+ALLOWED_HOSTS = get_env_param_list("ALLOWED_HOSTS", default=["127.0.0.1", "localhost"])
+CSRF_TRUSTED_ORIGINS = get_env_param_list("CSRF_TRUSTED_ORIGINS", default=[])
 
 # Application definition
 DJANGO_APPS = [
@@ -129,7 +125,7 @@ CACHES = {
     }
 }
 
-CORS_ALLOWED_ORIGINS = get_list("CORS_ALLOWED_ORIGINS", default=["127.0.0.1:3000", "localhost:3000"])
+CORS_ALLOWED_ORIGINS = get_env_param_list("CORS_ALLOWED_ORIGINS", default=["127.0.0.1:3000", "localhost:3000"])
 
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",

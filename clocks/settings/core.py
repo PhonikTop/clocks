@@ -23,3 +23,8 @@ def get_env_param_bool(param_name, default=None, required=True):
         1: True,
     }
     return truthy_values.get(param_str, False)
+
+def get_env_param_list(key, default=None):
+    val = os.getenv(key)
+    return [v.strip() for v in val.split(",")] if val else default or []
+
