@@ -88,7 +88,7 @@ class RoomConsumer(AsyncWebsocketConsumer):
             text_data_json = json.loads(text_data)
             action_name = text_data_json.get("action")
             response = await action_handler.execute(action_name, self, text_data_json)
-            await self.send(text_data=json.dumps(response))
+            await self._send_group_message(response)
         except json.JSONDecodeError:
             await self.send({"error": "Invalid JSON format"})
 
@@ -117,7 +117,20 @@ class RoomConsumer(AsyncWebsocketConsumer):
 
         return uuid_value
 
+    async def _send_group_message(self, message):
+        await self.channel_layer.group_send(
+            self._group_name,
+            message
+        )
+
+
     async def user_joined(self, event):
+        await self.send(text_data=json.dumps(event))
+
+    async def user_voted(self, event):
+        await self.send(text_data=json.dumps(event))
+
+    async def results(self, event):
         await self.send(text_data=json.dumps(event))
 
     async def task_name_changed(self, event):
