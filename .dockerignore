@@ -1,0 +1,7 @@
+*.md
+Dockerfile
+docker-compose.prod.yml
+docker-compose.yml
+redis.conf
+pyproject.toml
+static

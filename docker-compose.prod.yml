@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  watchy-api:
+    container_name: watchy-api
+    hostname: watchy
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env.prod
+    command: "uvicorn settings.asgi:application --host 0.0.0.0 --port 8000"
+    depends_on:
+      - watchy-redis
+      - watchy-db
+    volumes:
+      - ./clocks/static:/code/clocks/static
+    restart: always
+    networks:
+      - watchy_network
+
+  watchy-redis:
+    image: redis:latest
+    container_name: watchy-redis
+    restart: always
+    volumes:
+      - ./redis.conf:/usr/local/etc/redis/redis.conf:ro
+    environment:
+      - REDIS_PASSWORD=passwo4509b14a24a8rd
+    networks:
+      - watchy_network
+
+  watchy-db:
+    image: postgres:latest
+    container_name: watchy-db
+    env_file:
+      - .env.prod
+    restart: always
+    networks:
+      - watchy_network
+
+  watchy-nginx:
+    container_name: watchy-nginx
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile
+    restart: always
+    ports:
+      - "82:80"
+    depends_on:
+      - watchy-api
+    volumes:
+      - ./clocks/static:/static
+    networks:
+      - watchy_network
+
+networks:
+  watchy_network:
