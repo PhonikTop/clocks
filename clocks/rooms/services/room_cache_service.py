@@ -3,11 +3,11 @@ from uuid import UUID
 
 from django.core.cache import cache
 from rest_framework.exceptions import ValidationError
-from users.serializers import UserRoleChoices
+from users.enums import UserRole
 
 
 class UserData(TypedDict):
-    role: UserRoleChoices
+    role: UserRole
     nickname: str | None
 
 class RoomCacheService:
@@ -36,7 +36,7 @@ class RoomCacheService:
         for key in keys:
             cache.touch(key, timeout=self.ttl)
 
-    def add_user(self, uuid: str | UUID, role: UserRoleChoices, nickname: str | None = None) -> None:
+    def add_user(self, uuid: str | UUID, role: UserRole, nickname: str | None = None) -> None:
         """
         Добавляет пользователя в кэш комнаты.
 
@@ -138,7 +138,7 @@ class RoomCacheService:
                 users_dict[uuid] = cached_data[user_key]
         return users_dict
 
-    def get_users_by_role(self, role: UserRoleChoices) -> List[str]:
+    def get_users_by_role(self, role: UserRole) -> List[str]:
         """
         Получает список UUID пользователей с определённой ролью.
 
@@ -163,7 +163,7 @@ class RoomCacheService:
             if not user_data:
                 raise ValueError("User not found")
 
-            if user_data["role"] != UserRoleChoices.VOTER.value:
+            if user_data["role"] != UserRole.VOTER:
                 raise ValueError("User is not allowed to vote")
 
             votes: Dict[str, dict] = cache.get(self.votes_key, {})

@@ -4,6 +4,7 @@ from meetings.logic import end_meeting_without_clearing_room, meeting_results
 from meetings.models import Meeting
 from rooms.services.room_cache_service import RoomCacheService
 from rooms.services.room_message_service import RoomStatusType
+from users.enums import UserRole
 from users.services.user_session_service import UserSessionService
 
 from .base_action import BaseAction
@@ -29,7 +30,7 @@ class SubmitVoteAction(BaseAction):
         user_id = user_session_service.get_user_session_data(token)["user_uuid"]
         participants = await sync_to_async(
             room_cache.get_users_by_role
-        )("voter")
+        )(UserRole.VOTER)
 
         if user_id not in participants:
             return {"error": "Participant not found"}

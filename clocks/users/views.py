@@ -17,6 +17,7 @@ from rooms.services.message_senders.django_channel import DjangoChannelMessageSe
 from rooms.services.room_cache_service import RoomCacheService
 from rooms.services.room_message_service import RoomMessageService
 
+from .enums import UserRole
 from .serializers import UserFullInfoSerializer, UserInputSerializer
 from .services.user_session_service import UserSessionService
 
@@ -42,14 +43,21 @@ USER_TAG=["Users"]
 )
 class JoinRoomView(GenericAPIView):
     serializer_class = UserInputSerializer
-    queryset = Room.objects.filter(is_active = True)
+    queryset = Room.objects.filter(is_active=True)
 
     def post(self, request, *args, **kwargs):
         room = self.get_object()
         serializer = self.get_serializer(data=request.data, context={"room": room})
         serializer.is_valid(raise_exception=True)
 
-        nickname, role = serializer.validated_data["nickname"], serializer.validated_data["role"]
+        nickname = serializer.validated_data["nickname"]
+        role_str = serializer.validated_data["role"]
+
+        try:
+            role = UserRole(role_str)
+        except ValueError:
+            return Response({"detail": "Не верное значение роли."}, status=status.HTTP_400_BAD_REQUEST)
+
         user_uuid = str(uuid.uuid4())
 
         jwt_service = JWTService()

@@ -3,13 +3,15 @@ import time
 from api.services.jwt_service import JWTService
 from rooms.services.room_cache_service import RoomCacheService
 
+from users.enums import UserRole
+
 
 class UserSessionService:
     def __init__(self, jwt_service: JWTService, cache_service: RoomCacheService):
         self.jwt_service = jwt_service
         self.cache_service = cache_service
 
-    def create_user_session(self, user_uuid: str, role: str, nickname: str) -> str:
+    def create_user_session(self, user_uuid: str, role: UserRole, nickname: str) -> str:
         self.cache_service.add_user(user_uuid, role, nickname)
         return self.jwt_service.generate_token(user_uuid)
 
