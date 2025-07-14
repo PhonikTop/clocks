@@ -174,7 +174,6 @@ class UpdateMeetingTaskView(UpdateAPIView):
                 "id": 123,
                 "results": {
                     "average_score": 8.5,
-                    "participants_count": 5,
                     "votes": [8, 9, 8, 9, 8]
                 }
             },

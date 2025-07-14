@@ -98,22 +98,18 @@ class RoomDetailView(RetrieveDestroyAPIView):
                     "5e44c567-da6a-42ec-b01f-821b97c211ce": {
                         "role": "voter",
                         "nickname": "User1",
-                        "vote": "null"
                     },
                     "a0d35278-c4e9-468f-acc9-f032a9eb0cc5": {
                         "role": "voter",
                         "nickname": "User2",
-                        "vote": "null"
                     },
                     "9399cba1-6257-4398-919e-005d27c482dc": {
                         "role": "voter",
                         "nickname": "User3",
-                        "vote": "2"
                     },
                     "0cf90a7d-dccd-45f9-9349-f2a9f650ba7f": {
                         "role": "observer",
                         "nickname": "User4",
-                        "vote": "null"
                     }
                 }
             },
