@@ -179,7 +179,6 @@ onMounted(async () => {
           :average-score="averageScore"
           @restart-meeting="meetingActions.handleRestartMeeting"
           @next-meeting="meetingActions.handleNextMeeting"
-          @end-meeting="meetingActions.handleEndMeeting"
         />
       </div>    
     </Transition>

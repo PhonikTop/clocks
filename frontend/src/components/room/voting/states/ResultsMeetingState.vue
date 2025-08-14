@@ -1,5 +1,5 @@
 <script setup>
-defineEmits(["restartMeeting", "nextMeeting", "endMeeting"]);
+defineEmits(["restartMeeting", "nextMeeting"]);
 defineProps({
   resultsVotes: {
     type: Object,
@@ -51,9 +51,6 @@ defineProps({
       </button>
       <button class="btn btn-primary" @click="$emit('nextMeeting')">
         Далее
-      </button>
-      <button class="btn btn-error text-white" @click="$emit('endMeeting')">
-        Завершить
       </button>
     </div>
   </div>

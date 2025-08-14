@@ -91,9 +91,6 @@ export default function useRoomWebSocketHandler(
           localStorage.removeItem("active_meeting_id");
           taskName.value = null;
           break;
-        case "ended":
-          redirectToLogin();
-          break;
       }
     });
   };
