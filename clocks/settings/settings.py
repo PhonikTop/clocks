@@ -1,5 +1,4 @@
 import os
-import sys
 from pathlib import Path
 
 import dj_database_url
@@ -9,13 +8,6 @@ from settings.core import get_env_param_bool, get_env_param_str, get_env_param_l
 BASE_DIR = Path(__file__).resolve().parent.parent
 PROJECT_ROOT = BASE_DIR.parent
 
-
-def at_project_root(name):
-    return os.path.normpath(os.path.join(PROJECT_ROOT, name))
-
-sys.path.insert(1, PROJECT_ROOT)
-for app_lookup_path in ("clocks",):
-    sys.path.insert(1, at_project_root(app_lookup_path))
 
 SECRET_KEY = get_env_param_str("SECRET_KEY", "dev")
 DEBUG = get_env_param_bool("DEBUG", False)
@@ -100,9 +92,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-SESSION_ENGINE = "django.contrib.sessions.backends.cache"
-SESSION_CACHE_ALIAS = "default"
-SESSION_COOKIE_AGE = 60 * 60 * 5
 
 
 CHANNEL_LAYERS = {
