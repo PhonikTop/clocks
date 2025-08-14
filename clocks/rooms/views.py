@@ -1,5 +1,12 @@
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import OpenApiExample, OpenApiResponse, extend_schema
+from drf_spectacular.utils import (
+    OpenApiExample,
+    OpenApiParameter,
+    OpenApiResponse,
+    extend_schema,
+    inline_serializer,
+)
+from rest_framework import serializers
 from rest_framework.generics import (
     CreateAPIView,
     ListAPIView,
@@ -8,6 +15,7 @@ from rest_framework.generics import (
 from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from users.serializers import UserInfoSerializer
 
 from rooms.models import Room
 from rooms.serializers import (
@@ -19,18 +27,25 @@ from rooms.services.room_cache_service import RoomCacheService
 ROOM_TAG = ["Rooms"]
 
 @extend_schema(
+    operation_id="createRoom",
     summary="Создание новой комнаты",
     responses={
         201: RoomNameSerializer,
-        400: OpenApiResponse(description="Некорректные входные данные"),
-        403: OpenApiResponse(description="Не аутентифицирован")
+        400: OpenApiResponse(
+            description="Некорректные входные данные",
+        ),
+        403: OpenApiResponse(
+            description="Доступ запрещён",
+        ),
     },
     examples=[
+        OpenApiExample("Пример запроса", value={"name": "Room A"}, request_only=True),
         OpenApiExample(
-            "Пример запроса",
-            value={"name": "Room A"},
-            request_only=True
-        )
+            "Пример ответа",
+            value={"id": 1, "name": "Room A"},
+            response_only=True,
+            status_codes=["201"],
+        ),
     ],
     tags=ROOM_TAG,
 )
@@ -40,10 +55,28 @@ class RoomCreateView(CreateAPIView):
 
 
 @extend_schema(
+    operation_id="getRoomsList",
     summary="Получение списка доступных комнат",
+    auth=[],
     responses={
-        200: RoomDetailSerializer,
+        200: RoomDetailSerializer(many=True),
     },
+    examples=[
+        OpenApiExample(
+            "Пример ответа",
+            value=[
+                {"id": 1, "name": "Room A", "active_meeting_id": 42, "is_active": True},
+                {
+                    "id": 2,
+                    "name": "Room B",
+                    "active_meeting_id": None,
+                    "is_active": True,
+                },
+            ],
+            response_only=True,
+            status_codes=["200"],
+        )
+    ],
     tags=ROOM_TAG,
 )
 class RoomListView(ListAPIView):
@@ -61,10 +94,20 @@ class RoomDetailView(RetrieveDestroyAPIView):
         return [AllowAny()]
 
     @extend_schema(
-        summary="Удаление комнаты (только для администраторов)",
+        operation_id="deleteRoom",
+        summary="Удаление комнаты",
+        parameters=[
+            OpenApiParameter(
+                name="id",
+                location="path",
+                description="ID комнаты",
+                type=int,
+                examples=[OpenApiExample("Пример", value=1)]
+            )
+        ],
         responses={
             204: None,
-            403: OpenApiResponse(description="Не аутентифицирован"),
+            403: OpenApiResponse(description="Доступ запрещён"),
             404: OpenApiResponse(description="Комната не найдена")
         },
         tags=ROOM_TAG,
@@ -73,21 +116,71 @@ class RoomDetailView(RetrieveDestroyAPIView):
         return super().delete(request, *args, **kwargs)
 
     @extend_schema(
-        summary="Получение информации о комнате.",
+        operation_id="getRoom",
+        summary="Получение информации о комнате",
+        auth=[],
+        parameters=[
+            OpenApiParameter(
+                name="id",
+                location="path",
+                description="ID комнаты",
+                type=int,
+                examples=[OpenApiExample("Пример", value=1)],
+            )
+        ],
         responses={
             200: RoomDetailSerializer,
-            404: OpenApiResponse(description="Комната не найдена")
+            404: OpenApiResponse(description="Комната не найдена"),
         },
+        examples=[
+            OpenApiExample(
+                "Пример ответа",
+                value={
+                    "id": 1,
+                    "name": "Комната переговоров",
+                    "active_meeting_id": 42,
+                    "is_active": True,
+                },
+                response_only=True,
+                status_codes=["200"],
+            )
+        ],
         tags=ROOM_TAG,
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
 @extend_schema(
-    summary="Получение списка участников конкретной комнаты.",
+    operation_id="getRoomParticipants",
+    summary="Получение списка участников комнаты",
+    auth=[],
+    parameters=[
+        OpenApiParameter(
+            name="id",
+            location="path",
+            description="ID комнаты",
+            type=int,
+            examples=[OpenApiExample("Пример", value=1)],
+        )
+    ],
     responses={
-        200: OpenApiTypes.OBJECT,
-        404: OpenApiTypes.OBJECT,
+        200: inline_serializer(
+            name="RoomParticipantsResponse",
+            fields={
+                "participants": serializers.DictField(
+                    child=UserInfoSerializer(),
+                )
+            },
+        ),
+        404: OpenApiResponse(
+            description="Комната не найдена или пуста",
+            response=OpenApiTypes.OBJECT,
+            examples=[
+                OpenApiExample(
+                    "Ошибка", value={"detail": "Комната не найдена или нет участников"}
+                )
+            ],
+        ),
     },
     examples=[
         OpenApiExample(
@@ -99,25 +192,12 @@ class RoomDetailView(RetrieveDestroyAPIView):
                         "nickname": "User1",
                     },
                     "a0d35278-c4e9-468f-acc9-f032a9eb0cc5": {
-                        "role": "voter",
+                        "role": "observer",
                         "nickname": "User2",
                     },
-                    "9399cba1-6257-4398-919e-005d27c482dc": {
-                        "role": "voter",
-                        "nickname": "User3",
-                    },
-                    "0cf90a7d-dccd-45f9-9349-f2a9f650ba7f": {
-                        "role": "observer",
-                        "nickname": "User4",
-                    }
                 }
             },
-            status_codes=["200"]
-        ),
-        OpenApiExample(
-            "Пример ошибки отсутствия комнаты или участников в ней",
-            value={"detail": "Комната не найдена или нет участников"},
-            status_codes=["404"]
+            status_codes=["200"],
         )
     ],
     tags=ROOM_TAG,

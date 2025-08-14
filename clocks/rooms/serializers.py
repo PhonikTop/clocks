@@ -17,7 +17,7 @@ class RoomDetailSerializer(serializers.ModelSerializer):
         model = Room
         fields = ["id", "name", "active_meeting_id", "is_active"]
 
-    def get_active_meeting_id(self, obj):
+    def get_active_meeting_id(self, obj) -> int | None:
         meeting = Meeting.objects.filter(
             room=obj,
             active=True,

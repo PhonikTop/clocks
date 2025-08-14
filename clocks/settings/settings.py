@@ -118,12 +118,18 @@ CORS_ALLOWED_ORIGINS = get_env_param_list("CORS_ALLOWED_ORIGINS", default=["127.
 
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        "rest_framework.authentication.BasicAuthentication",
+    ],
 }
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Watchy API",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
+    "SWAGGER_UI_SETTINGS": {
+        "displayOperationId": True,
+    },
 }
 
 

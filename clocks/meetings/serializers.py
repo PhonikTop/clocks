@@ -4,6 +4,19 @@ from rest_framework.exceptions import ValidationError
 from meetings.models import Meeting
 
 
+class VoteDetailSerializer(serializers.Serializer):
+    nickname = serializers.CharField()
+    vote = serializers.IntegerField()
+
+
+class VotesResponseField(serializers.DictField):
+    child = VoteDetailSerializer()
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.read_only = True
+
+
 class MeetingCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Meeting
@@ -16,13 +29,15 @@ class MeetingCreateSerializer(serializers.ModelSerializer):
         return data
 
 
-class MeetingGetSerializer(serializers.ModelSerializer):
+class MeetingInfoSerializer(serializers.ModelSerializer):
+    votes = VotesResponseField(required=False)
+
     class Meta:
         model = Meeting
         fields = ["id", "room", "task_name", "votes", "average_score", "active"]
 
 
-class MeetingUpdateSerializer(serializers.ModelSerializer):
+class MeetingUpdateTaskNameSerializer(serializers.ModelSerializer):
     class Meta:
         model = Meeting
         fields = ["task_name"]
@@ -35,19 +50,9 @@ class MeetingRemoveSerializer(serializers.ModelSerializer):
 
 
 class MeetingResultsSerializer(serializers.ModelSerializer):
+    votes = VotesResponseField(required=False)
+
     class Meta:
         model = Meeting
-        fields = ["id", "votes"]
-        read_only_fields = ["average_score"]
-
-
-class MeetingVotesSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Meeting
-        fields = ["votes"]
-
-
-class MeetingHistorySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Meeting
-        fields = ["id", "task_name", "votes", "average_score"]
+        fields = ["id", "votes", "average_score"]
+        read_only_fields = ["average_score", "votes"]

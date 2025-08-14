@@ -18,31 +18,35 @@ from rooms.services.room_cache_service import RoomCacheService
 from rooms.services.room_message_service import RoomMessageService
 
 from users.enums import UserRole
-from users.serializers import UserFullInfoSerializer, UserInputSerializer
+from users.serializers import UserFullInfoSerializer, UserInfoSerializer
 from users.services.user_session_service import UserSessionService
 
 USER_TAG=["Users"]
 
 @extend_schema(
+    operation_id="createUser",
     summary="Присоединение пользователя к комнате.",
     description="Присоединяет пользователя к комнате и отправляет уведомление участникам этой комнаты через WebSocket.",
-    request=UserInputSerializer,
+    auth=[],
+    request=UserInfoSerializer,
     responses={
         200: OpenApiTypes.OBJECT,
     },
     examples=[
         OpenApiExample(
             name="JWT-токен пользователя",
-            value={"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX3V1aWQiOiI0MWQyZWQyYS1hMTlmLTRkMWItYjE1Mi04NmNiYjBhMDlhOTUiLCJleHAiOjI1MzM5MjQ4NDE0OX0.SfmkZ_ngO2JZErPJtVGNPR9kdDEQr1k-0eu0CJ9vuHg"},
+            value={
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX3V1aWQiOiI0MWQyZWQyYS1hMTlmLTRkMWItYjE1Mi04NmNiYjBhMDlhOTUiLCJleHAiOjI1MzM5MjQ4NDE0OX0.SfmkZ_ngO2JZErPJtVGNPR9kdDEQr1k-0eu0CJ9vuHg"
+            },
             summary="JWT токен пользователя",
             response_only=True,
-            status_codes=["200"]
+            status_codes=["200"],
         )
     ],
-    tags=USER_TAG
+    tags=USER_TAG,
 )
 class JoinRoomView(GenericAPIView):
-    serializer_class = UserInputSerializer
+    serializer_class = UserInfoSerializer
     queryset = Room.objects.filter(is_active=True)
 
     def post(self, request, *args, **kwargs):
@@ -74,15 +78,17 @@ class JoinRoomView(GenericAPIView):
         return Response({"token": token}, status=status.HTTP_200_OK)
 
 @extend_schema(
+    operation_id="getUser",
     summary="Получение информации о пользователе",
     description="Получение информации о пользователе на основе JWT токена из заголовка Authorization.",
+    auth=[],
     parameters=[
         OpenApiParameter(
             name="Authorization",
             type=str,
             location="header",
             description='JWT токен в формате "Bearer <token>"',
-            required=True
+            required=True,
         )
     ],
     responses={
@@ -94,7 +100,7 @@ class JoinRoomView(GenericAPIView):
             description="Ошибка аутентификации. Токен не предоставлен, неправильный формат или недействительный токен.",
         ),
     },
-    tags=USER_TAG
+    tags=USER_TAG,
 )
 class UserInfoView(GenericAPIView):
     queryset = Room.objects.all()
