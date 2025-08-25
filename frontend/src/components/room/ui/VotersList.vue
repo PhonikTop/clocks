@@ -22,7 +22,7 @@ const voters = computed(() =>
 </script>
 
 <template>
-  <div class="card bg-base-100 shadow p-4 h-auto max-h-[20vh]">
+  <div class="card bg-base-100 shadow p-4 h-auto">
     <h2 class="text-lg font-semibold mb-3">Голосующие</h2>
 
     <div v-if="voters.length" class="space-y-2 overflow-y-auto">
@@ -57,7 +57,7 @@ const voters = computed(() =>
             ]"
             aria-label="Статус голосования"
           >
-            {{ votes.includes(id) ? '✓ Проголосовал' : '⌛ Ожидает' }}
+            {{ votes.includes(id) ? '✓' : '⌛' }}
           </div>
         </Transition>
       </div>

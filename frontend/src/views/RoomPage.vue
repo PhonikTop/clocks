@@ -127,7 +127,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-base-200 flex flex-col items-center p-4 sm:p-6 gap-6">
+  <div class="min-h-screen bg-base-200 flex flex-col p-4 sm:p-6 gap-6">
     <RoomHeader
       :room-id="roomId"
       :task-name="taskName"
@@ -137,50 +137,51 @@ onMounted(async () => {
       @leave-room="redirectToLogin"
     />
 
-    <div v-if="roomState === ROOM_STATES.WAITING" class="w-full max-w-2xl">
-      <WaitingMeetingState
-        v-model:task-name="taskName"
-        @start-voting="(taskName) => meetingActions.startVoting(roomId, taskName)"
-      />
-    </div>
+    <div class="flex flex-1 w-full gap-6">
+      <div class="flex-1 flex flex-col items-center gap-6">
+        <div v-if="roomState === ROOM_STATES.WAITING" class="w-full max-w-2xl">
+          <WaitingMeetingState
+            v-model:task-name="taskName"
+            @start-voting="(taskName) => meetingActions.startVoting(roomId, taskName)"
+          />
+        </div>
 
-    <div
-      v-else-if="roomState === ROOM_STATES.VOTING && userRole === 'voter'"
-      class="w-full max-w-md"
-    >
-      <VotingMeetingState
-        @vote="handleVote"
-        @update-task="meetingActions.updateMeetingTaskName"
-      />
-    </div>
+        <div
+          v-else-if="roomState === ROOM_STATES.VOTING && userRole === 'voter'"
+          class="w-full max-w-md"
+        >
+          <VotingMeetingState
+            @vote="handleVote"
+            @update-task="meetingActions.updateMeetingTaskName"
+          />
+        </div>
 
-    <div
-      v-if="roomState !== ROOM_STATES.RESULTS"
-      class="w-full max-w-3xl fixed bottom-10"
-    >
-      <ParticipantsSection
-        :participants="participants"
-        :votes="votes"
-      />
-    </div>
+        <Transition
+          appear
+          enter-active-class="transition-all duration-700 ease-out"
+          enter-from-class="opacity-0 translate-y-6"
+          enter-to-class="opacity-100 translate-y-0"
+        >
+          <div
+            v-if="roomState === ROOM_STATES.RESULTS"
+            class="w-full max-w-3xl"
+          >
+            <ResultsMeetingState
+              :results-votes="resultsVotes"
+              :average-score="averageScore"
+              @restart-meeting="meetingActions.handleRestartMeeting"
+              @next-meeting="meetingActions.handleNextMeeting"
+            />
+          </div>
+        </Transition>
+      </div>
 
-    <Transition
-      appear
-      enter-active-class="transition-all duration-700 ease-out"
-      enter-from-class="opacity-0 translate-y-6"
-      enter-to-class="opacity-100 translate-y-0"
-    >
-      <div
-        v-if="roomState === ROOM_STATES.RESULTS"
-        class="w-full max-w-3xl"
-      >
-        <ResultsMeetingState
-          :results-votes="resultsVotes"
-          :average-score="averageScore"
-          @restart-meeting="meetingActions.handleRestartMeeting"
-          @next-meeting="meetingActions.handleNextMeeting"
+      <div v-if="roomState !== ROOM_STATES.RESULTS" class="w-84">
+        <ParticipantsSection
+          :participants="participants"
+          :votes="votes"
         />
-      </div>    
-    </Transition>
+      </div>
+    </div>
   </div>
 </template>
