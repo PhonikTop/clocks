@@ -13,7 +13,6 @@ export default function useRoomWebSocketHandler(
   averageScore,
   taskName,
   notify,
-  redirectToLogin
 ) {
   const currentMeeting = ref(null);
 
