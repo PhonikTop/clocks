@@ -57,7 +57,7 @@ export default function useRoomWebSocketHandler(
     addMessageHandler("task_name_changed", (msg) => {
       if (!msg?.new_task_name) return;
       taskName.value = msg.new_task_name;
-      notify.info("Описание задачи было измененно")
+      notify.info(`Описание задачи было измененно участником ${msg.user}`)
     });
 
     addMessageHandler("meeting_started", async (msg) => {

@@ -1,3 +1,4 @@
+from api.services.jwt_service import JWTService
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import (
     OpenApiExample,
@@ -5,6 +6,7 @@ from drf_spectacular.utils import (
     OpenApiResponse,
     extend_schema,
 )
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.generics import (
     CreateAPIView,
     RetrieveAPIView,
@@ -15,6 +17,7 @@ from rooms.services.message_senders.django_channel import DjangoChannelMessageSe
 from rooms.services.room_cache_service import RoomCacheService
 from rooms.services.room_message_service import RoomMessageService
 from rooms.services.room_online_tracker import RoomOnlineTracker
+from users.services.user_session_service import UserSessionService
 
 from meetings.logic import end_meeting, meeting_results
 from meetings.models import Meeting
@@ -247,11 +250,25 @@ class UpdateMeetingTaskView(UpdateAPIView):
     http_method_names = ["put"]
 
     def perform_update(self, serializer):
+        auth_header = self.request.headers.get("Authorization")
+        if not auth_header:
+            raise AuthenticationFailed("Токен не предоставлен")
+
+        if not auth_header.startswith("Bearer "):
+            raise AuthenticationFailed("Неверный формат токена")
+
+        token = auth_header.split(" ")[1]
+
         instance = serializer.save()
+        jwt_service = JWTService()
+        room_cache = RoomCacheService(instance.room)
+        user_session_service = UserSessionService(jwt_service, room_cache)
+
+        user_nickname = user_session_service.get_user_session_data(token)["nickname"]
         channel_sender = DjangoChannelMessageSender()
         room_message_service = RoomMessageService(instance.room.id, channel_sender)
 
-        room_message_service.notify_meeting_task_name_changed(instance.task_name)
+        room_message_service.notify_meeting_task_name_changed(instance.task_name, user_nickname)
 
 
 @extend_schema(

@@ -74,10 +74,11 @@ class RoomMessageService:
         }
         self.message_sender.send(self._group_name, message)
 
-    def notify_meeting_task_name_changed(self, new_task_name:str):
+    def notify_meeting_task_name_changed(self, new_task_name:str, user_nickname: str):
         message = {
             "type": "task_name_changed",
-            "new_task_name": new_task_name
+            "new_task_name": new_task_name,
+            "user": user_nickname
         }
         self.message_sender.send(self._group_name, message)
 
