@@ -59,6 +59,14 @@ class RoomMessageService:
 
         self.message_sender.send(self._group_name, message)
 
+    def notify_meeting_results(self, votes, average_score):
+        message = {
+            "type": "results",
+            "votes": votes,
+            "average_score": average_score,
+        }
+        self.message_sender.send(self._group_name, message)
+
     def notify_user_offline(self, user_uuid):
         user_data: UserData = self.room_cache_service.get_user(user_uuid)
 

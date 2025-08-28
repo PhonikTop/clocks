@@ -3,7 +3,10 @@ from urllib.parse import parse_qs
 
 from api.services.jwt_service import JWTService
 from asgiref.sync import sync_to_async
+from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
+from meetings.logic import check_meeting_finish, meeting_results
+from meetings.models import Meeting
 from rooms.models import Room
 from rooms.services.message_senders.django_channel import DjangoChannelMessageSender
 from rooms.services.room_cache_service import RoomCacheService
@@ -76,12 +79,31 @@ class RoomConsumer(AsyncWebsocketConsumer):
         await sync_to_async(RoomOnlineTracker.set_user_online)(self.uuid, self.lookup_id)
 
         await sync_to_async(self.room_message_service.send_room_voted_users)()
+        meeting = await self.get_meeting()
+        if meeting is not None and meeting.average_score is not None:
+            meeting = await self.get_meeting()
+            votes = await sync_to_async(self.room_cache.get_votes)()
+
+            await self.send(
+                json.dumps(
+                    {
+                        "type": "results",
+                        "votes": votes,
+                        "average_score": meeting.average_score,
+                    }
+                )
+            )
 
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(self._group_name, self.channel_name)
         if self.lookup_id or self.uuid:
             await sync_to_async(RoomOnlineTracker.set_user_offline)(self.uuid, self.lookup_id)
             await sync_to_async(UserChannelTracker.remove_participant)(self.channel_name)
+            if await sync_to_async(check_meeting_finish)(self.lookup_id):
+                meeting = await self.get_meeting()
+                votes = await sync_to_async(self.room_cache.get_votes)()
+                await sync_to_async(meeting_results)(meeting)
+                await sync_to_async(self.room_message_service.notify_meeting_results)(votes, meeting.average_score)
 
     async def receive(self, text_data):
         try:
@@ -95,6 +117,10 @@ class RoomConsumer(AsyncWebsocketConsumer):
     @property
     def _group_name(self):
         return f"{self.group_prefix}_{self.lookup_id}"
+
+    @database_sync_to_async
+    def get_meeting(self):
+        return Meeting.objects.filter(room=self.lookup_id, active=True).first()
 
     async def _get_lookup_id(self):
         scope_id = self.scope["url_route"]["kwargs"].get("id")
