@@ -21,7 +21,7 @@ def meeting_results(meeting):
     meeting_room = RoomCacheService(meeting.room.id)
     votes = meeting_room.get_votes()
     meeting.average_score = (
-        round(sum(item["vote"] for item in votes.values()) / len(votes))
+        -(-sum(item["vote"] for item in votes.values()) // len(votes))
         if votes
         else 0
     )
