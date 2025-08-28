@@ -18,7 +18,11 @@ from rooms.services.room_cache_service import RoomCacheService
 from rooms.services.room_message_service import RoomMessageService
 
 from users.enums import UserRole
-from users.serializers import UserFullInfoSerializer, UserInfoSerializer
+from users.serializers import (
+    KickUserSerializer,
+    UserFullInfoSerializer,
+    UserInfoSerializer,
+)
 from users.services.user_session_service import UserSessionService
 
 USER_TAG=["Users"]
@@ -128,3 +132,40 @@ class UserInfoView(GenericAPIView):
             raise AuthenticationFailed("Token invalid!")
 
         return Response(user_data, status=status.HTTP_200_OK)
+
+class UserKickView(GenericAPIView):
+    queryset = Room.objects.filter(is_active=True)
+    serializer_class = KickUserSerializer
+
+    def post(self, request, *args, **kwargs):
+        auth_header = self.request.headers.get("Authorization")
+        if not auth_header:
+            raise AuthenticationFailed("Токен не предоставлен")
+
+        if not auth_header.startswith("Bearer "):
+            raise AuthenticationFailed("Неверный формат токена")
+
+        token = auth_header.split(" ")[1]
+
+        room = self.get_object()
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        jwt_service = JWTService()
+        room_cache = RoomCacheService(room)
+        user_session_service = UserSessionService(jwt_service, room_cache)
+
+        kicker_uuid = user_session_service.get_user_uuid(token)
+        kicked_uuid = serializer.validated_data["user_uuid"]
+
+        room_cache_service = RoomCacheService(room.id)
+
+        channel_sender = DjangoChannelMessageSender()
+        room_message_service = RoomMessageService(room.id, channel_sender, room_cache_service)
+
+        room_message_service.notify_user_kicked(kicked_uuid, kicker_uuid)
+
+        room_cache_service.remove_user_vote(kicked_uuid)
+        room_cache_service.remove_user(kicked_uuid)
+
+        return Response(status=status.HTTP_200_OK)

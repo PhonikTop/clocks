@@ -58,7 +58,6 @@ export default function useMeetingManager(
 
   const handleRestartMeeting = () => {
     restartMeeting(currentMeeting.value);
-    changeMeetingStatus("restart");
   };
 
   const handleNextMeeting = () => {

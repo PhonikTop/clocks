@@ -47,6 +47,26 @@ class RoomMessageService:
         }
         self.message_sender.send(self._group_name, message)
 
+    def notify_user_kicked(self, kicked_uuid: str, kicker_uuid: str):
+        kicked_user_data: UserData = self.room_cache_service.get_user(kicked_uuid)
+        kicker_user_data: UserData = self.room_cache_service.get_user(kicker_uuid)
+
+        message = {
+            "type": "user_kicked",
+            "kicked": {kicked_uuid: kicked_user_data},
+            "kicker": {kicker_uuid: kicker_user_data},
+        }
+
+        self.message_sender.send(self._group_name, message)
+
+    def notify_meeting_results(self, votes, average_score):
+        message = {
+            "type": "results",
+            "votes": votes,
+            "average_score": average_score,
+        }
+        self.message_sender.send(self._group_name, message)
+
     def notify_user_offline(self, user_uuid):
         user_data: UserData = self.room_cache_service.get_user(user_uuid)
 
@@ -74,10 +94,11 @@ class RoomMessageService:
         }
         self.message_sender.send(self._group_name, message)
 
-    def notify_meeting_task_name_changed(self, new_task_name:str):
+    def notify_meeting_task_name_changed(self, new_task_name:str, user_nickname: str):
         message = {
             "type": "task_name_changed",
-            "new_task_name": new_task_name
+            "new_task_name": new_task_name,
+            "user": user_nickname
         }
         self.message_sender.send(self._group_name, message)
 

@@ -1,6 +1,7 @@
 <script setup>
 import ConnectionStatus from "@/components/room/ui/ConnectionStatus.vue";
 import { ROOM_STATES } from "@/composables/room/useRoomState";
+import { ref } from "vue";
 
 defineProps({
   roomName: String,
@@ -9,7 +10,28 @@ defineProps({
   roomState: String,
 });
 
-defineEmits(["leave-room"]);
+const cooldown = ref(0)
+const isCooldown = ref(false)
+
+function startCooldown(seconds) {
+  cooldown.value = seconds
+  isCooldown.value = true
+
+  const interval = setInterval(() => {
+    cooldown.value--
+    if (cooldown.value <= 0) {
+      clearInterval(interval)
+      isCooldown.value = false
+    }
+  }, 1000)
+}
+
+function handleRestartButton() {
+  startCooldown(10);
+  emit('restart-meeting');
+}
+
+const emit = defineEmits(["leave-room", "restart-meeting"]);
 </script>
 
 <template>
@@ -39,9 +61,13 @@ defineEmits(["leave-room"]);
         </Transition>
       </div>
     </div>
-
-    <button class="btn btn-sm text-white btn-error" @click="$emit('leave-room')">
-      Выйти из комнаты
-    </button>
+    <div class="flex"> 
+      <button v-if="roomState != ROOM_STATES.WAITING" class="btn btn-sm btn-dash" :disabled="isCooldown" @click="handleRestartButton">
+        Перезагрузить голосование
+      </button>
+      <button class="btn btn-sm text-white btn-error ml-3" @click="$emit('leave-room')">
+        Выйти из комнаты
+      </button>
+    </div>
   </header>
 </template>

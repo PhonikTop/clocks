@@ -38,11 +38,15 @@ const {
   fetchParticipants,
   getCurrentUser,
   userError,
+  kickUserRoom
 } = useRoomParticipants(roomId.value);
 
 const token = ref(localStorage.getItem("token"));
 
 const userRole = ref("");
+const userUuid = ref("")
+
+const hasVoted = ref(false)
 
 const redirectToLogin = () => router.push({ name: "Login" });
 
@@ -60,7 +64,9 @@ const { currentMeeting } = useRoomWebSocketHandler(
   averageScore,
   taskName,
   notify,
-  redirectToLogin
+  redirectToLogin,
+  userUuid,
+  hasVoted
 );
 
 const { meetingRoom } = useMeeting();
@@ -69,11 +75,14 @@ const { getRoomMeeting, ...meetingActions } = useMeetingManager(
   roomState,
   sendMessage,
   currentMeeting,
-  notify
+  notify,
+  hasVoted
 );
 
 const handleVote = (voteValue) => {
   try {
+    hasVoted.value = true;
+    localStorage.setItem("hasVoted", true)
     sendMessage({
       action: "submit_vote",
       vote: `${voteValue}`,
@@ -84,6 +93,10 @@ const handleVote = (voteValue) => {
     console.error("Ошибка отправки голоса:", err);
   }
 };
+
+const handleKickUser = async (voterId) => {
+  await kickUserRoom(voterId)
+}
 
 onBeforeMount(async () => {
   if (!token.value) redirectToLogin();
@@ -97,12 +110,15 @@ onBeforeMount(async () => {
     }
     if (currentUser.value) {
       userRole.value = currentUser.value.role;
+      userUuid.value = currentUser.value.user_uuid;
     }
   } catch {
     redirectToLogin();
   }
   await fetchRoomDetails(roomId.value);
   roomName.value = currentRoom.value.name;
+
+  hasVoted.value = JSON.parse(localStorage.getItem("hasVoted")) || false
 
   await fetchParticipants();
 });
@@ -127,7 +143,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-base-200 flex flex-col items-center p-4 sm:p-6 gap-6">
+  <div class="min-h-screen bg-base-200 flex flex-col p-4 sm:p-6 gap-6">
     <RoomHeader
       :room-id="roomId"
       :task-name="taskName"
@@ -135,53 +151,59 @@ onMounted(async () => {
       :is-connected="isConnected"
       :room-state="roomState"
       @leave-room="redirectToLogin"
+      @restart-meeting="meetingActions.handleRestartMeeting"
     />
 
-    <div v-if="roomState === ROOM_STATES.WAITING" class="w-full max-w-2xl">
-      <WaitingMeetingState
-        v-model:task-name="taskName"
-        @start-voting="(taskName) => meetingActions.startVoting(roomId, taskName)"
-      />
-    </div>
+    <div class="flex flex-1 w-full gap-6">
+      <div class="flex-1 flex flex-col items-center gap-6">
+        <div v-if="roomState === ROOM_STATES.WAITING" class="w-full max-w-2xl">
+          <WaitingMeetingState
+            v-model:task-name="taskName"
+            @start-voting="(taskName) => meetingActions.startVoting(roomId, taskName)"
+          />
+        </div>
 
-    <div
-      v-else-if="roomState === ROOM_STATES.VOTING && userRole === 'voter'"
-      class="w-full max-w-md"
-    >
-      <VotingMeetingState
-        @vote="handleVote"
-        @update-task="meetingActions.updateMeetingTaskName"
-      />
-    </div>
+        <div
+          v-else-if="roomState === ROOM_STATES.VOTING"
+          class="w-full max-w-2xl"
+        >
+          <VotingMeetingState
+            :userRole="userRole"
+            :hasVoted="hasVoted"
+            @vote="handleVote"
+            @update-task="meetingActions.updateMeetingTaskName"
+          />
+        </div>
 
-    <div
-      v-if="roomState !== ROOM_STATES.RESULTS"
-      class="w-full max-w-3xl fixed bottom-10"
-    >
-      <ParticipantsSection
-        :participants="participants"
-        :votes="votes"
-      />
-    </div>
+        <Transition
+          appear
+          enter-active-class="transition-all duration-700 ease-out"
+          enter-from-class="opacity-0 translate-y-6"
+          enter-to-class="opacity-100 translate-y-0"
+        >
+          <div
+            v-if="roomState === ROOM_STATES.RESULTS"
+            class="w-full max-w-3xl"
+          >
+            <ResultsMeetingState
+              :results-votes="resultsVotes"
+              :average-score="averageScore"
+              :task-name="taskName"
+              @restart-meeting="meetingActions.handleRestartMeeting"
+              @next-meeting="meetingActions.handleNextMeeting"
+              @resultsCopied="notify.info(`Результаты были успешно скопированы`)"
+            />
+          </div>
+        </Transition>
+      </div>
 
-    <Transition
-      appear
-      enter-active-class="transition-all duration-700 ease-out"
-      enter-from-class="opacity-0 translate-y-6"
-      enter-to-class="opacity-100 translate-y-0"
-    >
-      <div
-        v-if="roomState === ROOM_STATES.RESULTS"
-        class="w-full max-w-3xl"
-      >
-        <ResultsMeetingState
-          :results-votes="resultsVotes"
-          :average-score="averageScore"
-          @restart-meeting="meetingActions.handleRestartMeeting"
-          @next-meeting="meetingActions.handleNextMeeting"
-          @end-meeting="meetingActions.handleEndMeeting"
+      <div v-if="roomState !== ROOM_STATES.RESULTS" class="w-84">
+        <ParticipantsSection
+          :participants="participants"
+          :votes="votes"
+          @kick-user="handleKickUser"
         />
-      </div>    
-    </Transition>
+      </div>
+    </div>
   </div>
 </template>

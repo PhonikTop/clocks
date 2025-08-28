@@ -82,6 +82,11 @@ class RoomCacheService:
         if not user_data:
             raise ValidationError({"error": "User not found in source room"})
 
+        votes = self.get_votes()
+        if user_uuid in votes:
+            self.remove_user_vote(user_uuid)
+            self.set_vote(user_uuid, votes[user_uuid]["vote"])
+
         self.remove_user(user_uuid)
 
         target_service.add_user(

@@ -1,6 +1,10 @@
 from api.services.jwt_service import JWTService
 from asgiref.sync import sync_to_async
-from meetings.logic import end_meeting_without_clearing_room, meeting_results
+from meetings.logic import (
+    check_meeting_finish,
+    end_meeting_without_clearing_room,
+    meeting_results,
+)
 from meetings.models import Meeting
 from rooms.services.room_cache_service import RoomCacheService
 from rooms.services.room_message_service import RoomStatusType
@@ -38,11 +42,9 @@ class SubmitVoteAction(BaseAction):
 
         await sync_to_async(room_cache.set_vote)(user_id, vote)
 
-        votes = await sync_to_async(
-            room_cache.get_votes
-        )()
+        meeting_finished: bool = await sync_to_async(check_meeting_finish)(self.consumer.lookup_id)
 
-        if len(participants) == len(votes):
+        if meeting_finished:
             votes = await sync_to_async(room_cache.get_votes)()
             await sync_to_async(meeting_results)(meeting)
             return {

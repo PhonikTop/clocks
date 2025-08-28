@@ -13,7 +13,9 @@ export default function useRoomWebSocketHandler(
   averageScore,
   taskName,
   notify,
-  redirectToLogin
+  redirectToLogin,
+  userUuid,
+  hasVoted
 ) {
   const currentMeeting = ref(null);
 
@@ -53,18 +55,36 @@ export default function useRoomWebSocketHandler(
       roomState.value = ROOM_STATES.RESULTS;
       resultsVotes.value = msg.votes;
       averageScore.value = msg.average_score;
+      localStorage.setItem("hasVoted", false)
+      hasVoted.value = false
     });
 
     addMessageHandler("task_name_changed", (msg) => {
       if (!msg?.new_task_name) return;
       taskName.value = msg.new_task_name;
-      notify.info("Описание задачи было измененно")
+      notify.info(`Описание задачи было измененно участником ${msg.user}`)
+    });
+
+    addMessageHandler("user_kicked", (msg) => {
+      const kickerId = Object.keys(msg.kicker)[0];
+      const kickerNickname = msg.kicker[kickerId].nickname;
+
+      const kickedId = Object.keys(msg.kicked)[0];
+      const kickedNickname = msg.kicked[kickedId].nickname;
+
+      delete participants.value[kickedId];
+      
+      notify.info(`Участник ${kickerNickname} кикнул участника ${kickedNickname}`)
+      
+      if (kickedId === userUuid.value) {redirectToLogin()}
     });
 
     addMessageHandler("meeting_started", async (msg) => {
       if (!msg?.id) return;
       await getMeeting(msg.id);
       currentMeeting.value = msg.id;
+      localStorage.setItem("hasVoted", false)
+      hasVoted.value = false
       localStorage.setItem("active_meeting_id", msg.id);
       taskName.value = meetingRoom.value.task_name;
 
@@ -81,8 +101,10 @@ export default function useRoomWebSocketHandler(
 
       switch (msg.status) {
         case "restart":
+          hasVoted.value = false;
           roomState.value = ROOM_STATES.VOTING;
           votes.value = [];
+          notify.info("Голосование перезапущенно")
           break;
         case "next":
           roomState.value = ROOM_STATES.WAITING;
@@ -90,9 +112,6 @@ export default function useRoomWebSocketHandler(
           votes.value = [];
           localStorage.removeItem("active_meeting_id");
           taskName.value = null;
-          break;
-        case "ended":
-          redirectToLogin();
           break;
       }
     });

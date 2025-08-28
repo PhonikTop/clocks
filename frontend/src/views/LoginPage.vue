@@ -13,7 +13,16 @@ const selectRoomId = ref("");
 const { roomList, fetchRoomList } = useRoom();
 const { joinRoom } = useUser();
 
+const enterButtonEnable = ref(true);
+
+function validateInput() {
+  if (/^\s*$/.test(username.value)) {
+    username.value = ''
+  }
+}
 const enterRoom = async () => {
+  enterButtonEnable.value = false;
+  localStorage.clear()
   const role = isObserver.value ? "observer" : "voter";
   await joinRoom(selectRoomId.value, username.value, role);
   router.push({
@@ -45,9 +54,11 @@ onMounted(async () => {
             Имя пользователя
           </label>
           <input
+            @input="validateInput"
             id="username"
             v-model="username"
             type="text"
+            maxlength="25"
             required
             placeholder="Введите имя"
             class="input"
@@ -84,7 +95,7 @@ onMounted(async () => {
         <button
           type="submit"
           class="btn btn-primary"
-          :disabled="!username || !selectRoomId"
+          :disabled="!username || !selectRoomId || !enterButtonEnable"
         >
           Войти
         </button>

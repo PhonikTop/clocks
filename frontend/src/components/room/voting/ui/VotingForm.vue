@@ -6,7 +6,7 @@ const emit = defineEmits(["vote"]);
 const guessValue = ref("");
 
 const isValid = computed(() => {
-  return Number(guessValue.value) > 0;
+  return /^\d+$/.test(guessValue.value) && Number(guessValue.value) > 0 && Number(guessValue.value) < 1000 && Number.isInteger(guessValue.value);
 });
 
 const handleSubmit = () => {
