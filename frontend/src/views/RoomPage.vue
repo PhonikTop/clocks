@@ -151,6 +151,7 @@ onMounted(async () => {
       :is-connected="isConnected"
       :room-state="roomState"
       @leave-room="redirectToLogin"
+      @restart-meeting="meetingActions.handleRestartMeeting"
     />
 
     <div class="flex flex-1 w-full gap-6">

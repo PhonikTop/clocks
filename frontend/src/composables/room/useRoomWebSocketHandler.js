@@ -104,6 +104,7 @@ export default function useRoomWebSocketHandler(
           hasVoted.value = false;
           roomState.value = ROOM_STATES.VOTING;
           votes.value = [];
+          notify.info("Голосование перезапущенно")
           break;
         case "next":
           roomState.value = ROOM_STATES.WAITING;
