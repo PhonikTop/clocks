@@ -11,3 +11,6 @@ class UserFullInfoSerializer(serializers.Serializer):
     role = serializers.ChoiceField(choices=UserRole.choices())
     nickname = serializers.CharField(max_length=25)
     user_uuid = serializers.CharField()
+
+class KickUserSerializer(serializers.Serializer):
+    user_uuid = serializers.CharField()

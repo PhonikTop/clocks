@@ -127,6 +127,13 @@ class RoomConsumer(AsyncWebsocketConsumer):
     async def user_joined(self, event):
         await self.send(text_data=json.dumps(event))
 
+    async def user_kicked(self, event: dict[str, dict]):
+        await self.send(text_data=json.dumps(event))
+
+        uuid_str = next(iter(event["kicked"]))
+        if uuid_str == self.uuid:
+            await self.close()
+
     async def user_voted(self, event):
         await self.send(text_data=json.dumps(event))
 

@@ -47,6 +47,18 @@ class RoomMessageService:
         }
         self.message_sender.send(self._group_name, message)
 
+    def notify_user_kicked(self, kicked_uuid: str, kicker_uuid: str):
+        kicked_user_data: UserData = self.room_cache_service.get_user(kicked_uuid)
+        kicker_user_data: UserData = self.room_cache_service.get_user(kicker_uuid)
+
+        message = {
+            "type": "user_kicked",
+            "kicked": {kicked_uuid: kicked_user_data},
+            "kicker": {kicker_uuid: kicker_user_data},
+        }
+
+        self.message_sender.send(self._group_name, message)
+
     def notify_user_offline(self, user_uuid):
         user_data: UserData = self.room_cache_service.get_user(user_uuid)
 

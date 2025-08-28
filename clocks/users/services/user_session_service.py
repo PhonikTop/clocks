@@ -15,6 +15,11 @@ class UserSessionService:
         self.cache_service.add_user(user_uuid, role, nickname)
         return self.jwt_service.generate_token(user_uuid)
 
+    def get_user_uuid(self, token: str) -> str:
+        decoded_data = self.jwt_service.decode_token(token)
+        user_uuid = decoded_data["user_uuid"]
+        return user_uuid
+
     def get_user_session_data(self, token: str, max_retries: int = 5, delay: float = 0.1) -> dict:
         decoded_data = self.jwt_service.decode_token(token)
         user_uuid = decoded_data["user_uuid"]
