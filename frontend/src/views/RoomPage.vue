@@ -38,11 +38,15 @@ const {
   fetchParticipants,
   getCurrentUser,
   userError,
+  kickUserRoom
 } = useRoomParticipants(roomId.value);
 
 const token = ref(localStorage.getItem("token"));
 
 const userRole = ref("");
+const userUuid = ref("")
+
+const hasVoted = ref(false)
 
 const redirectToLogin = () => router.push({ name: "Login" });
 
@@ -60,7 +64,8 @@ const { currentMeeting } = useRoomWebSocketHandler(
   averageScore,
   taskName,
   notify,
-  redirectToLogin
+  redirectToLogin,
+  userUuid,
 );
 
 const { meetingRoom } = useMeeting();
@@ -85,6 +90,10 @@ const handleVote = (voteValue) => {
   }
 };
 
+const handleKickUser = async (voterId) => {
+  await kickUserRoom(voterId)
+}
+
 onBeforeMount(async () => {
   if (!token.value) redirectToLogin();
 
@@ -97,6 +106,7 @@ onBeforeMount(async () => {
     }
     if (currentUser.value) {
       userRole.value = currentUser.value.role;
+      userUuid.value = currentUser.value.user_uuid;
     }
   } catch {
     redirectToLogin();
@@ -180,6 +190,7 @@ onMounted(async () => {
         <ParticipantsSection
           :participants="participants"
           :votes="votes"
+          @kick-user="handleKickUser"
         />
       </div>
     </div>

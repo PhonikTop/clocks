@@ -10,6 +10,7 @@ export default function useRoomParticipants(roomId) {
     currentUser,
     error: userError,
     getCurrentUser: fetchCurrentUser,
+    kickUser,
   } = userComposable;
 
   const currentUserId = computed(() => currentUser.value?.user_uuid || "");
@@ -23,6 +24,10 @@ export default function useRoomParticipants(roomId) {
     await fetchCurrentUser(roomId, token);
   };
 
+  const kickUserRoom = async (kickUserUuid) => {
+    await kickUser(roomId, kickUserUuid);
+  }
+
   return {
     participants,
     currentUser,
@@ -30,5 +35,6 @@ export default function useRoomParticipants(roomId) {
     currentUserId,
     fetchParticipants,
     getCurrentUser,
+    kickUserRoom
   };
 }

@@ -26,10 +26,21 @@ export default function useRoom() {
     }
   };
 
+  const kickUser = async (roomId, kickUserUuid) => {
+    try {
+      await api.post(`/user/${roomId}/kick`, {
+        user_uuid: kickUserUuid,
+      });
+    } catch (err) {
+      error.value = err.response;
+    }
+  };
+
   return {
     currentUser,
     error,
     getCurrentUser,
     joinRoom,
+    kickUser
   };
 }

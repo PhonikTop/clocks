@@ -13,6 +13,8 @@ export default function useRoomWebSocketHandler(
   averageScore,
   taskName,
   notify,
+  redirectToLogin,
+  userUuid,
 ) {
   const currentMeeting = ref(null);
 
@@ -58,6 +60,20 @@ export default function useRoomWebSocketHandler(
       if (!msg?.new_task_name) return;
       taskName.value = msg.new_task_name;
       notify.info(`Описание задачи было измененно участником ${msg.user}`)
+    });
+
+    addMessageHandler("user_kicked", (msg) => {
+      const kickerId = Object.keys(msg.kicker)[0];
+      const kickerNickname = msg.kicker[kickerId].nickname;
+
+      const kickedId = Object.keys(msg.kicked)[0];
+      const kickedNickname = msg.kicked[kickedId].nickname;
+
+      delete participants.value[kickedId];
+      
+      notify.info(`Участник ${kickerNickname} кикнул участника ${kickedNickname}`)
+      
+      if (kickedId === userUuid.value) {redirectToLogin()}
     });
 
     addMessageHandler("meeting_started", async (msg) => {
