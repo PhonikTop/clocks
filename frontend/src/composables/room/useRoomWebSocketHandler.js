@@ -15,6 +15,7 @@ export default function useRoomWebSocketHandler(
   notify,
   redirectToLogin,
   userUuid,
+  hasVoted
 ) {
   const currentMeeting = ref(null);
 
@@ -54,6 +55,8 @@ export default function useRoomWebSocketHandler(
       roomState.value = ROOM_STATES.RESULTS;
       resultsVotes.value = msg.votes;
       averageScore.value = msg.average_score;
+      localStorage.setItem("hasVoted", false)
+      hasVoted.value = false
     });
 
     addMessageHandler("task_name_changed", (msg) => {
@@ -80,6 +83,8 @@ export default function useRoomWebSocketHandler(
       if (!msg?.id) return;
       await getMeeting(msg.id);
       currentMeeting.value = msg.id;
+      localStorage.setItem("hasVoted", false)
+      hasVoted.value = false
       localStorage.setItem("active_meeting_id", msg.id);
       taskName.value = meetingRoom.value.task_name;
 
@@ -96,6 +101,7 @@ export default function useRoomWebSocketHandler(
 
       switch (msg.status) {
         case "restart":
+          hasVoted.value = false;
           roomState.value = ROOM_STATES.VOTING;
           votes.value = [];
           break;

@@ -66,6 +66,7 @@ const { currentMeeting } = useRoomWebSocketHandler(
   notify,
   redirectToLogin,
   userUuid,
+  hasVoted
 );
 
 const { meetingRoom } = useMeeting();
@@ -74,11 +75,14 @@ const { getRoomMeeting, ...meetingActions } = useMeetingManager(
   roomState,
   sendMessage,
   currentMeeting,
-  notify
+  notify,
+  hasVoted
 );
 
 const handleVote = (voteValue) => {
   try {
+    hasVoted.value = true;
+    localStorage.setItem("hasVoted", true)
     sendMessage({
       action: "submit_vote",
       vote: `${voteValue}`,
@@ -113,6 +117,8 @@ onBeforeMount(async () => {
   }
   await fetchRoomDetails(roomId.value);
   roomName.value = currentRoom.value.name;
+
+  hasVoted.value = JSON.parse(localStorage.getItem("hasVoted")) || false
 
   await fetchParticipants();
 });
@@ -162,6 +168,7 @@ onMounted(async () => {
         >
           <VotingMeetingState
             :userRole="userRole"
+            :hasVoted="hasVoted"
             @vote="handleVote"
             @update-task="meetingActions.updateMeetingTaskName"
           />

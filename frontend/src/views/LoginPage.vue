@@ -14,6 +14,7 @@ const { roomList, fetchRoomList } = useRoom();
 const { joinRoom } = useUser();
 
 const enterRoom = async () => {
+  localStorage.clear()
   const role = isObserver.value ? "observer" : "voter";
   await joinRoom(selectRoomId.value, username.value, role);
   router.push({
