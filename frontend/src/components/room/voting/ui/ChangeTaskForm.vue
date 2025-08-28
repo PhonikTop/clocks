@@ -17,7 +17,8 @@ const handleSubmit = () => {
     <input
       v-model="localTaskName"
       type="text"
-      placeholder="Название комнаты"
+      placeholder="Название задачи"
+      maxlength="35"
       class="input input-bordered w-full"
     />
     <button type="submit" class="btn btn-primary">

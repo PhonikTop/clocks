@@ -157,10 +157,11 @@ onMounted(async () => {
         </div>
 
         <div
-          v-else-if="roomState === ROOM_STATES.VOTING && userRole === 'voter'"
-          class="w-full max-w-md"
+          v-else-if="roomState === ROOM_STATES.VOTING"
+          class="w-full max-w-2xl"
         >
           <VotingMeetingState
+            :userRole="userRole"
             @vote="handleVote"
             @update-task="meetingActions.updateMeetingTaskName"
           />
