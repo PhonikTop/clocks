@@ -188,8 +188,10 @@ onMounted(async () => {
             <ResultsMeetingState
               :results-votes="resultsVotes"
               :average-score="averageScore"
+              :task-name="taskName"
               @restart-meeting="meetingActions.handleRestartMeeting"
               @next-meeting="meetingActions.handleNextMeeting"
+              @resultsCopied="notify.info(`Результаты были успешно скопированы`)"
             />
           </div>
         </Transition>
