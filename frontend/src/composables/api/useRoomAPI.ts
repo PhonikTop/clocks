@@ -10,9 +10,13 @@ export interface Room {
 
 export type RoleEnum = "observer" | "voter";
 
-interface Participant {
+interface ParticipantInfo {
   nickname: string;
   role: RoleEnum;
+}
+
+export interface Participant {
+  [key: string]: ParticipantInfo
 }
 
 interface ApiError {
