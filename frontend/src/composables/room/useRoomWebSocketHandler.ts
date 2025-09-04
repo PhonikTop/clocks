@@ -1,47 +1,88 @@
-import { ref, onMounted } from "vue";
+import { ref, onMounted, Ref } from "vue";
 import { ROOM_STATES } from "./useRoomState";
-import useMeeting from "@/composables/api/useMeetingAPI";
+import useMeeting, { Vote } from "@/composables/api/useMeetingAPI";
+import { Participant } from "../api/useRoomAPI";
+import { User } from "../api/useUserAPI";
 
 const { getMeeting, meetingRoom } = useMeeting();
 
+interface UserJoinedMsg {
+  user: Record<string, { nickname: string }>;
+}
+
+interface VotedMsg {
+  user: string;
+}
+
+interface UserOnlineStatusMsg {
+  user: Record<string, { nickname: string }>;
+}
+
+interface TaskNameChangedMsg {
+  new_task_name?: string;
+  user: string;
+}
+
+interface ResultsMsg {
+  votes: Vote[];
+  average_score: number;
+}
+
+interface UserKickedMsg {
+  kicked: Record<string, User>;
+  kicker: Record<string, User>;
+}
+
+interface MeetingStartedMsg {
+  id: number;
+}
+
+interface VotedUsersMsg {
+  voted_users: string[]
+}
+
+interface MeetingStatusChangeMsg {
+  status?: "restart" | "next";
+}
+
 export default function useRoomWebSocketHandler(
-  addMessageHandler,
-  roomState,
-  participants,
-  votes,
-  resultsVotes,
-  averageScore,
-  taskName,
-  notify,
-  redirectToLogin,
-  userUuid,
-  hasVoted
+  addMessageHandler: any,
+  roomState: Ref<string>,
+  participants: Ref<Participant>,
+  votes: Ref<string[]>,
+  resultsVotes: Ref,
+  averageScore: Ref<number>,
+  taskName: Ref<string | null>,
+  notify: any,
+  redirectToLogin: any,
+  userUuid: Ref<string>,
+  hasVoted: Ref<boolean>
 ) {
-  const currentMeeting = ref(null);
+  const currentMeeting: Ref<null | number> = ref(null);
 
   const setupHandlers = () => {
-    addMessageHandler("user_joined", (msg) => {
+    addMessageHandler("user_joined", (msg: UserJoinedMsg) => {
       if (!msg?.user) return;
       Object.assign(participants.value, msg.user);
     });
 
-    addMessageHandler("user_voted", (msg) => {
+    addMessageHandler("user_voted", (msg: VotedMsg) => {
       if (!msg?.user) return;
       if (!votes.value.includes(msg.user)) {
         votes.value.push(msg.user);
       }
     });
 
-    addMessageHandler("user_online", (msg) => {
+    addMessageHandler("user_online", (msg: UserOnlineStatusMsg) => {
       if (!msg?.user) return;
-      const userId = Object.keys(msg.user)[0];
+      const userId: string = Object.keys(msg.user)[0];
 
       if (!participants.value[userId]) {
         Object.assign(participants.value, msg.user);
       }
     });
 
-    addMessageHandler("user_offline", (msg) => {
+    addMessageHandler("user_offline", (msg: UserOnlineStatusMsg) => {
       if (!msg?.user) return;
       const userId = Object.keys(msg.user)[0];
 
@@ -50,26 +91,26 @@ export default function useRoomWebSocketHandler(
       }
     });
 
-    addMessageHandler("results", (msg) => {
+    addMessageHandler("results", (msg: ResultsMsg) => {
       if (!msg?.votes || !msg?.average_score) return;
       roomState.value = ROOM_STATES.RESULTS;
       resultsVotes.value = msg.votes;
       averageScore.value = msg.average_score;
-      localStorage.setItem("hasVoted", false)
+      localStorage.setItem("hasVoted", JSON.stringify(false))
       hasVoted.value = false
     });
 
-    addMessageHandler("task_name_changed", (msg) => {
+    addMessageHandler("task_name_changed", (msg: TaskNameChangedMsg) => {
       if (!msg?.new_task_name) return;
       taskName.value = msg.new_task_name;
       notify.info(`Описание задачи было измененно участником ${msg.user}`)
     });
 
-    addMessageHandler("user_kicked", (msg) => {
+    addMessageHandler("user_kicked", (msg: UserKickedMsg) => {
       const kickerId = Object.keys(msg.kicker)[0];
       const kickerNickname = msg.kicker[kickerId].nickname;
 
-      const kickedId = Object.keys(msg.kicked)[0];
+      const kickedId: string = Object.keys(msg.kicked)[0];
       const kickedNickname = msg.kicked[kickedId].nickname;
 
       delete participants.value[kickedId];
@@ -79,24 +120,24 @@ export default function useRoomWebSocketHandler(
       if (kickedId === userUuid.value) {redirectToLogin()}
     });
 
-    addMessageHandler("meeting_started", async (msg) => {
+    addMessageHandler("meeting_started", async (msg: MeetingStartedMsg) => {
       if (!msg?.id) return;
       await getMeeting(msg.id);
       currentMeeting.value = msg.id;
-      localStorage.setItem("hasVoted", false)
+      localStorage.setItem("hasVoted", JSON.stringify(false))
       hasVoted.value = false
-      localStorage.setItem("active_meeting_id", msg.id);
-      taskName.value = meetingRoom.value.task_name;
+      localStorage.setItem("active_meeting_id", msg.id.toString());
+      taskName.value = meetingRoom.value?.task_name || "";
 
       roomState.value = ROOM_STATES.VOTING;
     });
 
-    addMessageHandler("voted_users_update", (msg) => {
+    addMessageHandler("voted_users_update", (msg: VotedUsersMsg) => {
       if (!msg?.voted_users) return;
       votes.value = msg.voted_users;
     });
 
-    addMessageHandler("meeting_change_status", (msg) => {
+    addMessageHandler("meeting_change_status", (msg: MeetingStatusChangeMsg) => {
       if (!msg?.status) return;
 
       switch (msg.status) {

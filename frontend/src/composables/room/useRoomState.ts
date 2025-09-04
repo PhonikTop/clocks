@@ -1,10 +1,10 @@
 import { ref } from "vue";
 
-export const ROOM_STATES = {
-  WAITING: "waiting",
-  VOTING: "voting",
-  RESULTS: "results",
-};
+export enum ROOM_STATES {
+  WAITING = "waiting",
+  VOTING = "voting",
+  RESULTS = "results",
+}
 
 export default function useRoomState() {
   const roomState = ref(ROOM_STATES.WAITING);

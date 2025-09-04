@@ -2,7 +2,7 @@ import { computed } from "vue";
 import useRoom from "@/composables/api/useRoomAPI";
 import useUser from "@/composables/api/useUserAPI";
 
-export default function useRoomParticipants(roomId) {
+export default function useRoomParticipants(roomId: number) {
   const { participants, fetchParticipants: fetchRoomParticipants } = useRoom();
 
   const userComposable = useUser();
@@ -20,11 +20,10 @@ export default function useRoomParticipants(roomId) {
   };
 
   const getCurrentUser = async () => {
-    const token = localStorage.getItem("token");
-    await fetchCurrentUser(roomId, token);
+    await fetchCurrentUser(roomId);
   };
 
-  const kickUserRoom = async (kickUserUuid) => {
+  const kickUserRoom = async (kickUserUuid: string) => {
     await kickUser(roomId, kickUserUuid);
   }
 
