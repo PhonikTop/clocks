@@ -1,7 +1,8 @@
 import { ref, Ref } from "vue";
 import api from "@/plugins/axios";
 
-interface User {
+export interface User {
+  user_uuid: string
   nickname: string;
   role: string;
 }

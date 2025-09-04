@@ -6,11 +6,11 @@ interface UserVoteDetail {
   vote: number;
 }
 
-interface Vote {
+export interface Vote {
   [key: string]: UserVoteDetail;
 }
 
-interface Meeting {
+export interface Meeting {
   id: number;
   room: string;
   task_name: string;

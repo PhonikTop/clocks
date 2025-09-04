@@ -1,7 +1,7 @@
 import { ref, Ref } from "vue";
 import api from "@/plugins/axios";
 
-interface Room {
+export interface Room {
   id: number;
   name: string;
   active_meeting_id: number;

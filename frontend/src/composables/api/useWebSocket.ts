@@ -1,6 +1,6 @@
 import { ref, Ref, onUnmounted } from "vue";
 
-type MessageHandler = (message: any) => void;
+export type MessageHandler = (message: any) => void;
 
 export function useRoomWebSocket(url: string) {
   const isConnected: Ref<boolean> = ref(false);
