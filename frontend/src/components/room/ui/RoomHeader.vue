@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import ConnectionStatus from "@/components/room/ui/ConnectionStatus.vue";
 import { ROOM_STATES } from "@/composables/room/useRoomState";
 import { ref } from "vue";
@@ -13,7 +13,7 @@ defineProps({
 const cooldown = ref(0)
 const isCooldown = ref(false)
 
-function startCooldown(seconds) {
+function startCooldown(seconds: number) {
   cooldown.value = seconds
   isCooldown.value = true
 

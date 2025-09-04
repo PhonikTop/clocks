@@ -1,7 +1,8 @@
-<script setup>
+<script setup lang="ts">
+import { useToasts } from '@/composables/useToasts'
 import { inject } from 'vue'
 
-const toast = inject('toast')
+const toast = inject<ReturnType<typeof useToasts>>('toast')
 if (!toast) throw new Error('Toast not provided!')
 
 const { toasts, pauseToast, resumeToast, removeToast } = toast

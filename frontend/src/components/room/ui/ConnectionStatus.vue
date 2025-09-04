@@ -1,10 +1,7 @@
-<script setup>
-defineProps({
-  status: {
-    type: Boolean,
-    default: false,
-  },
-});
+<script setup lang="ts">
+const props = defineProps<{
+  status?: boolean
+}>()
 </script>
 
 <template>
@@ -14,9 +11,9 @@ defineProps({
       :class="status ? 'badge-success' : 'badge-error'"
     >
       <span class="mr-1">
-        {{ status ? '✓' : '✗' }}
+        {{ props.status ? '✓' : '✗' }}
       </span>
-      {{ status ? 'Online' : 'Offline' }}
+      {{ props.status ? 'Online' : 'Offline' }}
     </span>
   </div>
 </template>

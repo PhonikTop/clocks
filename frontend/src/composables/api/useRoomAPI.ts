@@ -10,7 +10,7 @@ export interface Room {
 
 export type RoleEnum = "observer" | "voter";
 
-interface ParticipantInfo {
+export interface ParticipantInfo {
   nickname: string;
   role: RoleEnum;
 }

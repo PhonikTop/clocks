@@ -17,7 +17,6 @@ import { useNotify } from '@/composables/useNotify.js'
 
 import useRoom from "@/composables/api/useRoomAPI"
 
-import useMeeting from "@/composables/api/useMeetingAPI";
 
 const route = useRoute();
 const router = useRouter();
@@ -69,8 +68,6 @@ const { currentMeeting } = useRoomWebSocketHandler(
   hasVoted
 );
 
-const { meetingRoom } = useMeeting();
-
 const { getRoomMeeting, ...meetingActions } = useMeetingManager(
   roomState,
   sendMessage,
@@ -103,7 +100,6 @@ onBeforeMount(async () => {
   try {
     await getCurrentUser();
     if (userError.value?.status === 403) {
-      meetingRoom;
       redirectToLogin();
       return;
     }
