@@ -32,7 +32,7 @@ export default function useRoom() {
   const meetingRoom: Ref<Meeting | null> = ref(null);
   const error: Ref<string | null> = ref(null);
 
-  const createMeeting = async (roomId: string, taskName: string): Promise<Meeting | undefined> => {
+  const createMeeting = async (roomId: number, taskName: string): Promise<Meeting | undefined> => {
     try {
       const { data } = await api.post<Meeting>("/meeting/", {
         room: roomId,
@@ -45,7 +45,7 @@ export default function useRoom() {
     }
   };
 
-  const getMeeting = async (meetingId: string): Promise<void> => {
+  const getMeeting = async (meetingId: number): Promise<void> => {
     try {
       const { data } = await api.get<Meeting>(`/meeting/${meetingId}`);
       meetingRoom.value = data;
@@ -55,7 +55,7 @@ export default function useRoom() {
     }
   };
 
-  const endMeeting = async (meetingId: string): Promise<void> => {
+  const endMeeting = async (meetingId: number): Promise<void> => {
     try {
       await api.put(`/meeting/${meetingId}/end`);
     } catch (err: unknown) {
@@ -64,7 +64,7 @@ export default function useRoom() {
     }
   };
 
-  const setMeetingTask = async (meetingId: string, task: string): Promise<void> => {
+  const setMeetingTask = async (meetingId: number, task: string): Promise<void> => {
     try {
       await api.put(`/meeting/${meetingId}/task`, { task_name: task });
     } catch (err: unknown) {
@@ -73,7 +73,7 @@ export default function useRoom() {
     }
   };
 
-  const restartMeeting = async (meetingId: string): Promise<Meeting | undefined> => {
+  const restartMeeting = async (meetingId: number): Promise<Meeting | undefined> => {
     try {
       const { data } = await api.put<Meeting>(`/meeting/${meetingId}/restart`);
       return data;
