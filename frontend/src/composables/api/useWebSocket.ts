@@ -1,19 +1,21 @@
-import { ref, onUnmounted } from "vue";
+import { ref, Ref, onUnmounted } from "vue";
 
-export function useRoomWebSocket(url) {
-  const isConnected = ref(false);
-  const error = ref(null);
-  const messageHandlers = ref({});
+type MessageHandler = (message: any) => void;
 
-  const reconnectAttempts = ref(0);
+export function useRoomWebSocket(url: string) {
+  const isConnected: Ref<boolean> = ref(false);
+  const error: Ref<Event | Error | null> = ref(null);
+  const messageHandlers: Ref<Record<string, MessageHandler>> = ref({});
+
+  const reconnectAttempts: Ref<number> = ref(0);
   const maxReconnectAttempts = 5;
-  const reconnectFailed = ref(false);
+  const reconnectFailed: Ref<boolean> = ref(false);
 
-  let socket = null;
-  let reconnectTimer = null;
+  let socket: WebSocket | null = null;
+  let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   let isActive = true;
 
-  const connect = () => {
+  const connect = (): void => {
     reconnectFailed.value = false;
 
     if (socket) disconnect();
@@ -25,7 +27,7 @@ export function useRoomWebSocket(url) {
       reconnectAttempts.value = 0;
     };
 
-    socket.onmessage = (event) => {
+    socket.onmessage = (event: MessageEvent) => {
       try {
         const message = JSON.parse(event.data);
 
@@ -37,7 +39,7 @@ export function useRoomWebSocket(url) {
       }
     };
 
-    socket.onerror = (event) => {
+    socket.onerror = (event: Event) => {
       error.value = event;
       reconnect();
     };
@@ -48,7 +50,7 @@ export function useRoomWebSocket(url) {
     };
   };
 
-  const reconnect = () => {
+  const reconnect = (): void => {
     if (reconnectTimer) {
       clearTimeout(reconnectTimer);
       reconnectTimer = null;
@@ -70,21 +72,21 @@ export function useRoomWebSocket(url) {
     );
   };
 
-  const sendMessage = (message) => {
+  const sendMessage = (message: any): void => {
     if (socket?.readyState === WebSocket.OPEN) {
       socket.send(JSON.stringify(message));
     }
   };
 
-  const addMessageHandler = (type, handler) => {
+  const addMessageHandler = (type: string, handler: MessageHandler): void => {
     messageHandlers.value[type] = handler;
   };
 
-  const removeMessageHandler = (type) => {
+  const removeMessageHandler = (type: string): void => {
     delete messageHandlers.value[type];
   };
 
-  const disconnect = () => {
+  const disconnect = (): void => {
     if (socket) {
       socket.close();
       socket = null;
@@ -95,7 +97,7 @@ export function useRoomWebSocket(url) {
     }
   };
 
-  const resetReconnectLimit = () => {
+  const resetReconnectLimit = (): void => {
     reconnectAttempts.value = 0;
     reconnectFailed.value = false;
   };
