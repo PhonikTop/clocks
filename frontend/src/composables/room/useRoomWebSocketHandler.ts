@@ -51,7 +51,7 @@ export default function useRoomWebSocketHandler(
   participants: Ref<Participant>,
   votes: Ref<string[]>,
   resultsVotes: Ref,
-  averageScore: Ref<number>,
+  averageScore: Ref<number | null>,
   taskName: Ref<string | null>,
   notify: any,
   redirectToLogin: any,

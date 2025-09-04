@@ -2,7 +2,7 @@ import { ref, Ref } from "vue";
 import api from "@/plugins/axios";
 
 export interface User {
-  user_uuid: string
+  user_uuid: string;
   nickname: string;
   role: string;
 }
@@ -20,9 +20,14 @@ interface ApiError {
   };
 }
 
+interface ApiErrorState {
+  message: string;
+  status?: number;
+}
+
 export default function useRoom() {
   const currentUser: Ref<User | null> = ref(null);
-  const error: Ref<string | null> = ref(null);
+  const error: Ref<ApiErrorState | null> = ref(null);
 
   const getCurrentUser = async (roomId: number): Promise<void> => {
     try {
@@ -30,7 +35,10 @@ export default function useRoom() {
       currentUser.value = data;
     } catch (err: unknown) {
       const e = err as ApiError;
-      error.value = e.response?.data?.message || "Ошибка загрузки пользователя";
+      error.value = {
+        message: e.response?.data?.message || "Ошибка загрузки пользователя",
+        status: e.response?.status,
+      };
     }
   };
 
@@ -47,7 +55,10 @@ export default function useRoom() {
       localStorage.setItem("token", data.token);
     } catch (err: unknown) {
       const e = err as ApiError;
-      error.value = e.response?.data?.message || "Ошибка при входе в комнату";
+      error.value = {
+        message: e.response?.data?.message || "Ошибка при входе в комнату",
+        status: e.response?.status,
+      };
     }
   };
 
@@ -58,7 +69,10 @@ export default function useRoom() {
       });
     } catch (err: unknown) {
       const e = err as ApiError;
-      error.value = e.response?.data?.message || "Ошибка при кике пользователя";
+      error.value = {
+        message: e.response?.data?.message || "Ошибка при кике пользователя",
+        status: e.response?.status,
+      };
     }
   };
 

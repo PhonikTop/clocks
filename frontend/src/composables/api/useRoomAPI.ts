@@ -30,7 +30,7 @@ interface ApiError {
 export default function useRoom() {
   const currentRoom: Ref<Room | null> = ref(null);
   const roomList: Ref<Room[]> = ref([]);
-  const participants: Ref<Participant[]> = ref([]);
+  const participants: Ref<Participant> = ref({});
   const error: Ref<string | null> = ref(null);
 
   const fetchRoomList = async (): Promise<void> => {
@@ -55,7 +55,7 @@ export default function useRoom() {
 
   const fetchParticipants = async (roomId: number): Promise<void> => {
     try {
-      const { data } = await api.get<{ participants: Participant[] }>(
+      const { data } = await api.get<{ participants: Participant }>(
         `/room/${roomId}/participants/`
       );
       participants.value = data.participants;

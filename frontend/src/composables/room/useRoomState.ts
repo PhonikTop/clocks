@@ -1,4 +1,4 @@
-import { ref } from "vue";
+import { Ref, ref } from "vue";
 
 export enum ROOM_STATES {
   WAITING = "waiting",
@@ -11,7 +11,7 @@ export default function useRoomState() {
   const taskName = ref("");
   const votes = ref([]);
   const resultsVotes = ref({});
-  const averageScore = ref(null);
+  const averageScore: Ref<null | number> = ref(null);
 
   return {
     roomState,
