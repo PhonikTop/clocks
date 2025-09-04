@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { ref, onBeforeMount, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
@@ -21,7 +21,7 @@ import useMeeting from "@/composables/api/useMeetingAPI";
 
 const route = useRoute();
 const router = useRouter();
-const roomId = ref(route.params.room_id);
+const roomId = ref(Number(route.params.room_id));
 
 const roomName = ref("");
 
@@ -76,13 +76,12 @@ const { getRoomMeeting, ...meetingActions } = useMeetingManager(
   sendMessage,
   currentMeeting,
   notify,
-  hasVoted
 );
 
-const handleVote = (voteValue) => {
+const handleVote = (voteValue: number) => {
   try {
     hasVoted.value = true;
-    localStorage.setItem("hasVoted", true)
+    localStorage.setItem("hasVoted", JSON.stringify(true))
     sendMessage({
       action: "submit_vote",
       vote: `${voteValue}`,
@@ -94,7 +93,7 @@ const handleVote = (voteValue) => {
   }
 };
 
-const handleKickUser = async (voterId) => {
+const handleKickUser = async (voterId: string) => {
   await kickUserRoom(voterId)
 }
 
@@ -116,9 +115,12 @@ onBeforeMount(async () => {
     redirectToLogin();
   }
   await fetchRoomDetails(roomId.value);
-  roomName.value = currentRoom.value.name;
 
-  hasVoted.value = JSON.parse(localStorage.getItem("hasVoted")) || false
+  if (currentRoom.value) {
+    roomName.value = currentRoom.value.name;
+  }
+
+  hasVoted.value = JSON.parse(localStorage.getItem("hasVoted") ?? "false");
 
   await fetchParticipants();
 });
@@ -134,7 +136,7 @@ onMounted(async () => {
     const meeting = await getRoomMeeting(roomId.value);
     if (meeting?.id != null) {
       currentMeeting.value = meeting.id;
-      localStorage.setItem("active_meeting_id", meeting.id);
+      localStorage.setItem("active_meeting_id", JSON.stringify(meeting.id));
       taskName.value = meeting.task_name;
       roomState.value = ROOM_STATES.VOTING;
     }
@@ -159,7 +161,7 @@ onMounted(async () => {
         <div v-if="roomState === ROOM_STATES.WAITING" class="w-full max-w-2xl">
           <WaitingMeetingState
             v-model:task-name="taskName"
-            @start-voting="(taskName) => meetingActions.startVoting(roomId, taskName)"
+            @start-voting="(taskName: string) => meetingActions.startVoting(roomId, taskName)"
           />
         </div>
 

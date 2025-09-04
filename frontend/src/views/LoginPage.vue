@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { onMounted } from "vue";
 import { ref } from "vue";
 import { useRouter } from "vue-router";
@@ -8,7 +8,7 @@ import useUser from "@/composables/api/useUserAPI";
 const router = useRouter();
 const username = ref("");
 const isObserver = ref(false);
-const selectRoomId = ref("");
+const selectRoomId = ref();
 
 const { roomList, fetchRoomList } = useRoom();
 const { joinRoom } = useUser();
