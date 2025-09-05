@@ -1,14 +1,10 @@
-<script setup>
+<script setup lang="ts">
+import { Participant } from "@/composables/api/useRoomAPI";
 import { computed } from "vue";
 
-const props = defineProps({
-  participants: {
-    type: Object,
-    required: true,
-    validator: (value) =>
-      Object.values(value).every((p) => "nickname" in p && "role" in p),
-  },
-});
+const props = defineProps<{
+  participants: Participant
+}>()
 
 const observers = computed(() =>
   Object.entries(props.participants)

@@ -1,9 +1,9 @@
-<script setup>
+<script setup lang="ts">
 import html2canvas from 'html2canvas-pro';
 import { ref } from 'vue'
 
 const captureArea = ref(null)
-const screenshot = ref(null)
+const screenshot = ref<null | string>(null)
 
 const takeScreenshot = async () => {
   if (!captureArea.value) return

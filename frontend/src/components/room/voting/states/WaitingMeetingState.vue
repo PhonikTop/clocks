@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import ChangeTaskForm from "@/components/room/voting/ui/ChangeTaskForm.vue";
 
 defineEmits(["start-voting"]);

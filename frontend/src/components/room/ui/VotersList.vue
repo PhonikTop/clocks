@@ -1,34 +1,32 @@
-<script setup>
-import { computed, ref } from "vue";
+<script setup lang="ts">
+import { Participant, ParticipantInfo } from "@/composables/api/useRoomAPI";
+import { computed, Ref, ref } from "vue";
 
-const props = defineProps({
-  participants: {
-    type: Object,
-    required: true,
-    validator: (value) =>
-      Object.values(value).every((p) => "nickname" in p && "role" in p),
-  },
-  votes: {
-    type: Object,
-    required: true,
-  },
-});
+const props = defineProps<{
+  participants: Participant;
+  votes: string[];
+}>();
 
-const emit = defineEmits(['kick-user']);
+const emit = defineEmits<{
+  (e: 'kick-user', id: string): void;
+}>();
 
+// Получаем только участников с ролью "voter" и сортируем по имени
 const voters = computed(() =>
   Object.entries(props.participants)
-    .filter(([, participant]) => participant.role === "voter")
-    .sort((a, b) => a[1].nickname.localeCompare(b[1].nickname))
+    .filter(([, info]) => info.role === "voter")
+    .sort(([, aInfo], [, bInfo]) => aInfo.nickname.localeCompare(bInfo.nickname))
 );
 
-const selectedVoter = ref(null);
+// Выбранный голосующий
+const selectedVoter: Ref<null | { id: string; info: ParticipantInfo }> = ref(null);
 
-function onVoterClick(participant) {
-  if (selectedVoter.value?.id === participant[0]) {
+// Обработчик клика по участнику
+function onVoterClick([id, info]: [string, ParticipantInfo]) {
+  if (selectedVoter.value?.id === id) {
     selectedVoter.value = null;
   } else {
-    selectedVoter.value = { id: participant[0], ...participant[1] };
+    selectedVoter.value = { id, info };
   }
 }
 </script>
@@ -66,14 +64,14 @@ function onVoterClick(participant) {
             leave-to-class="opacity-0 scale-90"
           >
             <div
-              :key="votes.includes(id) ? 'voted' : 'waiting'"
+              :key="props.votes.includes(id) ? 'voted' : 'waiting'"
               :class="[
                 'badge text-sm text-white',
-                votes.includes(id) ? 'badge-success' : 'badge-warning'
+                props.votes.includes(id) ? 'badge-success' : 'badge-warning'
               ]"
               aria-label="Статус голосования"
             >
-              {{ votes.includes(id) ? '✓' : '⌛' }}
+              {{ props.votes.includes(id) ? '✓' : '⌛' }}
             </div>
           </Transition>
         </div>
@@ -91,7 +89,7 @@ function onVoterClick(participant) {
               @click="emit('kick-user', selectedVoter.id)"
               class="btn btn-primary w-full mt-1"
             >
-              Кикнуть {{ selectedVoter.nickname }}
+              Кикнуть {{ selectedVoter.info.nickname }}
             </button>
           </div>
         </Transition>

@@ -1,6 +1,8 @@
 import { ROOM_STATES } from "./useRoomState";
 import useMeeting from "@/composables/api/useMeetingAPI";
 import useRoom from "@/composables/api/useRoomAPI";
+import { Ref } from "vue";
+import { useNotify } from "../useNotify";
 
 const {
   createMeeting,
@@ -14,12 +16,12 @@ const {
 const { fetchRoomDetails, currentRoom } = useRoom();
 
 export default function useMeetingManager(
-  roomState,
-  sendMessage,
-  currentMeeting,
-  notify
+  roomState: Ref<ROOM_STATES>,
+  sendMessage: (msg: unknown) => void,
+  currentMeeting: Ref<number | null>,
+  notify: ReturnType<typeof useNotify>
 ) {
-  const startVoting = async (roomId, taskName) => {
+  const startVoting = async (roomId: number, taskName: string) => {
     try {
       roomState.value = ROOM_STATES.VOTING;
       await createMeeting(roomId, taskName);
@@ -30,21 +32,21 @@ export default function useMeetingManager(
     }
   };
 
-  const getRoomMeeting = async (roomId) => {
+  const getRoomMeeting = async (roomId: number) => {
     await fetchRoomDetails(roomId);
-    if (currentRoom.value.active_meeting_id == null) return null;
+    if (currentRoom.value?.active_meeting_id == null) return null;
 
     await getMeeting(currentRoom.value.active_meeting_id);
 
     return meetingRoom.value;
   };
 
-  const updateMeetingTaskName = async (newName) => {
+  const updateMeetingTaskName = async (newName: string) => {
     if (!currentMeeting.value) return;
     await setMeetingTask(currentMeeting.value, newName);
   };
 
-  const changeMeetingStatus = async (new_status) => {
+  const changeMeetingStatus = async (new_status: string) => {
     try {
       await sendMessage({
         action: "change_meeting_status",
@@ -57,6 +59,7 @@ export default function useMeetingManager(
   };
 
   const handleRestartMeeting = () => {
+    if (!currentMeeting.value) {return;}
     restartMeeting(currentMeeting.value);
   };
 
@@ -66,6 +69,7 @@ export default function useMeetingManager(
   };
 
   const handleEndMeeting = () => {
+    if (!currentMeeting.value) {return;}
     endMeeting(currentMeeting.value);
     changeMeetingStatus("ended");
     localStorage.removeItem("active_meeting_id");
