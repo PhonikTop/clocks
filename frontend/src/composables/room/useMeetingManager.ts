@@ -46,14 +46,14 @@ export default function useMeetingManager(
     await setMeetingTask(currentMeeting.value, newName);
   };
 
-  const changeMeetingStatus = async (new_status: string) => {
+  const changeMeetingStatus = (newStatus: string) => {
     try {
-      await sendMessage({
+      sendMessage({
         action: "change_meeting_status",
-        status: `${new_status}`,
+        status: newStatus,
       });
     } catch (err) {
-      notify.error("Произошла ошибка во время статуса голосования")
+      notify.error("Произошла ошибка во время изменения статуса голосования")
       console.error("Ошибка изменения статуса голосования:", err);
     }
   };
