@@ -122,14 +122,16 @@ export default function useRoomWebSocketHandler(
 
     addMessageHandler("meeting_started", async (msg: MeetingStartedMsg) => {
       if (!msg?.id) return;
-      await getMeeting(msg.id);
-      currentMeeting.value = msg.id;
-      localStorage.setItem("hasVoted", JSON.stringify(false))
-      hasVoted.value = false
-      localStorage.setItem("active_meeting_id", msg.id.toString());
-      taskName.value = meetingRoom.value?.task_name || "";
-
-      roomState.value = ROOM_STATES.VOTING;
+      getMeeting(msg.id)
+        .then(() => {
+          currentMeeting.value = msg.id;
+          localStorage.setItem("hasVoted", JSON.stringify(false));
+          hasVoted.value = false;
+          localStorage.setItem("active_meeting_id", msg.id.toString());
+          taskName.value = meetingRoom.value?.task_name || "";
+          roomState.value = ROOM_STATES.VOTING;
+        })
+        .catch(console.error);
     });
 
     addMessageHandler("voted_users_update", (msg: VotedUsersMsg) => {

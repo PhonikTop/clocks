@@ -1,6 +1,11 @@
 import { ref, Ref, onUnmounted } from "vue";
 
-export type MessageHandler = (message: any) => void;
+export interface WebSocketMessage {
+  type: string;
+  [key: string]: unknown;
+}
+
+export type MessageHandler = (message: WebSocketMessage) => void;
 
 export function useRoomWebSocket(url: string) {
   const isConnected: Ref<boolean> = ref(false);
@@ -29,11 +34,12 @@ export function useRoomWebSocket(url: string) {
 
     socket.onmessage = (event: MessageEvent) => {
       try {
-        const message = JSON.parse(event.data);
-
-        if (message.type && messageHandlers.value[message.type]) {
-          messageHandlers.value[message.type](message);
-        }
+          if (typeof event.data === "string") {
+            const message = JSON.parse(event.data) as WebSocketMessage;
+            if (message.type && messageHandlers.value[message.type]) {
+              messageHandlers.value[message.type](message);
+            }
+          }
       } catch (e) {
         console.error("Error parsing message:", e);
       }
@@ -72,7 +78,7 @@ export function useRoomWebSocket(url: string) {
     );
   };
 
-  const sendMessage = (message: any): void => {
+  const sendMessage = (message: WebSocketMessage): void => {
     if (socket?.readyState === WebSocket.OPEN) {
       socket.send(JSON.stringify(message));
     }
