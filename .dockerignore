@@ -5,3 +5,9 @@ docker-compose.yml
 redis.conf
 pyproject.toml
 static
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.git
+.venv/
