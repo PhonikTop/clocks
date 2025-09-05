@@ -7,6 +7,17 @@ import tsParser from "@typescript-eslint/parser";
 import { defineConfig } from "eslint/config";
 
 export default defineConfig([
+  {
+    files: ["**/*.{js,jsx,ts,tsx,vue}"],
+    languageOptions: {
+      globals: { ...globals.browser, ...globals.node },
+      parserOptions: {
+        ecmaVersion: 2021,
+        sourceType: "module",
+      },
+    },
+  },
+
   js.configs.recommended,
 
   // Vue
@@ -26,7 +37,8 @@ export default defineConfig([
     plugins: { "@typescript-eslint": ts },
     rules: {
       ...ts.configs.recommended.rules,
-      // ...ts.configs["recommended-requiring-type-checking"].rules,
+      ...ts.configs["recommended-requiring-type-checking"].rules,
+      "@typescript-eslint/no-floating-promises": "off",
     },
   },
 
@@ -39,11 +51,13 @@ export default defineConfig([
         project: "./tsconfig.json",
         extraFileExtensions: [".vue"],
       },
+      globals: { ...globals.browser, ...globals.node },
     },
     plugins: { "@typescript-eslint": ts },
     rules: {
       ...ts.configs.recommended.rules,
       "vue/no-undef-properties": "error",
+      "vue/require-default-prop": "off",
     },
   },
 
