@@ -17,7 +17,7 @@ const { fetchRoomDetails, currentRoom } = useRoom();
 
 export default function useMeetingManager(
   roomState: Ref<ROOM_STATES>,
-  sendMessage: (msg: any) => void,
+  sendMessage: (msg: unknown) => void,
   currentMeeting: Ref<number | null>,
   notify: ReturnType<typeof useNotify>
 ) {
@@ -36,7 +36,7 @@ export default function useMeetingManager(
     await fetchRoomDetails(roomId);
     if (currentRoom.value?.active_meeting_id == null) return null;
 
-    await getMeeting(currentRoom.value?.active_meeting_id);
+    await getMeeting(currentRoom.value.active_meeting_id);
 
     return meetingRoom.value;
   };

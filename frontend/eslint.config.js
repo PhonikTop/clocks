@@ -26,7 +26,6 @@ export default defineConfig([
     plugins: { "@typescript-eslint": ts },
     rules: {
       ...ts.configs.recommended.rules,
-      "@typescript-eslint/no-explicit-any": "off",
       // ...ts.configs["recommended-requiring-type-checking"].rules,
     },
   },

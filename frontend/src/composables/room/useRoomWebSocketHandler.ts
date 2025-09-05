@@ -3,6 +3,7 @@ import { ROOM_STATES } from "./useRoomState";
 import useMeeting, { Vote } from "@/composables/api/useMeetingAPI";
 import { Participant } from "../api/useRoomAPI";
 import { User } from "../api/useUserAPI";
+import { useNotify } from "../useNotify";
 
 const { getMeeting, meetingRoom } = useMeeting();
 
@@ -45,35 +46,53 @@ interface MeetingStatusChangeMsg {
   status?: "restart" | "next";
 }
 
+interface WebsocketMessages {
+  "user_joined": UserJoinedMsg;
+  "user_voted": VotedMsg;
+  "user_online": UserOnlineStatusMsg;
+  "user_offline": UserOnlineStatusMsg;
+  "task_name_changed": TaskNameChangedMsg;
+  "results": ResultsMsg;
+  "user_kicked": UserKickedMsg;
+  "meeting_started": MeetingStartedMsg;
+  "voted_users_update": VotedUsersMsg;
+  "meeting_change_status": MeetingStatusChangeMsg;
+}
+
+type AddMessageHandler = <K extends keyof WebsocketMessages>(
+  type: K,
+  handler: (msg: WebsocketMessages[K]) => void
+) => void;
+
 export default function useRoomWebSocketHandler(
-  addMessageHandler: any,
+  addMessageHandler: AddMessageHandler,
   roomState: Ref<string>,
   participants: Ref<Participant>,
   votes: Ref<string[]>,
-  resultsVotes: Ref,
+  resultsVotes: Ref<Vote[]>,
   averageScore: Ref<number | null>,
   taskName: Ref<string | null>,
-  notify: any,
-  redirectToLogin: any,
+  notify: ReturnType<typeof useNotify>,
+  redirectToLogin: () => void,
   userUuid: Ref<string>,
   hasVoted: Ref<boolean>
 ) {
   const currentMeeting: Ref<null | number> = ref(null);
 
   const setupHandlers = () => {
-    addMessageHandler("user_joined", (msg: UserJoinedMsg) => {
+    addMessageHandler("user_joined", (msg) => {
       if (!msg?.user) return;
       Object.assign(participants.value, msg.user);
     });
 
-    addMessageHandler("user_voted", (msg: VotedMsg) => {
+    addMessageHandler("user_voted", (msg) => {
       if (!msg?.user) return;
       if (!votes.value.includes(msg.user)) {
         votes.value.push(msg.user);
       }
     });
 
-    addMessageHandler("user_online", (msg: UserOnlineStatusMsg) => {
+    addMessageHandler("user_online", (msg) => {
       if (!msg?.user) return;
       const userId: string = Object.keys(msg.user)[0];
 
@@ -82,7 +101,7 @@ export default function useRoomWebSocketHandler(
       }
     });
 
-    addMessageHandler("user_offline", (msg: UserOnlineStatusMsg) => {
+    addMessageHandler("user_offline", (msg) => {
       if (!msg?.user) return;
       const userId = Object.keys(msg.user)[0];
 
@@ -91,22 +110,22 @@ export default function useRoomWebSocketHandler(
       }
     });
 
-    addMessageHandler("results", (msg: ResultsMsg) => {
+    addMessageHandler("results", (msg) => {
       if (!msg?.votes || !msg?.average_score) return;
       roomState.value = ROOM_STATES.RESULTS;
       resultsVotes.value = msg.votes;
       averageScore.value = msg.average_score;
-      localStorage.setItem("hasVoted", JSON.stringify(false))
-      hasVoted.value = false
+      localStorage.setItem("hasVoted", JSON.stringify(false));
+      hasVoted.value = false;
     });
 
-    addMessageHandler("task_name_changed", (msg: TaskNameChangedMsg) => {
+    addMessageHandler("task_name_changed", (msg) => {
       if (!msg?.new_task_name) return;
       taskName.value = msg.new_task_name;
-      notify.info(`Описание задачи было измененно участником ${msg.user}`)
+      notify.info(`Описание задачи было измененно участником ${msg.user}`);
     });
 
-    addMessageHandler("user_kicked", (msg: UserKickedMsg) => {
+    addMessageHandler("user_kicked", (msg) => {
       const kickerId = Object.keys(msg.kicker)[0];
       const kickerNickname = msg.kicker[kickerId].nickname;
 
@@ -114,13 +133,13 @@ export default function useRoomWebSocketHandler(
       const kickedNickname = msg.kicked[kickedId].nickname;
 
       delete participants.value[kickedId];
-      
+
       notify.info(`Участник ${kickerNickname} кикнул участника ${kickedNickname}`)
-      
+
       if (kickedId === userUuid.value) {redirectToLogin()}
     });
 
-    addMessageHandler("meeting_started", async (msg: MeetingStartedMsg) => {
+    addMessageHandler("meeting_started", (msg) => {
       if (!msg?.id) return;
       getMeeting(msg.id)
         .then(() => {
@@ -134,12 +153,12 @@ export default function useRoomWebSocketHandler(
         .catch(console.error);
     });
 
-    addMessageHandler("voted_users_update", (msg: VotedUsersMsg) => {
+    addMessageHandler("voted_users_update", (msg) => {
       if (!msg?.voted_users) return;
       votes.value = msg.voted_users;
     });
 
-    addMessageHandler("meeting_change_status", (msg: MeetingStatusChangeMsg) => {
+    addMessageHandler("meeting_change_status", (msg) => {
       if (!msg?.status) return;
 
       switch (msg.status) {
