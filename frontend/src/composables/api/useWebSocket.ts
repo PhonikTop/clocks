@@ -5,6 +5,11 @@ export interface WebSocketMessage {
   [key: string]: unknown;
 }
 
+export interface WebSocketSendMessage {
+  action: string;
+  [key: string]: unknown;
+}
+
 export type MessageHandler = (message: WebSocketMessage) => void;
 
 export function useRoomWebSocket(url: string) {
@@ -78,7 +83,7 @@ export function useRoomWebSocket(url: string) {
     );
   };
 
-  const sendMessage = (message: WebSocketMessage): void => {
+  const sendMessage = (message: WebSocketSendMessage): void => {
     if (socket?.readyState === WebSocket.OPEN) {
       socket.send(JSON.stringify(message));
     }
