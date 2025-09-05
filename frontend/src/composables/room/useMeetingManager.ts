@@ -3,6 +3,7 @@ import useMeeting from "@/composables/api/useMeetingAPI";
 import useRoom from "@/composables/api/useRoomAPI";
 import { Ref } from "vue";
 import { useNotify } from "@/composables/useNotify";
+import { WebSocketSendMessage } from "@/composables/api/useWebSocket";
 
 const {
   createMeeting,
@@ -17,7 +18,7 @@ const { fetchRoomDetails, currentRoom } = useRoom();
 
 export default function useMeetingManager(
   roomState: Ref<ROOM_STATES>,
-  sendMessage: (msg: unknown) => void,
+  sendMessage: (msg: WebSocketSendMessage) => void,
   currentMeeting: Ref<number | null>,
   notify: ReturnType<typeof useNotify>
 ) {
