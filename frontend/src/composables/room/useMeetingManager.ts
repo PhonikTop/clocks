@@ -2,7 +2,7 @@ import { ROOM_STATES } from "./useRoomState";
 import useMeeting from "@/composables/api/useMeetingAPI";
 import useRoom from "@/composables/api/useRoomAPI";
 import { Ref } from "vue";
-import { useNotify } from "../useNotify";
+import { useNotify } from "@/composables/useNotify";
 
 const {
   createMeeting,
