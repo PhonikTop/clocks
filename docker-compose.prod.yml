@@ -7,11 +7,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        REQUIREMENTS_FILE: requirements.txt
     env_file:
       - .env.prod
-    command: "gunicorn settings.asgi:application -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000"
+    command: "uvicorn settings.asgi:application --host 0.0.0.0 --port 8000"
     depends_on:
       - watchy-redis
       - watchy-db

@@ -15,11 +15,10 @@ WORKDIR /app
 
 
 # Копируем requirements
-ARG REQUIREMENTS_FILE=requirements.txt
-COPY requirements.txt requirements.dev.txt ./
+COPY requirements.txt .
 
 # Устанавливаем зависимости в отдельный каталог
-RUN pip install --no-cache-dir --prefix=/install -r ${REQUIREMENTS_FILE}
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
 
 # Stage 2: final
 FROM python:3.12-alpine
