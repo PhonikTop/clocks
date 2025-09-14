@@ -1,68 +1,11 @@
 import { ref, onMounted, Ref } from "vue";
-import { ROOM_STATES } from "./useRoomState";
+import { ROOM_STATES } from "@/composables/room/useRoomState";
 import useMeeting, { Vote } from "@/composables/api/useMeetingAPI";
-import { Participant } from "../api/useRoomAPI";
-import { User } from "../api/useUserAPI";
-import { useNotify } from "../useNotify";
+import { Participant } from "@/composables/api/useRoomAPI";
+import { useNotify } from "@/composables/useNotify";
+import { AddMessageHandler } from "@/types/websocket";
 
 const { getMeeting, meetingRoom } = useMeeting();
-
-interface UserJoinedMsg {
-  user: Record<string, { nickname: string }>;
-}
-
-interface VotedMsg {
-  user: string;
-}
-
-interface UserOnlineStatusMsg {
-  user: Record<string, { nickname: string }>;
-}
-
-interface TaskNameChangedMsg {
-  new_task_name?: string;
-  user: string;
-}
-
-interface ResultsMsg {
-  votes: Vote[];
-  average_score: number;
-}
-
-interface UserKickedMsg {
-  kicked: Record<string, User>;
-  kicker: Record<string, User>;
-}
-
-interface MeetingStartedMsg {
-  id: number;
-}
-
-interface VotedUsersMsg {
-  voted_users: string[]
-}
-
-interface MeetingStatusChangeMsg {
-  status?: "restart" | "next";
-}
-
-interface WebsocketMessages {
-  "user_joined": UserJoinedMsg;
-  "user_voted": VotedMsg;
-  "user_online": UserOnlineStatusMsg;
-  "user_offline": UserOnlineStatusMsg;
-  "task_name_changed": TaskNameChangedMsg;
-  "results": ResultsMsg;
-  "user_kicked": UserKickedMsg;
-  "meeting_started": MeetingStartedMsg;
-  "voted_users_update": VotedUsersMsg;
-  "meeting_change_status": MeetingStatusChangeMsg;
-}
-
-type AddMessageHandler = <K extends keyof WebsocketMessages>(
-  type: K,
-  handler: (msg: WebsocketMessages[K]) => void
-) => void;
 
 export default function useRoomWebSocketHandler(
   addMessageHandler: AddMessageHandler,

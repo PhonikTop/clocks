@@ -1,4 +1,5 @@
 import { ref, Ref, onUnmounted } from "vue";
+import { AddMessageHandler } from "@/types/websocket";
 
 export interface WebSocketMessage {
   type: string;
@@ -89,8 +90,8 @@ export function useRoomWebSocket(url: string) {
     }
   };
 
-  const addMessageHandler = (type: string, handler: MessageHandler): void => {
-    messageHandlers.value[type] = handler;
+  const addMessageHandler: AddMessageHandler = (type, handler) => {
+    messageHandlers.value[type] = handler as (msg: unknown) => void;
   };
 
   const removeMessageHandler = (type: string): void => {
