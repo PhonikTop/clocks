@@ -10,7 +10,7 @@ export default function useRoomState() {
   const roomState = ref(ROOM_STATES.WAITING);
   const taskName = ref("");
   const votes = ref([]);
-  const resultsVotes = ref({});
+  const resultsVotes = ref([]);
   const averageScore: Ref<null | number> = ref(null);
 
   return {
