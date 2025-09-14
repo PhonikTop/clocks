@@ -33,9 +33,14 @@ function onVoterClick([id, info]: [string, ParticipantInfo]) {
 
 <template>
   <div class="card bg-base-100 shadow p-4 h-auto">
-    <h2 class="text-lg font-semibold mb-3">Голосующие</h2>
+    <h2 class="text-lg font-semibold mb-3">
+      Голосующие
+    </h2>
 
-    <div v-if="voters.length" class="space-y-2 overflow-y-auto">
+    <div
+      v-if="voters.length"
+      class="space-y-2 overflow-y-auto"
+    >
       <div
         v-for="[id, participant] in voters"
         :key="id"
@@ -84,10 +89,13 @@ function onVoterClick([id, info]: [string, ParticipantInfo]) {
           leave-from-class="max-h-40 opacity-100 scale-y-100"
           leave-to-class="max-h-0 opacity-0 scale-y-90"
         >
-          <div v-if="selectedVoter?.id === id" class="flex justify-center">
+          <div
+            v-if="selectedVoter?.id === id"
+            class="flex justify-center"
+          >
             <button
-              @click="emit('kick-user', selectedVoter.id)"
               class="btn btn-primary w-full mt-1"
+              @click="emit('kick-user', selectedVoter.id)"
             >
               Кикнуть {{ selectedVoter.info.nickname }}
             </button>
@@ -96,7 +104,10 @@ function onVoterClick([id, info]: [string, ParticipantInfo]) {
       </div>
     </div>
 
-    <div v-else class="text-sm text-gray-400 italic">
+    <div
+      v-else
+      class="text-sm text-gray-400 italic"
+    >
       Нет голосующих участников.
     </div>
   </div>

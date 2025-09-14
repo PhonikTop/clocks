@@ -57,14 +57,19 @@ defineProps({
 </script>
 
 <template>
-  <div ref="captureArea" class="card bg-base-100 shadow p-6 space-y-6 max-w-2xl w-full mx-auto">
+  <div
+    ref="captureArea"
+    class="card bg-base-100 shadow p-6 space-y-6 max-w-2xl w-full mx-auto"
+  >
     <div class="flex justify-between items-center">
       <div class="flex">
-        <h2 class="text-xl font-semibold">Результаты голосования</h2>
+        <h2 class="text-xl font-semibold">
+          Результаты голосования
+        </h2>
         <button
-          @click="handleScreenshot"
           class="w-6 h-6 flex items-center justify-center text-black hover:text-gray-700 active:text-gray-900 transition-colors no-screenshot cursor-pointer"
           title="Скопировать"
+          @click="handleScreenshot"
         >
           <svg
             class="w-4 h-4 translate-y-[3px]"
@@ -79,14 +84,18 @@ defineProps({
           </svg>
         </button>
       </div>
-      <h2 class="text-xl font-normal">{{ taskName }}</h2>
+      <h2 class="text-xl font-normal">
+        {{ taskName }}
+      </h2>
     </div>
     <div class="overflow-x-auto">
       <table class="table w-full">
         <thead>
           <tr>
             <th>Участник</th>
-            <th class="text-right">Оценка</th>
+            <th class="text-right">
+              Оценка
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -96,7 +105,9 @@ defineProps({
             class="hover:bg-base-200"
           >
             <td>{{ user.nickname }}</td>
-            <td class="text-right">{{ user.vote }} ч.</td>
+            <td class="text-right">
+              {{ user.vote }} ч.
+            </td>
           </tr>
         </tbody>
       </table>
@@ -111,10 +122,16 @@ defineProps({
     </div>
 
     <div class="flex flex-wrap gap-3 justify-end no-screenshot">
-      <button class="btn btn-outline btn-warning" @click="$emit('restartMeeting')">
+      <button
+        class="btn btn-outline btn-warning"
+        @click="$emit('restartMeeting')"
+      >
         Перезапустить
       </button>
-      <button class="btn btn-primary" @click="$emit('nextMeeting')">
+      <button
+        class="btn btn-primary"
+        @click="$emit('nextMeeting')"
+      >
         Далее
       </button>
     </div>

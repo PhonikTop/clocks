@@ -41,7 +41,9 @@ const emit = defineEmits(["leave-room", "restart-meeting"]);
     <div class="flex items-center gap-4">
       <ConnectionStatus :status="isConnected" />
       <div>
-        <h1 class="text-lg font-semibold">Комната "{{ roomName }}"</h1>
+        <h1 class="text-lg font-semibold">
+          Комната "{{ roomName }}"
+        </h1>
         <Transition
           enter-active-class="transition-opacity duration-700"
           enter-from-class="opacity-0"
@@ -62,10 +64,18 @@ const emit = defineEmits(["leave-room", "restart-meeting"]);
       </div>
     </div>
     <div class="flex"> 
-      <button v-if="roomState != ROOM_STATES.WAITING" class="btn btn-sm btn-dash" :disabled="isCooldown" @click="handleRestartButton">
+      <button
+        v-if="roomState != ROOM_STATES.WAITING"
+        class="btn btn-sm btn-dash"
+        :disabled="isCooldown"
+        @click="handleRestartButton"
+      >
         Перезагрузить голосование
       </button>
-      <button class="btn btn-sm text-white btn-error ml-3" @click="$emit('leave-room')">
+      <button
+        class="btn btn-sm text-white btn-error ml-3"
+        @click="$emit('leave-room')"
+      >
         Выйти из комнаты
       </button>
     </div>

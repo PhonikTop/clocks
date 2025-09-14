@@ -17,6 +17,6 @@ const emit = defineEmits(["kick-user"]);
       :votes="props.votes"
       @kick-user="(voterId: string) => emit('kick-user', voterId)"
     />
-    <ObserversList :participants="props.participants"/>
+    <ObserversList :participants="props.participants" />
   </div>
 </template>

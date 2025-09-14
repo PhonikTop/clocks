@@ -154,7 +154,10 @@ onMounted(async () => {
 
     <div class="flex flex-1 w-full gap-6">
       <div class="flex-1 flex flex-col items-center gap-6">
-        <div v-if="roomState === ROOM_STATES.WAITING" class="w-full max-w-2xl">
+        <div
+          v-if="roomState === ROOM_STATES.WAITING"
+          class="w-full max-w-2xl"
+        >
           <WaitingMeetingState
             v-model:task-name="taskName"
             @start-voting="(taskName: string) => meetingActions.startVoting(roomId, taskName)"
@@ -166,8 +169,8 @@ onMounted(async () => {
           class="w-full max-w-2xl"
         >
           <VotingMeetingState
-            :userRole="userRole"
-            :hasVoted="hasVoted"
+            :user-role="userRole"
+            :has-voted="hasVoted"
             @vote="handleVote"
             @update-task="meetingActions.updateMeetingTaskName"
           />
@@ -189,13 +192,16 @@ onMounted(async () => {
               :task-name="taskName"
               @restart-meeting="meetingActions.handleRestartMeeting"
               @next-meeting="meetingActions.handleNextMeeting"
-              @resultsCopied="notify.info(`Результаты были успешно скопированы`)"
+              @results-copied="notify.info(`Результаты были успешно скопированы`)"
             />
           </div>
         </Transition>
       </div>
 
-      <div v-if="roomState !== ROOM_STATES.RESULTS" class="w-84">
+      <div
+        v-if="roomState !== ROOM_STATES.RESULTS"
+        class="w-84"
+      >
         <ParticipantsSection
           :participants="participants"
           :votes="votes"

@@ -12,7 +12,13 @@ defineEmits(["vote", "update-task"]);
 
 <template>
   <div class="flex flex-col items-center gap-6">
-    <ChangeTaskForm @submitted="$emit('update-task', $event)" class="w-full"/>
-    <VotingForm v-if="!hasVoted && userRole === `voter`" @vote="$emit('vote', $event)" />
+    <ChangeTaskForm
+      class="w-full"
+      @submitted="$emit('update-task', $event)"
+    />
+    <VotingForm
+      v-if="!hasVoted && userRole === `voter`"
+      @vote="$emit('vote', $event)"
+    />
   </div>
 </template>

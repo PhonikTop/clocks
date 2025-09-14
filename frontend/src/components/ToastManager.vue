@@ -27,7 +27,12 @@ const { toasts, pauseToast, resumeToast, removeToast } = toast
         @mouseleave="resumeToast(toast.id)"
       >
         <span>{{ toast.message }}</span>
-        <button class="btn btn-sm btn-ghost ml-2" @click="removeToast(toast.id)">✕</button>
+        <button
+          class="btn btn-sm btn-ghost ml-2"
+          @click="removeToast(toast.id)"
+        >
+          ✕
+        </button>
       </div>
     </div>
   </Teleport>

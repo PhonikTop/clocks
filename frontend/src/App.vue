@@ -10,5 +10,5 @@ provide('toast', toast)
 
 <template>
   <RouterView />
-  <ToastManager/>
+  <ToastManager />
 </template>
