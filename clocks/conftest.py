@@ -1,4 +1,7 @@
+from uuid import uuid4
+
 import pytest
+from api.services.jwt_service import JWTService
 from rest_framework.test import APIClient
 
 
@@ -8,6 +11,10 @@ from rest_framework.test import APIClient
 @pytest.fixture
 def api_client():
     return APIClient()
+
+@pytest.fixture
+def jwt_token():
+    return JWTService().generate_token(str(uuid4))
 
 @pytest.fixture
 def user(db):
