@@ -45,7 +45,7 @@ WORKDIR /app
 COPY --from=builder /install /usr/local
 COPY clocks/ /app
 
-ENTRYPOINT ["uvicorn", "settings.asgi:application", "--host", "0.0.0.0",  "--port", "8000"]
+CMD ["uvicorn", "settings.asgi:application", "--host", "0.0.0.0",  "--port", "8000"]
 
 FROM python:3.12-alpine as api-local
 
