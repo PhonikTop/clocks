@@ -2,8 +2,11 @@ from uuid import uuid4
 
 import pytest
 from api.services.jwt_service import JWTService
+from channels.routing import URLRouter
 from django.contrib.auth import get_user_model
+from django.urls import re_path
 from rest_framework.test import APIClient
+from ws.consumers import RoomConsumer
 
 User = get_user_model()
 
@@ -40,3 +43,13 @@ def finished_meeting(db, room):
     from meetings.models import Meeting
 
     return Meeting.objects.create(room=room, task_name="Initial Task", average_score=4)
+
+@pytest.fixture
+def room_url_router():
+    application = URLRouter(
+        [
+            re_path(r"^ws/room/(?P<id>\d+)/$", RoomConsumer.as_asgi()),
+        ]
+    )
+    return application
+
