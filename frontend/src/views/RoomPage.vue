@@ -152,7 +152,7 @@ onMounted(async () => {
       @restart-meeting="meetingActions.handleRestartMeeting"
     />
 
-    <div class="flex flex-1 w-full gap-6">
+    <div class="flex flex-1 w-full gap-6 flex-col md:flex-row">
       <div class="flex-1 flex flex-col items-center gap-6">
         <div
           v-if="roomState === ROOM_STATES.WAITING"
@@ -200,7 +200,7 @@ onMounted(async () => {
 
       <div
         v-if="roomState !== ROOM_STATES.RESULTS"
-        class="w-84"
+        class="w-full md:w-84"
       >
         <ParticipantsSection
           :participants="participants"
