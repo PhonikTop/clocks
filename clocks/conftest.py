@@ -2,8 +2,10 @@ from uuid import uuid4
 
 import pytest
 from api.services.jwt_service import JWTService
+from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 
+User = get_user_model()
 
 # ------------------------
 # DRF APIClient
