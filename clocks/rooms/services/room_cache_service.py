@@ -84,8 +84,8 @@ class RoomCacheService:
 
         votes = self.get_votes()
         if user_uuid in votes:
+            target_service.set_vote(user_uuid, votes[user_uuid]["vote"])
             self.remove_user_vote(user_uuid)
-            self.set_vote(user_uuid, votes[user_uuid]["vote"])
 
         self.remove_user(user_uuid)
 
@@ -153,7 +153,7 @@ class RoomCacheService:
         all_users = self.get_room_users()
         return [uuid for uuid, user_data in all_users.items() if user_data["role"] == role]
 
-    def set_vote(self, user_uuid: str | UUID, vote: str) -> None:
+    def set_vote(self, user_uuid: str | UUID, vote: int) -> None:
         """
         Устанавливает голос для пользователя.
 
