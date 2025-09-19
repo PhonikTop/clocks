@@ -1,18 +1,13 @@
-import { inject } from 'vue'
-import { useToasts } from './useToasts'
+import { useToastStore } from "@/stores/toasts"
 
-export type ToastContext = ReturnType<typeof useToasts>;
 type ToastType = "info" | "success" | "warning" | "error";
 
 
 export function useNotify() {
-  const toast = inject<ToastContext>("toast");
-  if (!toast) {
-    throw new Error('Toast not provided')
-  }
+  const toastStore = useToastStore()
 
   const notify = (message: string, type: ToastType = 'info', duration = 5000) => {
-    toast.addToast(message, type, duration)
+    toastStore.addToast(message, type, duration)
   }
 
   return {
