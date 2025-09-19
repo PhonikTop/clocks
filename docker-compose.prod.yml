@@ -23,8 +23,11 @@ services:
     image: redis:latest
     container_name: watchy-redis
     restart: always
+    command: >
+      sh -c "exec redis-server /usr/local/etc/redis/redis.conf --requirepass $$REDIS_PASSWORD"
     volumes:
-      - ./redis.conf:/usr/local/etc/redis/redis.conf:ro
+      - ./redis.prod.conf:/usr/local/etc/redis/redis.conf:ro
+      - redis-data:/data
     environment:
       - REDIS_PASSWORD=passwo4509b14a24a8rd
     networks:
@@ -56,3 +59,6 @@ services:
 
 networks:
   watchy_network:
+
+volumes:
+  redis-data:

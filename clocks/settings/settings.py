@@ -103,10 +103,18 @@ CHANNEL_LAYERS = {
     },
 }
 
+
+REDIS_PASSWORD = get_env_param_str("REDIS_PASSWORD")
+
+if REDIS_PASSWORD:
+    REDIS_URL = f"redis://:{REDIS_PASSWORD}@watchy-redis:6379/0"
+else:
+    REDIS_URL = f"redis://watchy-redis:6379/0"
+
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://watchy-redis:6379/0",
+        "LOCATION": REDIS_URL,
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
             "DECODE_RESPONSES": True,

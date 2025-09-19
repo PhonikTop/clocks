@@ -38,7 +38,10 @@ services:
     ports:
       - "6379:6379"
     volumes:
-      - ./redis.conf:/usr/local/etc/redis/redis.conf:ro
+      - ./redis.dev.conf:/usr/local/etc/redis/redis.conf:ro
+      - redis-data:/data
+    command: >
+      sh -c "exec redis-server /usr/local/etc/redis/redis.conf"
     environment:
       - REDIS_PASSWORD=password
     networks:
@@ -71,3 +74,6 @@ services:
 
 networks:
   watchy_network:
+
+volumes:
+  redis-data:
