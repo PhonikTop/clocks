@@ -7,9 +7,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: api-prod
     env_file:
       - .env.prod
-    command: "uvicorn settings.asgi:application --host 0.0.0.0 --port 8000"
     depends_on:
       - watchy-redis
       - watchy-db

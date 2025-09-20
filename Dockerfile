@@ -1,7 +1,5 @@
-# Stage 1: builder
 FROM python:3.12-alpine AS builder
 
-# Устанавливаем зависимости для сборки пакетов
 RUN apk add --no-cache --virtual .build-deps \
         gcc \
         musl-dev \
@@ -14,16 +12,13 @@ RUN apk add --no-cache --virtual .build-deps \
 WORKDIR /app
 
 
-# Копируем requirements
 COPY requirements.txt .
 
-# Устанавливаем зависимости в отдельный каталог
 RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
 
-# Stage 2: final
-FROM python:3.12-alpine
 
-# Минимальные зависимости для работы Python
+FROM python:3.12-alpine as api-prod
+
 RUN apk add --no-cache libpq bash
 
 WORKDIR /app
@@ -31,4 +26,15 @@ WORKDIR /app
 COPY --from=builder /install /usr/local
 COPY clocks/ /app
 
+CMD ["uvicorn", "settings.asgi:application", "--host", "0.0.0.0",  "--port", "8000"]
+
+FROM python:3.12-alpine as api-local
+
+RUN apk add --no-cache libpq bash
+
 WORKDIR /app
+
+COPY --from=builder /install /usr/local
+COPY clocks/ /app
+
+CMD ["uvicorn", "settings.asgi:application", "--reload", "--host", "0.0.0.0",  "--port", "8000"]
