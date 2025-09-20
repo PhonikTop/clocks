@@ -62,7 +62,7 @@ def test_room_detail_get(api_client, room):
     url = reverse("room_detail", args=[room.id])
     resp = api_client.get(url)
     assert resp.status_code == 200
-    assert resp.json()["name"] == "RoomX"
+    assert resp.json()["name"] == room.name
 
 @pytest.mark.django_db
 def test_room_detail_not_found(api_client):
