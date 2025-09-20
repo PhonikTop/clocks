@@ -104,7 +104,7 @@ CHANNEL_LAYERS = {
 }
 
 
-REDIS_PASSWORD = get_env_param_str("REDIS_PASSWORD")
+REDIS_PASSWORD = get_env_param_str("REDIS_PASSWORD", raise_exception=False)
 
 if REDIS_PASSWORD:
     REDIS_URL = f"redis://:{REDIS_PASSWORD}@watchy-redis:6379/0"
