@@ -6,7 +6,7 @@ from users.enums import UserRole
 from rooms.services.room_cache_service import RoomCacheService
 
 
-def test_add_and_get_user(fake_cache, room, UserRole):
+def test_add_and_get_user(fake_cache, room):
     rcs = RoomCacheService(room.name)
     user_id = str(uuid4())
 
@@ -98,7 +98,7 @@ def test_transfer_user_moves_user_and_vote_to_target(fake_cache):
     assert uid in tgt.get_votes()
     assert uid not in src.get_votes()
 
-def test_clear_room_deletes_all(fake_cache, room, UserRole):
+def test_clear_room_deletes_all(fake_cache, room):
     rcs = RoomCacheService(room.name)
     u1 = str(uuid4())
     u2 = str(uuid4())
