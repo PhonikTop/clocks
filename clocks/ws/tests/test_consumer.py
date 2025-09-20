@@ -9,7 +9,7 @@ from ws.consumers import RoomConsumer
 
 
 @pytest.mark.asyncio
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
 async def test_connect_accepts_and_sends_results_if_meeting_with_avg(room_url_router, finished_meeting):
     room_id = finished_meeting.room.id
     token = "dummy-token"

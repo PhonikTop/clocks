@@ -11,6 +11,25 @@ from ws.consumers import RoomConsumer
 
 User = get_user_model()
 
+
+@pytest.fixture(autouse=True)
+def test_settings(settings):
+    settings.DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": ":memory:",
+        }
+    }
+
+    settings.CHANNEL_LAYERS = {
+        "default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}
+    }
+
+    settings.CACHES = {
+        "default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}
+    }
+
+
 @pytest.fixture
 def api_client():
     return APIClient()
