@@ -133,6 +133,30 @@ class UserInfoView(GenericAPIView):
 
         return Response(user_data, status=status.HTTP_200_OK)
 
+@extend_schema(
+    operation_id="kickUser",
+    summary="Удаление пользователя из комнаты",
+    auth=[],
+    parameters=[
+        OpenApiParameter(
+            name="Authorization",
+            type=str,
+            location="header",
+            description='JWT токен в формате "Bearer <token>"',
+            required=True,
+        )
+    ],
+    request=KickUserSerializer,
+    responses={
+        200: OpenApiResponse(
+            description="Пользователь удалён из комнаты",
+        ),
+        401: OpenApiResponse(
+            description="Ошибка аутентификации. Токен не предоставлен, неправильный формат или недействительный токен.",
+        ),
+    },
+    tags=USER_TAG,
+)
 class UserKickView(GenericAPIView):
     queryset = Room.objects.filter(is_active=True)
     serializer_class = KickUserSerializer
