@@ -27,6 +27,7 @@ class RoomCacheService:
         self.room_key = f"room:{room_uuid}"
         self.users_key = f"{self.room_key}:users"
         self.votes_key = f"{self.room_key}:votes"
+        self.timer_key = f"{self.room_key}:timer"
         self.ttl = ttl
 
     def _get_user_key(self, uuid: str | UUID) -> str:
@@ -220,3 +221,12 @@ class RoomCacheService:
                 cache.delete(f"user:{user_uuid}:data")
             cache.delete(self.users_key)
             cache.delete(self.votes_key)
+
+    def start_room_timer(self, end_time: int) -> None:
+        cache.set(self.timer_key, end_time)
+
+    def get_room_timer(self) -> int | None:
+        return cache.get(self.timer_key)
+
+    def reset_room_timer(self) -> None:
+        cache.delete(self.timer_key)
