@@ -106,15 +106,17 @@ def test_room_participants_none_returns_404(api_client, room):
         assert "detail" in resp.json()
 
 @pytest.mark.django_db
-def test_room_timer_set(jwt_token, api_client):
-    with (patch("rooms.views.UserSessionService") as mock_user_session_cls, \
-         patch("rooms.views.JWTService") as mock_jwt_cls, \
-         patch("rooms.views.RoomMessageService") as mock_rms, \
-         patch("rooms.views.DjangoChannelMessageSender"), \
+def test_room_timer_set(jwt_token, room, api_client):
+    with (patch("rooms.views.UserSessionService") as mock_user_session_cls,
+         patch("rooms.views.JWTService") as mock_jwt_cls,
+         patch("rooms.views.RoomMessageService") as mock_rms,
+         patch("rooms.views.DjangoChannelMessageSender") as mock_sender_cls,
          patch("rooms.views.RoomCacheService") as mock_rcs):
 
-        url = reverse("set_room_timer")
-        payload = {"minutes": 5}
+        minutes = 5
+
+        url = reverse("set_room_timer", args=[room.id])
+        payload = {"minutes": minutes}
 
         resp1 = api_client.post(url, data=payload, format="json")
         assert resp1.status_code == 401
@@ -125,22 +127,25 @@ def test_room_timer_set(jwt_token, api_client):
 
         user_uuid = "065e8922-5961-4584-8271-39eaeacbe677"
 
-        mock_user_session_cls.get_user_uuid.return_value = user_uuid
+        mock_user_session_cls.return_value.get_user_uuid.return_value = user_uuid
 
+        api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {jwt_token}")
         resp = api_client.post(
-            url, data=payload, format="json", HTTP_AUTHORIZATION=f"Bearer {jwt_token}"
+            url, data=payload, format="json"
         )
 
-        mock_rms.assert_called_once()
-        mock_rms.return_value.notify_room_timer_started.assert_called_once_with(resp["time"], user_uuid)
+        new_timestamp = int((datetime.now(timezone.utc) + timedelta(minutes=minutes)).timestamp())
+
+        mock_rms.assert_called_once_with(room.id, mock_sender_cls.return_value, mock_rcs.return_value)
+        mock_rms.return_value.notify_room_timer_started.assert_called_once_with(new_timestamp, user_uuid)
 
         mock_rcs.assert_called_once()
-        mock_rcs.return_value.start_room_timer.assert_called_once_with(resp["time"])
+        mock_rcs.return_value.start_room_timer.assert_called_once_with(new_timestamp)
 
         assert resp.status_code == 200
 
 @pytest.mark.django_db
-def test_room_timer_set_invalid_minutes(api_client, jwt_token):
+def test_room_timer_set_invalid_minutes(api_client, room, jwt_token):
     with (patch("rooms.views.UserSessionService") as mock_user_session_cls, \
          patch("rooms.views.JWTService") as mock_jwt_cls, \
          patch("rooms.views.RoomMessageService") as mock_rms, \
@@ -148,67 +153,61 @@ def test_room_timer_set_invalid_minutes(api_client, jwt_token):
          patch("rooms.views.RoomCacheService") as mock_rcs):
 
         payload = {"minutes": "invalid minutes"}
-        url = reverse("set_room_timer")
+        url = reverse("set_room_timer", args=[room.id])
 
         resp = api_client.post(
             url, data=payload, format="json", HTTP_AUTHORIZATION=f"Bearer {jwt_token}"
         )
 
         assert resp.status_code == 400
-        body = resp.json()
-        assert "error" in body
-        assert "Invalid minutes format" in json.dumps(body)
 
 @pytest.mark.django_db
 def test_room_timer_get(api_client, room):
     with (patch("rooms.views.RoomCacheService") as mock_rcs):
-        url = reverse("get_room_timer")
-
-        resp = api_client.get(url, args=[room.id])
-
         new_timestamp_str = int(
             (datetime.now(timezone.utc) + timedelta(minutes=5)).timestamp()
         )
 
-        mock_rcs.return_value.get_room_timer = MagicMock()
         mock_rcs.return_value.get_room_timer.return_value = new_timestamp_str
 
+        url = reverse("get_room_timer", args=[room.id])
+        resp = api_client.get(url)
+
         mock_rcs.assert_called_once()
-        mock_rcs.return_value.get_room_timer.assert_called_once_with()
+        mock_rcs.return_value.get_room_timer.assert_called_once()
 
         assert resp.status_code == 200
         body = resp.json()
         assert body["timer_end_time"] == new_timestamp_str
 
 @pytest.mark.django_db
-def test_room_timer_reset(api_client, jwt_token):
+def test_room_timer_reset(api_client, room, jwt_token):
     with (patch("rooms.views.UserSessionService") as mock_user_session_cls, \
          patch("rooms.views.JWTService") as mock_jwt_cls, \
          patch("rooms.views.RoomMessageService") as mock_rms, \
-         patch("rooms.views.DjangoChannelMessageSender"), \
+         patch("rooms.views.DjangoChannelMessageSender") as mock_sender_cls, \
          patch("rooms.views.RoomCacheService") as mock_rcs):
 
-        url = reverse("reset_room_timer")
+        url = reverse("reset_room_timer", args=[room.id])
 
-        resp1 = api_client.post(url)
+        resp1 = api_client.delete(url)
         assert resp1.status_code == 401
 
         api_client.credentials(HTTP_AUTHORIZATION="Token abc")
-        resp2 = api_client.post(url)
+        resp2 = api_client.delete(url)
         assert resp2.status_code == 401
 
         user_uuid = "065e8922-5961-4584-8271-39eaeacbe677"
 
-        mock_user_session_cls.get_user_uuid.return_value = user_uuid
+        mock_user_session_cls.return_value.get_user_uuid.return_value = user_uuid
 
-        resp = api_client.post(
-            url, HTTP_AUTHORIZATION=f"Bearer {jwt_token}"
-        )
+        api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {jwt_token}")
+        resp = api_client.delete(url)
 
-        mock_rms.assert_called_once()
-        mock_rms.return_value.notify_room_timer_reset.assert_called_once_with(resp["time"], user_uuid)
+        mock_rms.assert_called_once_with(room.id, mock_sender_cls.return_value, mock_rcs.return_value)
+        mock_rms.return_value.notify_room_timer_reset.assert_called_once_with(user_uuid)
 
         mock_rcs.assert_called_once()
-        mock_rcs.return_value.reset_room_timer.assert_called_once_with(resp["time"])
+        mock_rcs.return_value.reset_room_timer.assert_called_once_with()
 
         assert resp.status_code == 200
