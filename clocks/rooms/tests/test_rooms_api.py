@@ -1,5 +1,6 @@
 import json
-from unittest.mock import patch
+from datetime import datetime, timedelta, timezone
+from unittest.mock import MagicMock, patch
 
 import pytest
 from django.contrib.auth.models import User
@@ -157,3 +158,24 @@ def test_room_timer_set_invalid_minutes(api_client, jwt_token):
         body = resp.json()
         assert "error" in body
         assert "Invalid minutes format" in json.dumps(body)
+
+@pytest.mark.django_db
+def test_room_timer_get(api_client, room):
+    with (patch("rooms.views.RoomCacheService") as mock_rcs):
+        url = reverse("get_room_timer")
+
+        resp = api_client.get(url, args=[room.id])
+
+        new_timestamp_str = int(
+            (datetime.now(timezone.utc) + timedelta(minutes=5)).timestamp()
+        )
+
+        mock_rcs.return_value.get_room_timer = MagicMock()
+        mock_rcs.return_value.get_room_timer.return_value = new_timestamp_str
+
+        mock_rcs.assert_called_once()
+        mock_rcs.return_value.get_room_timer.assert_called_once_with()
+
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["timer_end_time"] == new_timestamp_str
