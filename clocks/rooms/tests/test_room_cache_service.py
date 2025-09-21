@@ -117,10 +117,10 @@ def test_clear_room_deletes_all(fake_cache, room):
 
 def test_start_and_get_room_timer(fake_cache, room):
     rcs = RoomCacheService(room.id)
-    minutes = random.randint(10, 15)  # noqa: S311
-    rcs.start_room_timer(minutes)
+    end_time = 1761049410
+    rcs.start_room_timer(end_time)
 
-    assert rcs.get_room_timer() == minutes
+    assert rcs.get_room_timer() == end_time
 
 def test_reset_room_timer(fake_cache, room):
     rcs = RoomCacheService(room.id)
