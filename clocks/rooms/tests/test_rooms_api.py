@@ -1,3 +1,4 @@
+import json
 from unittest.mock import patch
 
 import pytest
@@ -102,3 +103,58 @@ def test_room_participants_none_returns_404(api_client, room):
         resp = api_client.get(url)
         assert resp.status_code == 404
         assert "detail" in resp.json()
+
+@pytest.mark.django_db
+def test_room_timer_set(jwt_token, api_client):
+    token = jwt_token
+
+    with (patch("rooms.views.UserSessionService") as mock_user_session_cls, \
+         patch("rooms.views.JWTService") as mock_jwt_cls, \
+         patch("rooms.views.RoomMessageService") as mock_rms, \
+         patch("rooms.views.DjangoChannelMessageSender"), \
+         patch("rooms.views.RoomCacheService") as mock_rcs):
+
+        url = reverse("room_timer")
+        payload = {"token": token, "minutes": 5}
+
+        resp1 = api_client.put(url, data=payload, format="json")
+        assert resp1.status_code == 401
+
+        api_client.credentials(HTTP_AUTHORIZATION="Token abc")
+        resp2 = api_client.put(url, data=payload, format="json")
+        assert resp2.status_code == 401
+
+        resp = api_client.post(
+            url, data=payload, format="json", HTTP_AUTHORIZATION=f"Bearer {jwt_token}"
+        )
+
+        mock_user_session_cls.get_user_session_data.return_value = {"user_uuid": "uu"}
+
+        mock_rms.assert_called_once()
+        mock_rms.return_value.notify_room_timer.assert_called_once_with(resp["time"])
+
+        mock_rcs.assert_called_once()
+        mock_rcs.return_value.start_room_timer.assert_called_once_with(resp["time"])
+
+        assert resp.status_code == 200
+
+@pytest.mark.django_db
+def test_room_timer_set_invalid_minutes(api_client, jwt_token):
+
+    with (patch("rooms.views.UserSessionService") as mock_user_session_cls, \
+         patch("rooms.views.JWTService") as mock_jwt_cls, \
+         patch("rooms.views.RoomMessageService") as mock_rms, \
+         patch("rooms.views.DjangoChannelMessageSender"), \
+         patch("rooms.views.RoomCacheService") as mock_rcs):
+
+        payload = {"minutes": "invalid minutes"}
+        url = reverse("room_timer")
+
+        resp = api_client.post(
+            url, data=payload, format="json", HTTP_AUTHORIZATION=f"Bearer {jwt_token}"
+        )
+
+        assert resp.status_code == 400
+        body = resp.json()
+        assert "error" in body
+        assert "Invalid minutes format" in json.dumps(body)

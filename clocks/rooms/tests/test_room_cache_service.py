@@ -115,9 +115,9 @@ def test_clear_room_deletes_all(fake_cache, room):
     assert rcs.get_user(u1) is None
     assert rcs.get_user(u2) is None
 
-def test_start_and_get_meeting_timer(fake_cache, room):
+def test_start_and_get_room_timer(fake_cache, room):
     rcs = RoomCacheService(room.id)
     minutes = random.randint(10, 15)  # noqa: S311
-    rcs.start_meeting_timer(minutes)
+    rcs.start_room_timer(minutes)
 
-    assert rcs.get_meeting_timer() == minutes
+    assert rcs.get_room_timer() == minutes
