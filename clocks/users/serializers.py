@@ -14,3 +14,6 @@ class UserFullInfoSerializer(serializers.Serializer):
 
 class KickUserSerializer(serializers.Serializer):
     user_uuid = serializers.CharField()
+
+class RoomTimerSerializer(serializers.Serializer):
+    minutes = serializers.IntegerField()

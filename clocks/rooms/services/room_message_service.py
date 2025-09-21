@@ -59,6 +59,27 @@ class RoomMessageService:
 
         self.message_sender.send(self._group_name, message)
 
+    def notify_room_timer_started(self, timer_end_time: int, timer_started_user_uuid: str):
+        timer_started_user_data: UserData = self.room_cache_service.get_user(timer_started_user_uuid)
+
+        message = {
+            "type": "timer_started",
+            "end_time": timer_end_time,
+            "timer_started_user": {timer_started_user_uuid: timer_started_user_data},
+        }
+
+        self.message_sender.send(self._group_name, message)
+
+    def notify_room_timer_reset(self, timer_reset_user_uuid: str):
+        timer_reset_user_data: UserData = self.room_cache_service.get_user(timer_reset_user_uuid)
+
+        message = {
+            "type": "timer_started",
+            "timer_reset_user": {timer_reset_user_uuid: timer_reset_user_data},
+        }
+
+        self.message_sender.send(self._group_name, message)
+
     def notify_meeting_results(self, votes, average_score):
         message = {
             "type": "results",
