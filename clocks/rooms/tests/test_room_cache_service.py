@@ -121,3 +121,10 @@ def test_start_and_get_room_timer(fake_cache, room):
     rcs.start_room_timer(minutes)
 
     assert rcs.get_room_timer() == minutes
+
+def test_reset_room_timer(fake_cache, room):
+    rcs = RoomCacheService(room.id)
+
+    rcs.reset_room_timer()
+
+    assert rcs.get_room_timer() is None
