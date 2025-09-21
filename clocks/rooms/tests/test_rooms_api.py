@@ -122,14 +122,16 @@ def test_room_timer_set(jwt_token, api_client):
         resp2 = api_client.post(url, data=payload, format="json")
         assert resp2.status_code == 401
 
+        user_uuid = "065e8922-5961-4584-8271-39eaeacbe677"
+
+        mock_user_session_cls.get_user_uuid.return_value = user_uuid
+
         resp = api_client.post(
             url, data=payload, format="json", HTTP_AUTHORIZATION=f"Bearer {jwt_token}"
         )
 
-        mock_user_session_cls.get_user_session_data.return_value = {"nickname": "User1", "role": "voter"}
-
         mock_rms.assert_called_once()
-        mock_rms.return_value.notify_room_timer.assert_called_once_with(resp["time"], jwt_token)
+        mock_rms.return_value.notify_room_timer_started.assert_called_once_with(resp["time"], user_uuid)
 
         mock_rcs.assert_called_once()
         mock_rcs.return_value.start_room_timer.assert_called_once_with(resp["time"])
