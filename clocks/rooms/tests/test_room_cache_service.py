@@ -121,6 +121,15 @@ def test_start_and_get_room_timer(fake_cache, room):
 
     assert rcs.get_room_timer() == end_time
 
+def test_start_room_timer_invalid_end_time(fake_cache, room):
+    rcs = RoomCacheService(room.id)
+
+    end_time = time.time() - 3600
+
+    with pytest.raises(ValueError):
+        rcs.start_room_timer(end_time)
+    assert rcs.get_room_timer() is None
+
 def test_reset_room_timer(fake_cache, room):
     rcs = RoomCacheService(room.id)
 

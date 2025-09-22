@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from typing import Dict, List, TypedDict
 from uuid import UUID
 
@@ -222,8 +223,9 @@ class RoomCacheService:
             cache.delete(self.users_key)
             cache.delete(self.votes_key)
 
-    def start_room_timer(self, end_time: int) -> None:
-        cache.set(self.timer_key, end_time)
+    def start_room_timer(self, end_time: float) -> None:
+        if end_time <= datetime.now(timezone.utc).timestamp():
+            raise ValueError("End time is invalid")
 
         cache.set(self.timer_key, end_time, end_time - datetime.now(timezone.utc).timestamp())
 
