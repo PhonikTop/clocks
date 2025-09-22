@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta, timezone
 
 from api.services.jwt_service import JWTService
-from django.template.context_processors import request
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import (
     OpenApiExample,
@@ -234,17 +233,17 @@ class SetRoomTimer(GenericAPIView):
 
         token = auth_header.split(" ")[1]
 
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
         jwt_service = JWTService()
         room_cache = RoomCacheService(pk)
         user_session_service = UserSessionService(jwt_service, room_cache)
 
         timer_started_user = user_session_service.get_user_uuid(token)
 
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
         minutes = serializer.validated_data["minutes"]
-        new_timestamp = int((datetime.now(timezone.utc) + timedelta(minutes=minutes)).timestamp())
+        new_timestamp = float((datetime.now(timezone.utc) + timedelta(minutes=minutes)).timestamp())
 
         channel_sender = DjangoChannelMessageSender()
         room_message_service = RoomMessageService(pk, channel_sender, room_cache)
@@ -258,8 +257,9 @@ class SetRoomTimer(GenericAPIView):
 class GetRoomTimer(APIView):
     def get(self, request, pk):
         room_cache = RoomCacheService(pk)
+        timer_end_time = room_cache.get_room_timer()
 
-        return Response({"timer_end_time": room_cache.get_room_timer()}, status=status.HTTP_200_OK )
+        return Response({"timer_end_time": timer_end_time}, status=status.HTTP_200_OK )
 
 class ResetRoomTimer(APIView):
     def delete(self, request, pk):

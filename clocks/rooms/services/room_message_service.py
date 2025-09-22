@@ -59,7 +59,7 @@ class RoomMessageService:
 
         self.message_sender.send(self._group_name, message)
 
-    def notify_room_timer_started(self, timer_end_time: int, timer_started_user_uuid: str):
+    def notify_room_timer_started(self, timer_end_time: float, timer_started_user_uuid: str):
         timer_started_user_data: UserData = self.room_cache_service.get_user(timer_started_user_uuid)
 
         message = {

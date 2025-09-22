@@ -225,7 +225,9 @@ class RoomCacheService:
     def start_room_timer(self, end_time: int) -> None:
         cache.set(self.timer_key, end_time)
 
-    def get_room_timer(self) -> int | None:
+        cache.set(self.timer_key, end_time, end_time - datetime.now(timezone.utc).timestamp())
+
+    def get_room_timer(self) -> float | None:
         return cache.get(self.timer_key)
 
     def reset_room_timer(self) -> None:
