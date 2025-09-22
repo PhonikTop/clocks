@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 import pytest
 from django.contrib.auth.models import User
@@ -133,16 +133,21 @@ def test_room_timer_set(jwt_token, room, api_client):
 
         mock_user_session_cls.return_value.get_user_uuid.return_value = user_uuid
 
+        mock_rcs.return_value.get_user.return_value = None
         api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {jwt_token}")
-        resp = api_client.post(
-            url, data=payload, format="json"
-        )
+        resp3 = api_client.post(url, data=payload, format="json")
+        assert resp3.status_code == 401
+
+        mock_rcs.return_value.get_user.return_value = {}
+        api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {jwt_token}")
+        resp = api_client.post(url, data=payload, format="json")
 
         mock_rms.assert_called_once_with(room.id, mock_sender_cls.return_value, mock_rcs.return_value)
         mock_rms.return_value.notify_room_timer_started.assert_called_once_with(expected_timestamp, user_uuid)
 
-        mock_rcs.assert_called_once()
+        assert mock_rcs.call_count == 2
         mock_rcs.return_value.start_room_timer.assert_called_once_with(expected_timestamp)
+        mock_rcs.return_value.get_user.assert_has_calls([call(user_uuid),call(user_uuid)])
 
         assert resp.status_code == 200
 
@@ -215,7 +220,8 @@ def test_room_timer_reset(api_client, room, jwt_token):
         mock_rms.assert_called_once_with(room.id, mock_sender_cls.return_value, mock_rcs.return_value)
         mock_rms.return_value.notify_room_timer_reset.assert_called_once_with(user_uuid)
 
-        mock_rcs.assert_called()
+        assert mock_rcs.call_count == 2
         mock_rcs.return_value.reset_room_timer.assert_called_once_with()
+        mock_rcs.return_value.get_user.assert_has_calls([call(user_uuid),call(user_uuid)])
 
         assert resp.status_code == 200

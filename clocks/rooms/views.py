@@ -239,6 +239,9 @@ class SetRoomTimer(GenericAPIView):
 
         timer_started_user = user_session_service.get_user_uuid(token)
 
+        if room_cache.get_user(timer_started_user) is None:
+            raise AuthenticationFailed("Пользователь не существует в комнате")
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -278,6 +281,10 @@ class ResetRoomTimer(APIView):
         user_session_service = UserSessionService(jwt_service, room_cache)
 
         timer_reset_user = user_session_service.get_user_uuid(token)
+
+        if room_cache.get_user(timer_reset_user) is None:
+            raise AuthenticationFailed("Пользователь не существует в комнате")
+
         channel_sender = DjangoChannelMessageSender()
         room_message_service = RoomMessageService(pk, channel_sender, room_cache)
 
