@@ -1,8 +1,7 @@
-import random
+import time
 from uuid import uuid4
 
 import pytest
-from meetings.models import Meeting
 from users.enums import UserRole
 
 from rooms.services.room_cache_service import RoomCacheService
@@ -125,6 +124,7 @@ def test_start_and_get_room_timer(fake_cache, room):
 def test_reset_room_timer(fake_cache, room):
     rcs = RoomCacheService(room.id)
 
+    rcs.start_room_timer(time.time() + 3600)
     rcs.reset_room_timer()
 
     assert rcs.get_room_timer() is None
