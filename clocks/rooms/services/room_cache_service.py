@@ -224,6 +224,9 @@ class RoomCacheService:
             cache.delete(self.votes_key)
 
     def start_room_timer(self, end_time: float) -> None:
+        if self.get_room_timer():
+            raise ValueError("Timer exists")
+
         if end_time <= datetime.now(timezone.utc).timestamp():
             raise ValueError("End time is invalid")
 
