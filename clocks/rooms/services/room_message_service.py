@@ -74,7 +74,7 @@ class RoomMessageService:
         timer_reset_user_data: UserData = self.room_cache_service.get_user(timer_reset_user_uuid)
 
         message = {
-            "type": "timer_started",
+            "type": "timer_reset",
             "timer_reset_user": {timer_reset_user_uuid: timer_reset_user_data},
         }
 
