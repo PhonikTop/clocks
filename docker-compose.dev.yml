@@ -14,7 +14,7 @@ services:
       - watchy-redis
       - watchy-db
     volumes:
-      - ./clocks:/app/clocks
+      - ./clocks:/app
     restart: always
     networks:
       - watchy_network
