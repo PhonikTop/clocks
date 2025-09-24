@@ -99,7 +99,7 @@ class RoomConsumer(AsyncWebsocketConsumer):
         if self.lookup_id or self.uuid:
             await sync_to_async(RoomOnlineTracker.set_user_offline)(self.uuid, self.lookup_id)
             await sync_to_async(UserChannelTracker.remove_participant)(self.channel_name)
-            if await sync_to_async(check_meeting_finish)(self.lookup_id):
+            if await sync_to_async(check_meeting_finish)(self.lookup_id) and (await self.get_meeting()) is not None:
                 meeting = await self.get_meeting()
                 votes = await sync_to_async(self.room_cache.get_votes)()
                 await sync_to_async(meeting_results)(meeting)
