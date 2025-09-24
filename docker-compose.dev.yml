@@ -42,8 +42,6 @@ services:
       - redis-data:/data
     command: >
       sh -c "exec redis-server /usr/local/etc/redis/redis.conf"
-    environment:
-      - REDIS_PASSWORD=password
     networks:
       - watchy_network
 
