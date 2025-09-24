@@ -1,6 +1,6 @@
 import { defineStore } from "pinia"
 
-export const useTimertStore = defineStore("timer", {
+export const useTimerStore = defineStore("timer", {
   state: () => ({
     timeEndTS: null as null | number, 
     timeLeft: null as null | number,

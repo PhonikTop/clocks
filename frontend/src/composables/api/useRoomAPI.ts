@@ -1,8 +1,8 @@
 import { ref, Ref } from "vue";
 import api from "@/plugins/axios";
-import { useTimertStore } from "@/stores/roomTimer";
+import { useTimerStore } from "@/stores/roomTimer";
 
-const timer = useTimertStore() 
+const timer = useTimerStore() 
 
 export interface Room {
   id: number;

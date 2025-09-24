@@ -4,10 +4,10 @@ import useMeeting, { Vote } from "@/composables/api/useMeetingAPI";
 import { Participant } from "@/composables/api/useRoomAPI";
 import { useNotify } from "@/composables/useNotify";
 import { AddMessageHandler } from "@/types/websocket";
-import { useTimertStore } from "@/stores/roomTimer";
+import { useTimerStore } from "@/stores/roomTimer";
 
 const { getMeeting, meetingRoom } = useMeeting();
-const timer = useTimertStore();
+const timer = useTimerStore();
 
 export default function useRoomWebSocketHandler(
   addMessageHandler: AddMessageHandler,
