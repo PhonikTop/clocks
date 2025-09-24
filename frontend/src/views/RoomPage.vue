@@ -14,6 +14,7 @@ import useRoomWebSocketHandler from "@/composables/room/useRoomWebSocketHandler"
 import useRoomParticipants from "@/composables/room/useRoomParticipants";
 import { useRoomWebSocket } from "@/composables/api/useWebSocket";
 import { useNotify } from '@/composables/useNotify.js'
+import { useTimerStore } from "@/stores/roomTimer";
 
 import useRoom from "@/composables/api/useRoomAPI"
 
@@ -25,8 +26,9 @@ const roomId = ref(Number(route.params.room_id));
 const roomName = ref("");
 
 const notify = useNotify();
+const timer = useTimerStore()
 
-const { fetchRoomDetails, currentRoom } = useRoom()
+const { fetchRoomDetails, currentRoom, startRoomTimer, fetchRoomTimer, resetRoomTimer } = useRoom()
 
 const { roomState, ROOM_STATES, taskName, votes, resultsVotes, averageScore } =
   useRoomState();
@@ -94,6 +96,10 @@ const handleKickUser = async (voterId: string) => {
   await kickUserRoom(voterId)
 }
 
+const handleRestartRoomTimer = async () => {
+  await resetRoomTimer(roomId.value)
+}
+
 onBeforeMount(async () => {
   if (!token.value) redirectToLogin();
 
@@ -119,6 +125,7 @@ onBeforeMount(async () => {
   hasVoted.value = JSON.parse(localStorage.getItem("hasVoted") ?? "false");
 
   await fetchParticipants();
+  await fetchRoomTimer(roomId.value)
 });
 
 onMounted(async () => {
@@ -148,8 +155,11 @@ onMounted(async () => {
       :room-name="roomName"
       :is-connected="isConnected"
       :room-state="roomState"
+      :end-timestamp="timer.timeEndTS"
+      @reset-timer="handleRestartRoomTimer"
       @leave-room="redirectToLogin"
       @restart-meeting="meetingActions.handleRestartMeeting"
+      @start-timer="(minutes: number) => startRoomTimer(roomId, minutes)"
     />
 
     <div class="flex flex-1 w-full gap-6 flex-col md:flex-row">
