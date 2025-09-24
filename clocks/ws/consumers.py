@@ -160,6 +160,12 @@ class RoomConsumer(AsyncWebsocketConsumer):
         if uuid_str == self.uuid:
             await self.close()
 
+    async def timer_started(self, event):
+        await self.send(text_data=json.dumps(event))
+
+    async def timer_reset(self, event):
+        await self.send(text_data=json.dumps(event))
+
     async def user_voted(self, event):
         await self.send(text_data=json.dumps(event))
 

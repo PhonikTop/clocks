@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from typing import Dict, List, TypedDict
 from uuid import UUID
 
@@ -27,6 +28,7 @@ class RoomCacheService:
         self.room_key = f"room:{room_uuid}"
         self.users_key = f"{self.room_key}:users"
         self.votes_key = f"{self.room_key}:votes"
+        self.timer_key = f"{self.room_key}:timer"
         self.ttl = ttl
 
     def _get_user_key(self, uuid: str | UUID) -> str:
@@ -220,3 +222,18 @@ class RoomCacheService:
                 cache.delete(f"user:{user_uuid}:data")
             cache.delete(self.users_key)
             cache.delete(self.votes_key)
+
+    def start_room_timer(self, end_time: float) -> None:
+        if self.get_room_timer():
+            raise ValueError("Timer exists")
+
+        if end_time <= datetime.now(timezone.utc).timestamp():
+            raise ValueError("End time is invalid")
+
+        cache.set(self.timer_key, end_time, end_time - datetime.now(timezone.utc).timestamp())
+
+    def get_room_timer(self) -> float | None:
+        return cache.get(self.timer_key)
+
+    def reset_room_timer(self) -> None:
+        cache.delete(self.timer_key)

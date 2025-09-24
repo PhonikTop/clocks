@@ -1,3 +1,4 @@
+import time
 from uuid import uuid4
 
 import pytest
@@ -112,3 +113,27 @@ def test_clear_room_deletes_all(fake_cache, room):
     assert rcs.get_votes() == {}
     assert rcs.get_user(u1) is None
     assert rcs.get_user(u2) is None
+
+def test_start_and_get_room_timer(fake_cache, room):
+    rcs = RoomCacheService(room.id)
+    end_time = 1761049410
+    rcs.start_room_timer(end_time)
+
+    assert rcs.get_room_timer() == end_time
+
+def test_start_room_timer_invalid_end_time(fake_cache, room):
+    rcs = RoomCacheService(room.id)
+
+    end_time = time.time() - 3600
+
+    with pytest.raises(ValueError):
+        rcs.start_room_timer(end_time)
+    assert rcs.get_room_timer() is None
+
+def test_reset_room_timer(fake_cache, room):
+    rcs = RoomCacheService(room.id)
+
+    rcs.start_room_timer(time.time() + 3600)
+    rcs.reset_room_timer()
+
+    assert rcs.get_room_timer() is None

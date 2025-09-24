@@ -1,5 +1,8 @@
 import { ref, Ref } from "vue";
 import api from "@/plugins/axios";
+import { useTimerStore } from "@/stores/roomTimer";
+
+const timer = useTimerStore() 
 
 export interface Room {
   id: number;
@@ -65,6 +68,40 @@ export default function useRoom() {
     }
   };
 
+  const startRoomTimer = async (roomId: number, minutes: number): Promise<void> => {
+    try {
+      await api.post<null>(`/room/${roomId}/timer_start/`, {
+        minutes: minutes
+      });
+    } catch (err: unknown) {
+      const e = err as ApiError;
+      error.value = e.response?.data?.message || "Ошибка создания таймера";
+    }
+  };
+
+  const resetRoomTimer = async (roomId: number): Promise<void> => {
+    try {
+      await api.delete<null>(`/room/${roomId}/reset_timer/`);
+    } catch (err: unknown) {
+      const e = err as ApiError;
+      error.value = e.response?.data?.message || "Ошибка сброса таймера";
+    }
+  };
+
+  const fetchRoomTimer = async (roomId: number): Promise<void> => {
+    try {
+      const { data } = await api.get<{"timer_end_time": number | null}>(
+        `/room/${roomId}/get_timer/`
+      );
+      if (data.timer_end_time !== null) {
+        timer.updateTime(data.timer_end_time * 1000)
+      }
+    } catch (err: unknown) {
+      const e = err as ApiError;
+      error.value = e.response?.data?.message || "Ошибка загрузки таймера";
+    }
+  };
+
   return {
     currentRoom,
     roomList,
@@ -73,5 +110,8 @@ export default function useRoom() {
     fetchRoomList,
     fetchRoomDetails,
     fetchParticipants,
+    startRoomTimer,
+    resetRoomTimer,
+    fetchRoomTimer
   };
 }

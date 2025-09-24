@@ -28,6 +28,15 @@ export interface UserKickedMsg {
   kicker: Record<string, User>;
 }
 
+export interface RoomTimerStarted {
+  "end_time": number,
+  "timer_started_user": Record<string, User>,
+}
+
+export interface RoomTimerReset {
+  "timer_reset_user": Record<string, User>,
+}
+
 export interface MeetingStartedMsg {
   id: number;
 }
@@ -48,6 +57,8 @@ export interface WebsocketMessages {
   "task_name_changed": TaskNameChangedMsg;
   "results": ResultsMsg;
   "user_kicked": UserKickedMsg;
+  "timer_started": RoomTimerStarted;
+  "timer_reset": RoomTimerReset;
   "meeting_started": MeetingStartedMsg;
   "voted_users_update": VotedUsersMsg;
   "meeting_change_status": MeetingStatusChangeMsg;
