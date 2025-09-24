@@ -4,8 +4,10 @@ import useMeeting, { Vote } from "@/composables/api/useMeetingAPI";
 import { Participant } from "@/composables/api/useRoomAPI";
 import { useNotify } from "@/composables/useNotify";
 import { AddMessageHandler } from "@/types/websocket";
+import { useTimertStore } from "@/stores/roomTimer";
 
 const { getMeeting, meetingRoom } = useMeeting();
+const timer = useTimertStore();
 
 export default function useRoomWebSocketHandler(
   addMessageHandler: AddMessageHandler,
@@ -81,6 +83,21 @@ export default function useRoomWebSocketHandler(
 
       if (kickedId === userUuid.value) {redirectToLogin()}
     });
+
+    addMessageHandler("timer_started", (msg) => {
+      const userId = Object.keys(msg.timer_started_user)[0];
+      const userNickname = msg.timer_started_user[userId].nickname;
+      timer.updateTime(msg.end_time * 1000);
+      notify.info(`Участник ${userNickname} запустил таймер`)
+    })
+
+    addMessageHandler("timer_reset", (msg) => {
+      const userId = Object.keys(msg.timer_reset_user)[0];
+      const userNickname = msg.timer_reset_user[userId].nickname;
+
+      timer.resetTimer();
+      notify.info(`Участник ${userNickname} сбросил таймер`)
+    })
 
     addMessageHandler("meeting_started", (msg) => {
       if (!msg?.id) return;
