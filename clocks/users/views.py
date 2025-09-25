@@ -51,7 +51,7 @@ USER_TAG=["Users"]
 )
 class JoinRoomView(GenericAPIView):
     serializer_class = UserInfoSerializer
-    queryset = Room.objects.filter(is_active=True)
+    queryset = Room.objects.filter(active=True)
 
     def post(self, request, *args, **kwargs):
         room = self.get_object()
@@ -158,7 +158,7 @@ class UserInfoView(GenericAPIView):
     tags=USER_TAG,
 )
 class UserKickView(GenericAPIView):
-    queryset = Room.objects.filter(is_active=True)
+    queryset = Room.objects.filter(active=True)
     serializer_class = KickUserSerializer
 
     def post(self, request, *args, **kwargs):

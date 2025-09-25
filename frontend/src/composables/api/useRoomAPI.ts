@@ -8,7 +8,7 @@ export interface Room {
   id: number;
   name: string;
   active_meeting_id: number;
-  is_active: boolean
+  active: boolean
 }
 
 export type RoleEnum = "observer" | "voter";

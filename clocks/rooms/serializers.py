@@ -15,7 +15,7 @@ class RoomDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Room
-        fields = ["id", "name", "active_meeting_id", "is_active"]
+        fields = ["id", "name", "active_meeting_id", "active"]
 
     def get_active_meeting_id(self, obj) -> int | None:
         meeting = Meeting.objects.filter(

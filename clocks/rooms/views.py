@@ -73,12 +73,12 @@ class RoomCreateView(CreateAPIView):
         OpenApiExample(
             "Пример ответа",
             value=[
-                {"id": 1, "name": "Room A", "active_meeting_id": 42, "is_active": True},
+                {"id": 1, "name": "Room A", "active_meeting_id": 42, "active": True},
                 {
                     "id": 2,
                     "name": "Room B",
                     "active_meeting_id": None,
-                    "is_active": True,
+                    "active": True,
                 },
             ],
             response_only=True,
@@ -89,7 +89,7 @@ class RoomCreateView(CreateAPIView):
 )
 class RoomListView(ListAPIView):
     serializer_class = RoomDetailSerializer
-    queryset = Room.objects.filter(is_active=True)
+    queryset = Room.objects.filter(active=True)
 
 
 class RoomDetailView(RetrieveDestroyAPIView):
@@ -147,7 +147,7 @@ class RoomDetailView(RetrieveDestroyAPIView):
                     "id": 1,
                     "name": "Комната переговоров",
                     "active_meeting_id": 42,
-                    "is_active": True,
+                    "active": True,
                 },
                 response_only=True,
                 status_codes=["200"],

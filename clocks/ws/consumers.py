@@ -124,7 +124,7 @@ class RoomConsumer(AsyncWebsocketConsumer):
 
     async def _get_lookup_id(self):
         scope_id = self.scope["url_route"]["kwargs"].get("id")
-        if await Room.objects.filter(id=scope_id, is_active=True).aexists():
+        if await Room.objects.filter(id=scope_id, active=True).aexists():
             return int(scope_id)
         return None
 

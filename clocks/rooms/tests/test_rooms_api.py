@@ -34,8 +34,8 @@ def test_create_room_empty_name(api_client, admin_user):
 
 @pytest.mark.django_db
 def test_list_rooms(api_client):
-    Room.objects.create(name="Room1", is_active=True)
-    Room.objects.create(name="Room2", is_active=False)
+    Room.objects.create(name="Room1", active=True)
+    Room.objects.create(name="Room2", active=False)
 
     url = reverse("room_list")
     resp = api_client.get(url)
@@ -46,8 +46,8 @@ def test_list_rooms(api_client):
 
 @pytest.mark.django_db
 def test_list_rooms_includes_active_meeting_id(api_client):
-    Room.objects.create(name="RoomWithMeeting", is_active=True)
-    Room.objects.create(name="RoomWithoutMeeting", is_active=True)
+    Room.objects.create(name="RoomWithMeeting", active=True)
+    Room.objects.create(name="RoomWithoutMeeting", active=True)
 
     url = reverse("room_list")
     resp = api_client.get(url)

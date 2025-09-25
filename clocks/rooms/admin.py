@@ -10,7 +10,7 @@ from rooms.models import Room
 
 @admin.register(Room)
 class RoomAdmin(admin.ModelAdmin):
-    list_display = ("name", "is_active", "created", "updated", "view_history")
+    list_display = ("name", "active", "created", "updated", "view_history")
 
     # Добавление ссылки на историю голосований
     def view_history(self, obj):
