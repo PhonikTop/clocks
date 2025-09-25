@@ -1,4 +1,4 @@
-from votings.models import Meeting
+from votings.models import Voting
 from rest_framework import serializers
 
 from rooms.models import Room
@@ -18,7 +18,7 @@ class RoomDetailSerializer(serializers.ModelSerializer):
         fields = ["id", "name", "active_meeting_id", "active"]
 
     def get_active_meeting_id(self, obj) -> int | None:
-        meeting = Meeting.objects.filter(
+        meeting = Voting.objects.filter(
             room=obj,
             active=True,
         ).first()

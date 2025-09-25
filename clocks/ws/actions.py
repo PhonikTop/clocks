@@ -5,7 +5,7 @@ from votings.logic import (
     end_meeting_without_clearing_room,
     meeting_results,
 )
-from votings.models import Meeting
+from votings.models import Voting
 from rooms.services.room_cache_service import RoomCacheService
 from rooms.services.room_message_service import RoomStatusType
 from users.enums import UserRole
@@ -18,7 +18,7 @@ from .handlers import ActionHandler
 
 class SubmitVoteAction(BaseAction):
     def get_queryset(self):
-        return Meeting.objects.filter(room=self.consumer.lookup_id, active=True)
+        return Voting.objects.filter(room=self.consumer.lookup_id, active=True)
 
     async def perform_action(self):
         token = await self.get_param("token")
@@ -57,7 +57,7 @@ class SubmitVoteAction(BaseAction):
 
 class ChangeMeetingStatus(BaseAction):
     def get_queryset(self):
-        return Meeting.objects.filter(room=self.consumer.lookup_id, active=True)
+        return Voting.objects.filter(room=self.consumer.lookup_id, active=True)
 
     async def perform_action(self):
         meeting = await self.get_object()

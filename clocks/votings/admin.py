@@ -1,8 +1,8 @@
 from django.contrib import admin
 
-from votings.models import Meeting
+from votings.models import Voting
 
 
-@admin.register(Meeting)
+@admin.register(Voting)
 class MeetingAdmin(admin.ModelAdmin):
     exclude = ("votes", "average_score", "active",)

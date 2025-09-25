@@ -10,7 +10,7 @@ export interface Vote {
   [key: string]: UserVoteDetail;
 }
 
-export interface Meeting {
+export interface Voting {
   id: number;
   room: string;
   task_name: string;
@@ -29,12 +29,12 @@ interface ApiError {
 };
 
 export default function useRoom() {
-  const meetingRoom: Ref<Meeting | null> = ref(null);
+  const meetingRoom: Ref<Voting | null> = ref(null);
   const error: Ref<string | null> = ref(null);
 
-  const createMeeting = async (roomId: number, taskName: string): Promise<Meeting | undefined> => {
+  const createMeeting = async (roomId: number, taskName: string): Promise<Voting | undefined> => {
     try {
-      const { data } = await api.post<Meeting>("/meeting/", {
+      const { data } = await api.post<Voting>("/meeting/", {
         room: roomId,
         task_name: taskName,
       });
@@ -47,7 +47,7 @@ export default function useRoom() {
 
   const getMeeting = async (meetingId: number): Promise<void> => {
     try {
-      const { data } = await api.get<Meeting>(`/meeting/${meetingId}`);
+      const { data } = await api.get<Voting>(`/meeting/${meetingId}`);
       meetingRoom.value = data;
     } catch (err: unknown) {
       const e = err as ApiError;
@@ -73,9 +73,9 @@ export default function useRoom() {
     }
   };
 
-  const restartMeeting = async (meetingId: number): Promise<Meeting | undefined> => {
+  const restartMeeting = async (meetingId: number): Promise<Voting | undefined> => {
     try {
-      const { data } = await api.put<Meeting>(`/meeting/${meetingId}/restart`);
+      const { data } = await api.put<Voting>(`/meeting/${meetingId}/restart`);
       return data;
     } catch (err: unknown) {
       const e = err as ApiError;

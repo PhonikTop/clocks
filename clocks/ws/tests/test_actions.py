@@ -99,7 +99,7 @@ async def test_change_meeting_status_next_calls_end_meeting_without_clearing_roo
     consumer = MagicMock()
     consumer.lookup_id = 1
     with patch("ws.actions.end_meeting_without_clearing_room") as mock_end, \
-         patch("ws.actions.Meeting") as mock_meeting_model:
+         patch("ws.actions.Voting") as mock_meeting_model:
 
         class M:
             pass

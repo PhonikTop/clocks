@@ -6,7 +6,7 @@ from asgiref.sync import sync_to_async
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
 from votings.logic import check_meeting_finish, meeting_results
-from votings.models import Meeting
+from votings.models import Voting
 from rooms.models import Room
 from rooms.services.message_senders.django_channel import DjangoChannelMessageSender
 from rooms.services.room_cache_service import RoomCacheService
@@ -120,7 +120,7 @@ class RoomConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def get_meeting(self):
-        return Meeting.objects.filter(room=self.lookup_id, active=True).first()
+        return Voting.objects.filter(room=self.lookup_id, active=True).first()
 
     async def _get_lookup_id(self):
         scope_id = self.scope["url_route"]["kwargs"].get("id")

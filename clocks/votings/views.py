@@ -20,7 +20,7 @@ from rooms.services.room_online_tracker import RoomOnlineTracker
 from users.services.user_session_service import UserSessionService
 
 from votings.logic import end_meeting, meeting_results
-from votings.models import Meeting
+from votings.models import Voting
 from votings.serializers import (
     MeetingCreateSerializer,
     MeetingInfoSerializer,
@@ -124,7 +124,7 @@ class StartMeetingView(CreateAPIView):
     tags=MEETING_TAG,
 )
 class GetMeetingView(RetrieveAPIView):
-    queryset = Meeting.objects.all()
+    queryset = Voting.objects.all()
     serializer_class = MeetingInfoSerializer
 
 
@@ -148,7 +148,7 @@ class GetMeetingView(RetrieveAPIView):
     tags=MEETING_TAG,
 )
 class EndMeetingView(UpdateAPIView):
-    queryset = Meeting.objects.select_related("room").filter(active=True)
+    queryset = Voting.objects.select_related("room").filter(active=True)
     serializer_class = MeetingRemoveSerializer
     http_method_names = ["put"]
 
@@ -181,7 +181,7 @@ class EndMeetingView(UpdateAPIView):
     tags=MEETING_TAG,
 )
 class RestartMeetingView(UpdateAPIView):
-    queryset = Meeting.objects.all()
+    queryset = Voting.objects.all()
     serializer_class = MeetingRemoveSerializer
     http_method_names = ["put"]
 
@@ -245,7 +245,7 @@ class RestartMeetingView(UpdateAPIView):
     tags=MEETING_TAG,
 )
 class UpdateMeetingTaskView(UpdateAPIView):
-    queryset = Meeting.objects.all()
+    queryset = Voting.objects.all()
     serializer_class = MeetingUpdateTaskNameSerializer
     http_method_names = ["put"]
 
@@ -308,7 +308,7 @@ class UpdateMeetingTaskView(UpdateAPIView):
     tags=MEETING_TAG,
 )
 class MeetingResultsView(UpdateAPIView):
-    queryset = Meeting.objects.all()
+    queryset = Voting.objects.all()
     serializer_class = MeetingResultsSerializer
     http_method_names = ["put"]
 

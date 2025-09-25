@@ -3,7 +3,7 @@ from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, render
 from django.urls import path
 from django.utils.safestring import mark_safe
-from votings.models import Meeting
+from votings.models import Voting
 
 from rooms.models import Room
 
@@ -22,7 +22,7 @@ class RoomAdmin(admin.ModelAdmin):
 
 def meeting_history_view(request, room_id):
     room = get_object_or_404(Room, id=room_id)
-    meetings = Meeting.objects.filter(room=room).order_by("-created")
+    meetings = Voting.objects.filter(room=room).order_by("-created")
 
     paginator = Paginator(meetings, 10)  # 10 записей на страницу
     page_number = request.GET.get("page")

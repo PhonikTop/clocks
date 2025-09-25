@@ -1,7 +1,7 @@
 from django.db import models
 
 
-class Meeting(models.Model):
+class Voting(models.Model):
     room = models.ForeignKey(
         "rooms.Room",
         on_delete=models.CASCADE,
@@ -15,7 +15,7 @@ class Meeting(models.Model):
     updated = models.DateTimeField(auto_now=True)
 
     def __str__(self) -> str:
-        return f"Meeting for {self.room.name} - {self.task_name}"
+        return f"Voting for {self.room.name} - {self.task_name}"
 
     def reset_to_default(self):
         self.active = True

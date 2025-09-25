@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from votings.models import Meeting
+from votings.models import Voting
 
 
 class VoteDetailSerializer(serializers.Serializer):
@@ -19,12 +19,12 @@ class VotesResponseField(serializers.DictField):
 
 class MeetingCreateSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Meeting
+        model = Voting
         fields = ["id", "room", "task_name"]
 
     def validate(self, data):
         room = data.get("room")
-        if room and Meeting.objects.filter(room=room, active=True).exists():
+        if room and Voting.objects.filter(room=room, active=True).exists():
             raise ValidationError({"error": "Room meeting already exists"})
         return data
 
@@ -33,19 +33,19 @@ class MeetingInfoSerializer(serializers.ModelSerializer):
     votes = VotesResponseField(required=False)
 
     class Meta:
-        model = Meeting
+        model = Voting
         fields = ["id", "room", "task_name", "votes", "average_score", "active"]
 
 
 class MeetingUpdateTaskNameSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Meeting
+        model = Voting
         fields = ["task_name"]
 
 
 class MeetingRemoveSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Meeting
+        model = Voting
         fields = ["id"]
 
 
@@ -53,6 +53,6 @@ class MeetingResultsSerializer(serializers.ModelSerializer):
     votes = VotesResponseField(required=False)
 
     class Meta:
-        model = Meeting
+        model = Voting
         fields = ["id", "votes", "average_score"]
         read_only_fields = ["average_score", "votes"]
