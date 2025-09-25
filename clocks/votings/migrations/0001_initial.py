@@ -23,7 +23,7 @@ class Migration(migrations.Migration):
                 ('active', models.BooleanField(default=True)),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('updated', models.DateTimeField(auto_now=True)),
-                ('room', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='meetings', to='rooms.room')),
+                ('room', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='votings', to='rooms.room')),
             ],
         ),
     ]

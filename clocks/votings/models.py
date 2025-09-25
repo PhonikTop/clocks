@@ -5,7 +5,7 @@ class Meeting(models.Model):
     room = models.ForeignKey(
         "rooms.Room",
         on_delete=models.CASCADE,
-        related_name="meetings",
+        related_name="votings",
     )
     task_name = models.CharField(max_length=200)
     votes = models.JSONField(default=dict)

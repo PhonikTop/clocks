@@ -1,4 +1,4 @@
-from meetings.models import Meeting
+from votings.models import Meeting
 from rest_framework import serializers
 
 from rooms.models import Room

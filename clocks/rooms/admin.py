@@ -3,7 +3,7 @@ from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, render
 from django.urls import path
 from django.utils.safestring import mark_safe
-from meetings.models import Meeting
+from votings.models import Meeting
 
 from rooms.models import Room
 

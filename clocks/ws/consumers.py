@@ -5,8 +5,8 @@ from api.services.jwt_service import JWTService
 from asgiref.sync import sync_to_async
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
-from meetings.logic import check_meeting_finish, meeting_results
-from meetings.models import Meeting
+from votings.logic import check_meeting_finish, meeting_results
+from votings.models import Meeting
 from rooms.models import Room
 from rooms.services.message_senders.django_channel import DjangoChannelMessageSender
 from rooms.services.room_cache_service import RoomCacheService

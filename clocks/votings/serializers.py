@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from meetings.models import Meeting
+from votings.models import Meeting
 
 
 class VoteDetailSerializer(serializers.Serializer):

@@ -1,11 +1,11 @@
 from api.services.jwt_service import JWTService
 from asgiref.sync import sync_to_async
-from meetings.logic import (
+from votings.logic import (
     check_meeting_finish,
     end_meeting_without_clearing_room,
     meeting_results,
 )
-from meetings.models import Meeting
+from votings.models import Meeting
 from rooms.services.room_cache_service import RoomCacheService
 from rooms.services.room_message_service import RoomStatusType
 from users.enums import UserRole
