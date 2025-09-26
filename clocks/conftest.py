@@ -50,13 +50,13 @@ def room(db):
 
 
 @pytest.fixture
-def meeting(db, room):
+def voting(db, room):
     from votings.models import Voting
 
     return Voting.objects.create(room=room, task_name="Initial Task")
 
 @pytest.fixture
-def finished_meeting(db, room):
+def finished_voting(db, room):
     from votings.models import Voting
 
     return Voting.objects.create(room=room, task_name="Initial Task", average_score=4)

@@ -46,8 +46,8 @@ def test_list_rooms(api_client):
 
 @pytest.mark.django_db
 def test_list_rooms_includes_active_voting_id(api_client):
-    Room.objects.create(name="RoomWithMeeting", active=True)
-    Room.objects.create(name="RoomWithoutMeeting", active=True)
+    Room.objects.create(name="RoomWithVoting", active=True)
+    Room.objects.create(name="RoomWithoutVoting", active=True)
 
     url = reverse("room_list")
     resp = api_client.get(url)
