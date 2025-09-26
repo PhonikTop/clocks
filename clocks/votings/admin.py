@@ -4,5 +4,5 @@ from votings.models import Voting
 
 
 @admin.register(Voting)
-class MeetingAdmin(admin.ModelAdmin):
+class VotingAdmin(admin.ModelAdmin):
     exclude = ("votes", "average_score", "active",)
