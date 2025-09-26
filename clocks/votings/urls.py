@@ -1,19 +1,19 @@
 from django.urls import path
 
 from votings.views import (
-    EndMeetingView,
-    GetMeetingView,
-    MeetingResultsView,
-    RestartMeetingView,
-    StartMeetingView,
-    UpdateMeetingTaskView,
+    EndVotingView,
+    GetVotingView,
+    RestartVotingView,
+    StartVotingView,
+    UpdateVotingTaskView,
+    VotingResultsView,
 )
 
 urlpatterns = [
-    path("", StartMeetingView.as_view(), name="start_meeting"),
-    path("<int:pk>", GetMeetingView.as_view(), name="get_meeting"),
-    path("<int:pk>/end", EndMeetingView.as_view(), name="end_meeting"),
-    path("<int:pk>/restart", RestartMeetingView.as_view(), name="restart_meeting"),
-    path("<int:pk>/task", UpdateMeetingTaskView.as_view(), name="update_meeting_task"),
-    path("<int:pk>/results", MeetingResultsView.as_view(), name="get_meeting_results"),
+    path("", StartVotingView.as_view(), name="start_voting"),
+    path("<int:pk>", GetVotingView.as_view(), name="get_voting"),
+    path("<int:pk>/end", EndVotingView.as_view(), name="end_voting"),
+    path("<int:pk>/restart", RestartVotingView.as_view(), name="restart_voting"),
+    path("<int:pk>/task", UpdateVotingTaskView.as_view(), name="update_voting_task"),
+    path("<int:pk>/results", VotingResultsView.as_view(), name="get_voting_results"),
 ]

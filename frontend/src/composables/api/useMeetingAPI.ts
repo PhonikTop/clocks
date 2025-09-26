@@ -34,7 +34,7 @@ export default function useRoom() {
 
   const createMeeting = async (roomId: number, taskName: string): Promise<Voting | undefined> => {
     try {
-      const { data } = await api.post<Voting>("/meeting/", {
+      const { data } = await api.post<Voting>("/voting/", {
         room: roomId,
         task_name: taskName,
       });

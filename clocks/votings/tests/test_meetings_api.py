@@ -7,7 +7,7 @@ from django.urls import reverse
 
 @pytest.mark.django_db
 def test_start_meeting_creates_and_notifies(api_client, room):
-    url = reverse("start_meeting")
+    url = reverse("start_voting")
     payload = {"room": room.id, "task_name": "Разработка архитектуры"}
 
     with patch("votings.views.RoomMessageService") as MockRMS, patch(
@@ -29,7 +29,7 @@ def test_start_meeting_creates_and_notifies(api_client, room):
 
 @pytest.mark.django_db
 def test_start_meeting_validation_when_active_exists(api_client, room, meeting):
-    url = reverse("start_meeting")
+    url = reverse("start_voting")
     payload = {"room": room.id, "task_name": "Еще одна задача"}
 
     resp = api_client.post(url, data=payload, format="json")
@@ -42,7 +42,7 @@ def test_start_meeting_validation_when_active_exists(api_client, room, meeting):
 
 @pytest.mark.django_db
 def test_get_meeting_returns_info(api_client, meeting):
-    url = reverse("get_meeting", kwargs={"pk": meeting.id})
+    url = reverse("get_voting", kwargs={"pk": meeting.id})
     resp = api_client.get(url)
 
     assert resp.status_code == 200
@@ -54,7 +54,7 @@ def test_get_meeting_returns_info(api_client, meeting):
 
 @pytest.mark.django_db
 def test_end_meeting_only_active_allowed_and_calls_end_meeting(api_client, meeting):
-    url = reverse("end_meeting", kwargs={"pk": meeting.id})
+    url = reverse("end_voting", kwargs={"pk": meeting.id})
     with patch("votings.views.end_voting") as mock_end:
         mock_end.return_value = None
         resp = api_client.put(url, data={}, format="json")
@@ -71,7 +71,7 @@ def test_end_meeting_only_active_allowed_and_calls_end_meeting(api_client, meeti
 
 @pytest.mark.django_db
 def test_restart_meeting_calls_services_and_resets_meeting(api_client, meeting):
-    url = reverse("restart_meeting", kwargs={"pk": meeting.id})
+    url = reverse("restart_voting", kwargs={"pk": meeting.id})
 
     with patch("votings.views.DjangoChannelMessageSender"), patch(
         "votings.views.RoomMessageService"
@@ -97,7 +97,7 @@ def test_restart_meeting_calls_services_and_resets_meeting(api_client, meeting):
 
 @pytest.mark.django_db
 def test_update_meeting_task_requires_authorization_and_notifies(api_client, meeting, jwt_token):
-    url = reverse("update_meeting_task", kwargs={"pk": meeting.id})
+    url = reverse("update_voting_task", kwargs={"pk": meeting.id})
     payload = {"task_name": "Новое имя задачи"}
 
     resp1 = api_client.put(url, data=payload, format="json")
@@ -143,7 +143,7 @@ def test_update_meeting_task_requires_authorization_and_notifies(api_client, mee
 
 @pytest.mark.django_db
 def test_meeting_results_computes_and_returns_votes_and_average(api_client, meeting):
-    url = reverse("get_meeting_results", kwargs={"pk": meeting.id})
+    url = reverse("get_voting_results", kwargs={"pk": meeting.id})
 
     def fake_meeting_results(meeting_obj):
         votes = {
