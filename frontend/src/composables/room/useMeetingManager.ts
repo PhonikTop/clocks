@@ -35,9 +35,9 @@ export default function useMeetingManager(
 
   const getRoomMeeting = async (roomId: number) => {
     await fetchRoomDetails(roomId);
-    if (currentRoom.value?.active_meeting_id == null) return null;
+    if (currentRoom.value?.active_voting_id == null) return null;
 
-    await getMeeting(currentRoom.value.active_meeting_id);
+    await getMeeting(currentRoom.value.active_voting_id);
 
     return meetingRoom.value;
   };

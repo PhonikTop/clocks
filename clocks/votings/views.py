@@ -22,11 +22,11 @@ from users.services.user_session_service import UserSessionService
 from votings.logic import end_voting, voting_results
 from votings.models import Voting
 from votings.serializers import (
-    MeetingCreateSerializer,
-    MeetingInfoSerializer,
-    MeetingRemoveSerializer,
-    MeetingResultsSerializer,
-    MeetingUpdateTaskNameSerializer,
+    VotingCreateSerializer,
+    VotingInfoSerializer,
+    VotingRemoveSerializer,
+    VotingResultsSerializer,
+    VotingUpdateTaskNameSerializer,
 )
 
 MEETING_TAG = ["Meetings"]
@@ -36,13 +36,13 @@ MEETING_TAG = ["Meetings"]
     summary="Создание новой встречи",
     description="Создаёт новую встречу в комнате и отправляет уведомление участникам через WebSocket",
     responses={
-        201: MeetingCreateSerializer,
+        201: VotingCreateSerializer,
         400: OpenApiResponse(
             description="Некорректные данные или в комнате уже есть активная встреча",
             examples=[
                 OpenApiExample(
                     "Пример ошибки",
-                    value={"error": "Room meeting already exists"},
+                    value={"error": "Room voting already exists"},
                     status_codes=[400]
                 )
             ]
@@ -71,7 +71,7 @@ MEETING_TAG = ["Meetings"]
     tags=MEETING_TAG,
 )
 class StartMeetingView(CreateAPIView):
-    serializer_class = MeetingCreateSerializer
+    serializer_class = VotingCreateSerializer
 
     def perform_create(self, serializer):
         instance = serializer.save(room=serializer.validated_data["room"],
@@ -94,7 +94,7 @@ class StartMeetingView(CreateAPIView):
         )
     ],
     responses={
-        200: MeetingInfoSerializer,
+        200: VotingInfoSerializer,
         404: OpenApiResponse(
             description="Встреча с указанным ID не найдена",
             examples=[
@@ -125,7 +125,7 @@ class StartMeetingView(CreateAPIView):
 )
 class GetMeetingView(RetrieveAPIView):
     queryset = Voting.objects.all()
-    serializer_class = MeetingInfoSerializer
+    serializer_class = VotingInfoSerializer
 
 
 @extend_schema(
@@ -136,7 +136,7 @@ class GetMeetingView(RetrieveAPIView):
     auth=[],
     methods=["PUT"],
     responses={
-        200: MeetingRemoveSerializer,
+        200: VotingRemoveSerializer,
         400: OpenApiResponse(description="Невозможно завершить встречу"),
         404: OpenApiResponse(
             description="Активная встреча с указанным ID не найдена",
@@ -149,7 +149,7 @@ class GetMeetingView(RetrieveAPIView):
 )
 class EndMeetingView(UpdateAPIView):
     queryset = Voting.objects.select_related("room").filter(active=True)
-    serializer_class = MeetingRemoveSerializer
+    serializer_class = VotingRemoveSerializer
     http_method_names = ["put"]
 
     def update(self, request, *args, **kwargs):
@@ -171,7 +171,7 @@ class EndMeetingView(UpdateAPIView):
     auth=[],
     methods=["PUT"],
     responses={
-        200: MeetingRemoveSerializer,
+        200: VotingRemoveSerializer,
         400: OpenApiResponse(description="Невозможно перезапустить встречу"),
         404: OpenApiResponse(description="Встреча с указанным ID не найдена"),
     },
@@ -182,7 +182,7 @@ class EndMeetingView(UpdateAPIView):
 )
 class RestartMeetingView(UpdateAPIView):
     queryset = Voting.objects.all()
-    serializer_class = MeetingRemoveSerializer
+    serializer_class = VotingRemoveSerializer
     http_method_names = ["put"]
 
     def update(self, request, *args, **kwargs):
@@ -210,7 +210,7 @@ class RestartMeetingView(UpdateAPIView):
     auth=[],
     methods=["PUT"],
     responses={
-        200: MeetingUpdateTaskNameSerializer,
+        200: VotingUpdateTaskNameSerializer,
         400: OpenApiResponse(
             description="Некорректное название задачи",
             examples=[
@@ -246,7 +246,7 @@ class RestartMeetingView(UpdateAPIView):
 )
 class UpdateMeetingTaskView(UpdateAPIView):
     queryset = Voting.objects.all()
-    serializer_class = MeetingUpdateTaskNameSerializer
+    serializer_class = VotingUpdateTaskNameSerializer
     http_method_names = ["put"]
 
     def perform_update(self, serializer):
@@ -281,7 +281,7 @@ class UpdateMeetingTaskView(UpdateAPIView):
     auth=[],
     methods=["PUT"],
     responses={
-        200: MeetingResultsSerializer,
+        200: VotingResultsSerializer,
         400: OpenApiResponse(description="Невозможно подвести итоги"),
         404: OpenApiResponse(description="Встреча с указанным ID не найдена")
     },
@@ -309,7 +309,7 @@ class UpdateMeetingTaskView(UpdateAPIView):
 )
 class MeetingResultsView(UpdateAPIView):
     queryset = Voting.objects.all()
-    serializer_class = MeetingResultsSerializer
+    serializer_class = VotingResultsSerializer
     http_method_names = ["put"]
 
     def update(self, request, *args, **kwargs):

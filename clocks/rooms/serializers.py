@@ -1,5 +1,5 @@
-from votings.models import Voting
 from rest_framework import serializers
+from votings.models import Voting
 
 from rooms.models import Room
 
@@ -11,15 +11,15 @@ class RoomNameSerializer(serializers.ModelSerializer):
 
 
 class RoomDetailSerializer(serializers.ModelSerializer):
-    active_meeting_id = serializers.SerializerMethodField()
+    active_voting_id = serializers.SerializerMethodField()
 
     class Meta:
         model = Room
-        fields = ["id", "name", "active_meeting_id", "active"]
+        fields = ["id", "name", "active_voting_id", "active"]
 
-    def get_active_meeting_id(self, obj) -> int | None:
-        meeting = Voting.objects.filter(
+    def get_active_voting_id(self, obj) -> int | None:
+        voting = Voting.objects.filter(
             room=obj,
             active=True,
         ).first()
-        return meeting.id if meeting else None
+        return voting.id if voting else None

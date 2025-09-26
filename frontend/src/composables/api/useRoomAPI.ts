@@ -7,7 +7,7 @@ const timer = useTimerStore()
 export interface Room {
   id: number;
   name: string;
-  active_meeting_id: number;
+  active_voting_id: number;
   active: boolean
 }
 

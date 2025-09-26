@@ -37,7 +37,7 @@ def test_start_meeting_validation_when_active_exists(api_client, room, meeting):
     assert resp.status_code == 400
     body = resp.json()
     assert "error" in body
-    assert "Room meeting already exists" in json.dumps(body)
+    assert "Room voting already exists" in json.dumps(body)
 
 
 @pytest.mark.django_db
