@@ -1,12 +1,12 @@
 import { ref, onMounted, Ref } from "vue";
 import { ROOM_STATES } from "@/composables/room/useRoomState";
-import useMeeting, { Vote } from "@/composables/api/useMeetingAPI";
+import useVoting, { Vote } from "@/composables/api/useVotingsAPI";
 import { Participant } from "@/composables/api/useRoomAPI";
 import { useNotify } from "@/composables/useNotify";
 import { AddMessageHandler } from "@/types/websocket";
 import { useTimerStore } from "@/stores/roomTimer";
 
-const { getMeeting, meetingRoom } = useMeeting();
+const { getVoting, roomVoting } = useVoting();
 const timer = useTimerStore();
 
 export default function useRoomWebSocketHandler(
@@ -22,7 +22,7 @@ export default function useRoomWebSocketHandler(
   userUuid: Ref<string>,
   hasVoted: Ref<boolean>
 ) {
-  const currentMeeting: Ref<null | number> = ref(null);
+  const currentVoting: Ref<null | number> = ref(null);
 
   const setupHandlers = () => {
     addMessageHandler("user_joined", (msg) => {
@@ -101,13 +101,13 @@ export default function useRoomWebSocketHandler(
 
     addMessageHandler("voting_started", (msg) => {
       if (!msg?.id) return;
-      getMeeting(msg.id)
+      getVoting(msg.id)
         .then(() => {
-          currentMeeting.value = msg.id;
+          currentVoting.value = msg.id;
           localStorage.setItem("hasVoted", JSON.stringify(false));
           hasVoted.value = false;
-          localStorage.setItem("active_meeting_id", msg.id.toString());
-          taskName.value = meetingRoom.value?.task_name || "";
+          localStorage.setItem("active_voting_id", msg.id.toString());
+          taskName.value = roomVoting.value?.task_name || "";
           roomState.value = ROOM_STATES.VOTING;
         })
         .catch(console.error);
@@ -130,9 +130,9 @@ export default function useRoomWebSocketHandler(
           break;
         case "next":
           roomState.value = ROOM_STATES.WAITING;
-          currentMeeting.value = null;
+          currentVoting.value = null;
           votes.value = [];
-          localStorage.removeItem("active_meeting_id");
+          localStorage.removeItem("active_voting_id");
           taskName.value = null;
           break;
       }
@@ -141,6 +141,6 @@ export default function useRoomWebSocketHandler(
 
   onMounted(setupHandlers);
   return {
-    currentMeeting,
+    currentVoting,
   };
 }

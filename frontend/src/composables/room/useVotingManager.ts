@@ -1,31 +1,31 @@
 import { ROOM_STATES } from "./useRoomState";
-import useMeeting from "@/composables/api/useMeetingAPI";
+import useVoting from "@/composables/api/useVotingsAPI";
 import useRoom from "@/composables/api/useRoomAPI";
 import { Ref } from "vue";
 import { useNotify } from "@/composables/useNotify";
 import { WebSocketSendMessage } from "@/composables/api/useWebSocket";
 
 const {
-  createMeeting,
-  setMeetingTask,
-  restartMeeting,
-  endMeeting,
-  getMeeting,
-  meetingRoom,
-} = useMeeting();
+  createVoting,
+  setVotingTask,
+  restartVoting,
+  endVoting,
+  getVoting,
+  roomVoting,
+} = useVoting();
 
 const { fetchRoomDetails, currentRoom } = useRoom();
 
-export default function useMeetingManager(
+export default function useVotingManager(
   roomState: Ref<ROOM_STATES>,
   sendMessage: (msg: WebSocketSendMessage) => void,
-  currentMeeting: Ref<number | null>,
+  currentVoting: Ref<number | null>,
   notify: ReturnType<typeof useNotify>
 ) {
   const startVoting = async (roomId: number, taskName: string) => {
     try {
       roomState.value = ROOM_STATES.VOTING;
-      await createMeeting(roomId, taskName);
+      await createVoting(roomId, taskName);
     } catch (err) {
       notify.error("Произошла ошибка во время начала голосования")
       console.error("Ошибка начала голосования:", err);
@@ -33,21 +33,21 @@ export default function useMeetingManager(
     }
   };
 
-  const getRoomMeeting = async (roomId: number) => {
+  const getRoomVoting = async (roomId: number) => {
     await fetchRoomDetails(roomId);
     if (currentRoom.value?.active_voting_id == null) return null;
 
-    await getMeeting(currentRoom.value.active_voting_id);
+    await getVoting(currentRoom.value.active_voting_id);
 
-    return meetingRoom.value;
+    return roomVoting.value;
   };
 
-  const updateMeetingTaskName = async (newName: string) => {
-    if (!currentMeeting.value) return;
-    await setMeetingTask(currentMeeting.value, newName);
+  const updateVotingTaskName = async (newName: string) => {
+    if (!currentVoting.value) return;
+    await setVotingTask(currentVoting.value, newName);
   };
 
-  const changeMeetingStatus = (newStatus: string) => {
+  const changeVotingStatus = (newStatus: string) => {
     try {
       sendMessage({
         action: "change_voting_status",
@@ -59,30 +59,29 @@ export default function useMeetingManager(
     }
   };
 
-  const handleRestartMeeting = () => {
-    if (!currentMeeting.value) {return;}
-    restartMeeting(currentMeeting.value);
+  const handleRestartVoting = () => {
+    if (!currentVoting.value) {return;}
+    restartVoting(currentVoting.value);
   };
 
-  const handleNextMeeting = () => {
-    changeMeetingStatus("next");
-    localStorage.removeItem("active_meeting_id");
+  const handleNextVoting = () => {
+    changeVotingStatus("next");
+    localStorage.removeItem("active_Voting_id");
   };
 
-  const handleEndMeeting = () => {
-    if (!currentMeeting.value) {return;}
-    endMeeting(currentMeeting.value);
-    changeMeetingStatus("ended");
-    localStorage.removeItem("active_meeting_id");
+  const handleEndVoting = () => {
+    if (!currentVoting.value) {return;}
+    endVoting(currentVoting.value);
+    changeVotingStatus("ended");
+    localStorage.removeItem("active_Voting_id");
   };
 
   return {
     startVoting,
-    getRoomMeeting,
-    updateMeetingTaskName,
-    handleRestartMeeting,
-    handleNextMeeting,
-    handleEndMeeting,
-    meetingRoom,
+    getRoomVoting,
+    updateVotingTaskName,
+    handleRestartVoting,
+    handleNextVoting,
+    handleEndVoting,
   };
 }
