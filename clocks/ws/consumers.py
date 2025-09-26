@@ -103,7 +103,7 @@ class RoomConsumer(AsyncWebsocketConsumer):
                 voting = await self.get_voting()
                 votes = await sync_to_async(self.room_cache.get_votes)()
                 await sync_to_async(voting_results)(voting)
-                await sync_to_async(self.room_message_service.notify_meeting_results)(votes, voting.average_score)
+                await sync_to_async(self.room_message_service.notify_voting_results)(votes, voting.average_score)
 
     async def receive(self, text_data):
         try:
@@ -175,7 +175,7 @@ class RoomConsumer(AsyncWebsocketConsumer):
     async def task_name_changed(self, event):
         await self.send(text_data=json.dumps(event))
 
-    async def meeting_started(self, event):
+    async def voting_started(self, event):
         await self.send(text_data=json.dumps(event))
 
     async def voted_users_update(self, event):

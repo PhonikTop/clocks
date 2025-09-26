@@ -59,7 +59,7 @@ export interface WebsocketMessages {
   "user_kicked": UserKickedMsg;
   "timer_started": RoomTimerStarted;
   "timer_reset": RoomTimerReset;
-  "meeting_started": MeetingStartedMsg;
+  "voting_started": MeetingStartedMsg;
   "voted_users_update": VotedUsersMsg;
   "voting_change_status": MeetingStatusChangeMsg;
 }

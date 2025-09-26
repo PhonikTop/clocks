@@ -99,7 +99,7 @@ export default function useRoomWebSocketHandler(
       notify.info(`Участник ${userNickname} сбросил таймер`)
     })
 
-    addMessageHandler("meeting_started", (msg) => {
+    addMessageHandler("voting_started", (msg) => {
       if (!msg?.id) return;
       getMeeting(msg.id)
         .then(() => {

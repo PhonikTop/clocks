@@ -80,7 +80,7 @@ class StartVotingView(CreateAPIView):
         channel_sender = DjangoChannelMessageSender()
         room_message_service = RoomMessageService(instance.room.id, channel_sender)
 
-        room_message_service.notify_meeting_started(instance.id)
+        room_message_service.notify_voting_started(instance.id)
 
 
 @extend_schema(
@@ -198,7 +198,7 @@ class RestartVotingView(UpdateAPIView):
         room_cache_service.clear_votes()
         RoomOnlineTracker().clean_room_offline_participants(voting.room.id)
 
-        room_message_service.notify_meeting_restart()
+        room_message_service.notify_voting_restart()
 
         return Response(serializer.data)
 
@@ -268,7 +268,7 @@ class UpdateVotingTaskView(UpdateAPIView):
         channel_sender = DjangoChannelMessageSender()
         room_message_service = RoomMessageService(instance.room.id, channel_sender)
 
-        room_message_service.notify_meeting_task_name_changed(instance.task_name, user_nickname)
+        room_message_service.notify_voting_task_name_changed(instance.task_name, user_nickname)
 
 
 @extend_schema(

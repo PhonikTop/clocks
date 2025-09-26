@@ -13,7 +13,7 @@ def test_start_voting_creates_and_notifies(api_client, room):
     with patch("votings.views.RoomMessageService") as MockRMS, patch(
         "votings.views.DjangoChannelMessageSender"
     ):
-        MockRMS.return_value.notify_meeting_started = MagicMock()
+        MockRMS.return_value.notify_voting_started = MagicMock()
 
         resp = api_client.post(url, data=payload, format="json")
 
@@ -24,7 +24,7 @@ def test_start_voting_creates_and_notifies(api_client, room):
         assert data["task_name"] == "Разработка архитектуры"
 
         MockRMS.assert_called_once()
-        MockRMS.return_value.notify_meeting_started.assert_called_once_with(data["id"])
+        MockRMS.return_value.notify_voting_started.assert_called_once_with(data["id"])
 
 
 @pytest.mark.django_db
@@ -78,7 +78,7 @@ def test_restart_voting_calls_services_and_resets_voting(api_client, voting):
     ) as MockRMS, patch("votings.views.RoomCacheService") as MockRoomCache, patch(
         "votings.views.RoomOnlineTracker"
     ) as MockTracker:
-        MockRMS.return_value.notify_meeting_restart = MagicMock()
+        MockRMS.return_value.notify_voting_restart = MagicMock()
         MockRoomCache.return_value.clear_votes = MagicMock()
         MockTracker.return_value.clean_room_offline_participants = MagicMock()
 
@@ -87,7 +87,7 @@ def test_restart_voting_calls_services_and_resets_voting(api_client, voting):
         MockRoomCache.assert_called_once_with(voting.room.id)
         MockRoomCache.return_value.clear_votes.assert_called_once()
         MockTracker.return_value.clean_room_offline_participants.assert_called_once_with(voting.room.id)
-        MockRMS.return_value.notify_meeting_restart.assert_called_once()
+        MockRMS.return_value.notify_voting_restart.assert_called_once()
 
         voting.refresh_from_db()
         assert voting.active is True
@@ -127,7 +127,7 @@ def test_update_voting_task_requires_authorization_and_notifies(api_client, voti
 
         MockRoomCache.return_value = MagicMock()
 
-        MockRMS.return_value.notify_meeting_task_name_changed = MagicMock()
+        MockRMS.return_value.notify_voting_task_name_changed = MagicMock()
 
         resp3 = api_client.put(url, data=payload, format="json")
         assert resp3.status_code == 200
@@ -138,7 +138,7 @@ def test_update_voting_task_requires_authorization_and_notifies(api_client, voti
         instance_uss.get_user_session_data.assert_called_once_with(token)
 
         MockRMS.assert_called_once_with(voting.room.id, ANY)
-        MockRMS.return_value.notify_meeting_task_name_changed.assert_called_once_with("Новое имя задачи", "TesterNick")
+        MockRMS.return_value.notify_voting_task_name_changed.assert_called_once_with("Новое имя задачи", "TesterNick")
 
 
 @pytest.mark.django_db
