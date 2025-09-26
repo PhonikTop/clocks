@@ -1,15 +1,15 @@
 from api.services.jwt_service import JWTService
 from asgiref.sync import sync_to_async
-from votings.logic import (
-    check_meeting_finish,
-    end_meeting_without_clearing_room,
-    meeting_results,
-)
-from votings.models import Voting
 from rooms.services.room_cache_service import RoomCacheService
 from rooms.services.room_message_service import RoomStatusType
 from users.enums import UserRole
 from users.services.user_session_service import UserSessionService
+from votings.logic import (
+    check_voting_finish,
+    end_voting_without_clearing_room,
+    voting_results,
+)
+from votings.models import Voting
 
 from ws.base_action import BaseAction
 
@@ -42,11 +42,11 @@ class SubmitVoteAction(BaseAction):
 
         await sync_to_async(room_cache.set_vote)(user_id, vote)
 
-        meeting_finished: bool = await sync_to_async(check_meeting_finish)(self.consumer.lookup_id)
+        meeting_finished: bool = await sync_to_async(check_voting_finish)(self.consumer.lookup_id)
 
         if meeting_finished:
             votes = await sync_to_async(room_cache.get_votes)()
-            await sync_to_async(meeting_results)(meeting)
+            await sync_to_async(voting_results)(meeting)
             return {
                 "type": "results",
                 "votes": votes,
@@ -67,7 +67,7 @@ class ChangeMeetingStatus(BaseAction):
             return None
 
         if new_status == RoomStatusType.NEXT.value:
-            await sync_to_async(end_meeting_without_clearing_room)(meeting)
+            await sync_to_async(end_voting_without_clearing_room)(meeting)
 
         return {
             "type": "meeting_change_status",

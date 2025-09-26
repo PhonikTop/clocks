@@ -51,7 +51,7 @@ async def test_group_message_broadcasts_to_other_clients(room_url_router, room):
          patch.object(RoomConsumer, "_get_user_uuid", new=fake_get_user_uuid), \
          patch("ws.consumers.RoomMessageService") as mock_room_message_service_cls, \
          patch("ws.consumers.RoomOnlineTracker") as mock_room_online_tracker_cls, \
-         patch("ws.consumers.check_meeting_finish") as mock_check_finish:
+         patch("ws.consumers.check_voting_finish") as mock_check_finish:
 
         mock_check_finish.return_value = False
 

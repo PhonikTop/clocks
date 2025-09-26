@@ -19,7 +19,7 @@ from rooms.services.room_message_service import RoomMessageService
 from rooms.services.room_online_tracker import RoomOnlineTracker
 from users.services.user_session_service import UserSessionService
 
-from votings.logic import end_meeting, meeting_results
+from votings.logic import end_voting, voting_results
 from votings.models import Voting
 from votings.serializers import (
     MeetingCreateSerializer,
@@ -157,7 +157,7 @@ class EndMeetingView(UpdateAPIView):
         serializer = self.get_serializer(meeting, data=request.data, partial=kwargs.pop("partial", False))
         serializer.is_valid(raise_exception=True)
 
-        end_meeting(meeting)
+        end_voting(meeting)
         return Response(serializer.data)
 
 
@@ -317,7 +317,7 @@ class MeetingResultsView(UpdateAPIView):
         serializer = self.get_serializer(meeting, data=request.data, partial=kwargs.pop("partial", False))
         serializer.is_valid(raise_exception=True)
 
-        meeting_results(meeting)
+        voting_results(meeting)
         meeting.save()
 
         return Response(serializer.data)

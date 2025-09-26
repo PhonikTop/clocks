@@ -55,7 +55,7 @@ def test_get_meeting_returns_info(api_client, meeting):
 @pytest.mark.django_db
 def test_end_meeting_only_active_allowed_and_calls_end_meeting(api_client, meeting):
     url = reverse("end_meeting", kwargs={"pk": meeting.id})
-    with patch("votings.views.end_meeting") as mock_end:
+    with patch("votings.views.end_voting") as mock_end:
         mock_end.return_value = None
         resp = api_client.put(url, data={}, format="json")
         assert resp.status_code == 200
@@ -154,7 +154,7 @@ def test_meeting_results_computes_and_returns_votes_and_average(api_client, meet
         meeting_obj.average_score = 8.0
         meeting_obj.save()
 
-    with patch("votings.views.meeting_results", side_effect=fake_meeting_results) as mock_results:
+    with patch("votings.views.voting_results", side_effect=fake_meeting_results) as mock_results:
         resp = api_client.put(url, data={}, format="json")
         assert resp.status_code == 200
         body = resp.json()

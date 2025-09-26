@@ -42,7 +42,7 @@ async def test_submit_vote_success_not_finish(meeting):
     with patch("ws.actions.RoomCacheService") as mock_room_cache_cls, \
          patch("ws.actions.UserSessionService") as mock_user_session_cls, \
          patch("ws.actions.JWTService") as mock_jwt_cls, \
-         patch("ws.actions.check_meeting_finish") as mock_check_finish:
+         patch("ws.actions.check_voting_finish") as mock_check_finish:
 
         mock_cache = mock_room_cache_cls.return_value
         mock_cache.get_users_by_role.return_value = ["uA", "uB"]
@@ -66,8 +66,8 @@ async def test_submit_vote_finishes_meeting_and_returns_results(meeting):
     with patch("ws.actions.RoomCacheService") as mock_room_cache_cls, \
          patch("ws.actions.UserSessionService") as mock_user_session_cls, \
          patch("ws.actions.JWTService") as mock_jwt_cls, \
-         patch("ws.actions.check_meeting_finish") as mock_check_finish, \
-         patch("ws.actions.meeting_results") as mock_meeting_results:
+         patch("ws.actions.check_voting_finish") as mock_check_finish, \
+         patch("ws.actions.voting_results") as mock_meeting_results:
 
         mock_cache = mock_room_cache_cls.return_value
         mock_cache.get_users_by_role.return_value = ["uA"]
@@ -98,7 +98,7 @@ async def test_change_meeting_status_invalid_status_returns_none(meeting):
 async def test_change_meeting_status_next_calls_end_meeting_without_clearing_room():
     consumer = MagicMock()
     consumer.lookup_id = 1
-    with patch("ws.actions.end_meeting_without_clearing_room") as mock_end, \
+    with patch("ws.actions.end_voting_without_clearing_room") as mock_end, \
          patch("ws.actions.Voting") as mock_meeting_model:
 
         class M:

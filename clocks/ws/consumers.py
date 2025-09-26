@@ -5,14 +5,14 @@ from api.services.jwt_service import JWTService
 from asgiref.sync import sync_to_async
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
-from votings.logic import check_meeting_finish, meeting_results
-from votings.models import Voting
 from rooms.models import Room
 from rooms.services.message_senders.django_channel import DjangoChannelMessageSender
 from rooms.services.room_cache_service import RoomCacheService
 from rooms.services.room_message_service import RoomMessageService
 from rooms.services.room_online_tracker import RoomOnlineTracker
 from users.services.user_session_service import UserSessionService
+from votings.logic import check_voting_finish, voting_results
+from votings.models import Voting
 
 from ws.actions import action_handler
 from ws.services.user_channel_tracker import UserChannelTracker
@@ -99,10 +99,10 @@ class RoomConsumer(AsyncWebsocketConsumer):
         if self.lookup_id or self.uuid:
             await sync_to_async(RoomOnlineTracker.set_user_offline)(self.uuid, self.lookup_id)
             await sync_to_async(UserChannelTracker.remove_participant)(self.channel_name)
-            if await sync_to_async(check_meeting_finish)(self.lookup_id) and (await self.get_meeting()) is not None:
+            if await sync_to_async(check_voting_finish)(self.lookup_id) and (await self.get_meeting()) is not None:
                 meeting = await self.get_meeting()
                 votes = await sync_to_async(self.room_cache.get_votes)()
-                await sync_to_async(meeting_results)(meeting)
+                await sync_to_async(voting_results)(meeting)
                 await sync_to_async(self.room_message_service.notify_meeting_results)(votes, meeting.average_score)
 
     async def receive(self, text_data):
