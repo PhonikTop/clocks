@@ -2,7 +2,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from ws.actions import ChangeMeetingStatus, SubmitVoteAction
+from ws.actions import ChangeVotingStatus, SubmitVoteAction
 
 
 @pytest.mark.asyncio
@@ -59,7 +59,7 @@ async def test_submit_vote_success_not_finish(voting):
 
 @pytest.mark.asyncio
 @pytest.mark.django_db
-async def test_submit_vote_finishes_meeting_and_returns_results(voting):
+async def test_submit_vote_finishes_voting_and_returns_results(voting):
     consumer = MagicMock()
     consumer.lookup_id = voting.room.id
     token = "tkn"
@@ -86,16 +86,16 @@ async def test_submit_vote_finishes_meeting_and_returns_results(voting):
 
 @pytest.mark.asyncio
 @pytest.mark.django_db
-async def test_change_meeting_status_invalid_status_returns_none(voting):
+async def test_change_voting_status_invalid_status_returns_none(voting):
     consumer = MagicMock()
     consumer.lookup_id = voting.room.id
-    with patch.object(ChangeMeetingStatus, "get_object", return_value=voting):
-        res = await ChangeMeetingStatus.execute(consumer, {"status": "invalid_status"})
+    with patch.object(ChangeVotingStatus, "get_object", return_value=voting):
+        res = await ChangeVotingStatus.execute(consumer, {"status": "invalid_status"})
         assert res is None
 
 @pytest.mark.asyncio
 @pytest.mark.django_db
-async def test_change_meeting_status_next_calls_end_voting_without_clearing_room():
+async def test_change_voting_status_next_calls_end_voting_without_clearing_room():
     consumer = MagicMock()
     consumer.lookup_id = 1
     with patch("ws.actions.end_voting_without_clearing_room") as mock_end, \
@@ -107,6 +107,6 @@ async def test_change_meeting_status_next_calls_end_voting_without_clearing_room
         mock_voting_qs.first.return_value = M()
         mock_voting_model.objects.filter.return_value = mock_voting_qs
 
-        res = await ChangeMeetingStatus.execute(consumer, {"status": "next"})
+        res = await ChangeVotingStatus.execute(consumer, {"status": "next"})
         mock_end.assert_called_once()
-        assert res == {"type": "meeting_change_status", "status": "next"}
+        assert res == {"type": "voting_change_status", "status": "next"}

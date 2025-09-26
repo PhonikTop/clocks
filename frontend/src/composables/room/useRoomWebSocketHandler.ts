@@ -118,7 +118,7 @@ export default function useRoomWebSocketHandler(
       votes.value = msg.voted_users;
     });
 
-    addMessageHandler("meeting_change_status", (msg) => {
+    addMessageHandler("voting_change_status", (msg) => {
       if (!msg?.status) return;
 
       switch (msg.status) {

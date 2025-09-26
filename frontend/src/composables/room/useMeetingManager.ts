@@ -50,7 +50,7 @@ export default function useMeetingManager(
   const changeMeetingStatus = (newStatus: string) => {
     try {
       sendMessage({
-        action: "change_meeting_status",
+        action: "change_voting_status",
         status: newStatus,
       });
     } catch (err) {

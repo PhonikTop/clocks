@@ -61,7 +61,7 @@ export interface WebsocketMessages {
   "timer_reset": RoomTimerReset;
   "meeting_started": MeetingStartedMsg;
   "voted_users_update": VotedUsersMsg;
-  "meeting_change_status": MeetingStatusChangeMsg;
+  "voting_change_status": MeetingStatusChangeMsg;
 }
 
 export type AddMessageHandler = <K extends keyof WebsocketMessages>(

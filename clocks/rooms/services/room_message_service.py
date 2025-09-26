@@ -27,7 +27,7 @@ class RoomMessageService:
 
     def notify_meeting_restart(self):
         message = {
-            "type": "meeting_change_status",
+            "type": "voting_change_status",
             "status": RoomStatusType.RESTART.value
         }
         self.message_sender.send(self._group_name, message)

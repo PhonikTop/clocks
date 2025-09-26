@@ -24,7 +24,7 @@ async def test_connect_accepts_and_sends_results_if_voting_with_avg(room_url_rou
         mock_room_cache = mock_room_cache_cls.return_value
         mock_room_cache.get_votes.return_value = {"user-uuid-1": 5}
 
-        with patch.object(RoomConsumer, "get_meeting", return_value=finished_voting):
+        with patch.object(RoomConsumer, "get_voting", return_value=finished_voting):
             communicator = WebsocketCommunicator(room_url_router, f"/ws/room/{room_id}/?token={token}")
             connected, _ = await communicator.connect()
             assert connected

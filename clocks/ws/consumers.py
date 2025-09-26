@@ -79,9 +79,9 @@ class RoomConsumer(AsyncWebsocketConsumer):
         await sync_to_async(RoomOnlineTracker.set_user_online)(self.uuid, self.lookup_id)
 
         await sync_to_async(self.room_message_service.send_room_voted_users)()
-        meeting = await self.get_meeting()
-        if meeting is not None and meeting.average_score is not None:
-            meeting = await self.get_meeting()
+        voting = await self.get_voting()
+        if voting is not None and voting.average_score is not None:
+            voting = await self.get_voting()
             votes = await sync_to_async(self.room_cache.get_votes)()
 
             await self.send(
@@ -89,7 +89,7 @@ class RoomConsumer(AsyncWebsocketConsumer):
                     {
                         "type": "results",
                         "votes": votes,
-                        "average_score": meeting.average_score,
+                        "average_score": voting.average_score,
                     }
                 )
             )
@@ -99,11 +99,11 @@ class RoomConsumer(AsyncWebsocketConsumer):
         if self.lookup_id or self.uuid:
             await sync_to_async(RoomOnlineTracker.set_user_offline)(self.uuid, self.lookup_id)
             await sync_to_async(UserChannelTracker.remove_participant)(self.channel_name)
-            if await sync_to_async(check_voting_finish)(self.lookup_id) and (await self.get_meeting()) is not None:
-                meeting = await self.get_meeting()
+            if await sync_to_async(check_voting_finish)(self.lookup_id) and (await self.get_voting()) is not None:
+                voting = await self.get_voting()
                 votes = await sync_to_async(self.room_cache.get_votes)()
-                await sync_to_async(voting_results)(meeting)
-                await sync_to_async(self.room_message_service.notify_meeting_results)(votes, meeting.average_score)
+                await sync_to_async(voting_results)(voting)
+                await sync_to_async(self.room_message_service.notify_meeting_results)(votes, voting.average_score)
 
     async def receive(self, text_data):
         try:
@@ -119,7 +119,7 @@ class RoomConsumer(AsyncWebsocketConsumer):
         return f"{self.group_prefix}_{self.lookup_id}"
 
     @database_sync_to_async
-    def get_meeting(self):
+    def get_voting(self):
         return Voting.objects.filter(room=self.lookup_id, active=True).first()
 
     async def _get_lookup_id(self):
@@ -181,7 +181,7 @@ class RoomConsumer(AsyncWebsocketConsumer):
     async def voted_users_update(self, event):
         await self.send(text_data=json.dumps(event))
 
-    async def meeting_change_status(self, event):
+    async def voting_change_status(self, event):
         await self.send(text_data=json.dumps(event))
 
     async def user_online(self, event):
