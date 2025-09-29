@@ -1,3 +1,4 @@
+import structlog
 from api.services.jwt_service import JWTService
 from asgiref.sync import sync_to_async
 from rooms.services.room_cache_service import RoomCacheService
@@ -15,6 +16,7 @@ from ws.base_action import BaseAction
 
 from .handlers import ActionHandler
 
+logger = structlog.get_logger()
 
 class SubmitVoteAction(BaseAction):
     def get_queryset(self):
@@ -41,6 +43,7 @@ class SubmitVoteAction(BaseAction):
             return {"error": "Participant not found"}
 
         await sync_to_async(room_cache.set_vote)(user_id, vote)
+        logger.info("Пользователь проголосовал", room=self.consumer.lookup_id, voting=voting.id, user=user_id, vote=vote)
 
         voting_finished: bool = await sync_to_async(check_voting_finish)(self.consumer.lookup_id)
 
@@ -61,6 +64,7 @@ class ChangeVotingStatus(BaseAction):
 
     async def perform_action(self):
         voting = await self.get_object()
+        user_uuid = await self.get_param("user_uuid")
 
         new_status = await self.get_param("status")
         if new_status not in [s.value for s in RoomStatusType]:
@@ -68,7 +72,7 @@ class ChangeVotingStatus(BaseAction):
 
         if new_status == RoomStatusType.NEXT.value:
             await sync_to_async(end_voting_without_clearing_room)(voting)
-
+        logger.info("Статус голосования изменен", room=self.consumer.lookup_id, voting=voting.id, user=user_uuid)
         return {
             "type": "voting_change_status",
             "status": new_status
