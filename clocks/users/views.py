@@ -1,5 +1,6 @@
 import uuid
 
+import structlog
 from api.services.jwt_service import JWTService
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import (
@@ -24,6 +25,8 @@ from users.serializers import (
     UserInfoSerializer,
 )
 from users.services.user_session_service import UserSessionService
+
+logger = structlog.get_logger()
 
 USER_TAG=["Users"]
 
@@ -73,6 +76,7 @@ class JoinRoomView(GenericAPIView):
         user_session_service = UserSessionService(jwt_service, room_cache_service)
 
         token = user_session_service.create_user_session(user_uuid, role, nickname)
+        logger.info("Пользователь присоединился к комнате", room=room.id, user=user_uuid, role=role, nickname=nickname)
 
         channel_sender = DjangoChannelMessageSender()
         room_message_service = RoomMessageService(room.id, channel_sender, room_cache_service)
