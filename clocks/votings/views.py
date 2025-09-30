@@ -1,3 +1,4 @@
+import structlog
 from api.services.jwt_service import JWTService
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import (
@@ -28,6 +29,8 @@ from votings.serializers import (
     VotingResultsSerializer,
     VotingUpdateTaskNameSerializer,
 )
+
+logger = structlog.get_logger()
 
 VOTING_TAG = ["Votings"]
 
@@ -80,6 +83,7 @@ class StartVotingView(CreateAPIView):
         channel_sender = DjangoChannelMessageSender()
         room_message_service = RoomMessageService(instance.room.id, channel_sender)
 
+        logger.info("Голосование запущено", room=instance.room.id)
         room_message_service.notify_voting_started(instance.id)
 
 
@@ -158,6 +162,7 @@ class EndVotingView(UpdateAPIView):
         serializer.is_valid(raise_exception=True)
 
         end_voting(voting)
+        logger.info("Голосование завершено", room=voting.room.id, voting=voting.id)
         return Response(serializer.data)
 
 
@@ -198,6 +203,7 @@ class RestartVotingView(UpdateAPIView):
         room_cache_service.clear_votes()
         RoomOnlineTracker().clean_room_offline_participants(voting.room.id)
 
+        logger.info("Голосование перезапущено", room=voting.room.id, voting=voting.id)
         room_message_service.notify_voting_restart()
 
         return Response(serializer.data)
@@ -264,11 +270,19 @@ class UpdateVotingTaskView(UpdateAPIView):
         room_cache = RoomCacheService(instance.room)
         user_session_service = UserSessionService(jwt_service, room_cache)
 
-        user_nickname = user_session_service.get_user_session_data(token)["nickname"]
+        user_data = user_session_service.get_user_session_data(token)
+
+        logger.info(
+            "Описание задачи голосования изменено",
+            room=instance.room,
+            user=user_data["user_uuid"],
+            new_task_name=instance.task_name,
+        )
+
         channel_sender = DjangoChannelMessageSender()
         room_message_service = RoomMessageService(instance.room.id, channel_sender)
 
-        room_message_service.notify_voting_task_name_changed(instance.task_name, user_nickname)
+        room_message_service.notify_voting_task_name_changed(instance.task_name, user_data["nickname"])
 
 
 @extend_schema(
