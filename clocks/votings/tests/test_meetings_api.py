@@ -123,7 +123,7 @@ def test_update_voting_task_requires_authorization_and_notifies(api_client, voti
         }
 
         instance_uss = MockUSS.return_value
-        instance_uss.get_user_session_data.return_value = {"nickname": "TesterNick"}
+        instance_uss.get_user_session_data.return_value = {"user_uuid": 123, "nickname": "TesterNick"}
 
         MockRoomCache.return_value = MagicMock()
 
