@@ -170,24 +170,22 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
-
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": [("watchy-redis", 6379)],
-        },
-    },
-}
-
-
 REDIS_PASSWORD = get_env_param_str("REDIS_PASSWORD", raise_exception=False)
 
 if REDIS_PASSWORD:
     REDIS_URL = f"redis://:{REDIS_PASSWORD}@watchy-redis:6379/0"
 else:
     REDIS_URL = f"redis://watchy-redis:6379/0"
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [REDIS_URL],
+        },
+    },
+}
+
 
 CACHES = {
     "default": {
