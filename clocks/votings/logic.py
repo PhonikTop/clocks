@@ -1,7 +1,9 @@
+import structlog
 from rooms.services.room_cache_service import RoomCacheService
 from rooms.services.room_online_tracker import RoomOnlineTracker
 from users.enums import UserRole
 
+logger = structlog.get_logger()
 
 def end_voting(voting):
     voting_room = RoomCacheService(voting.room.id)
@@ -28,6 +30,7 @@ def voting_results(voting):
     )
     voting.votes = votes
     voting.save()
+    logger.info("Подведены итоги голосования", room=voting.room.id, voting=voting.id, average_score=voting.average_score, results_votes=voting.votes)
 
 def check_voting_finish(voting_room_id) -> bool:
     voting_room = RoomCacheService(voting_room_id)

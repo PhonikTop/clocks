@@ -20,4 +20,4 @@ class ActionHandler:
         action = self.get_action(name)
         if action:
             return await action.execute(consumer, data)
-        return {"error": "Invalid action"}
+        raise ValueError("Invalid action")

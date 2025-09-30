@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, timezone
 
+import structlog
 from api.services.jwt_service import JWTService
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import (
@@ -32,6 +33,7 @@ from rooms.services.message_senders.django_channel import DjangoChannelMessageSe
 from rooms.services.room_cache_service import RoomCacheService
 from rooms.services.room_message_service import RoomMessageService
 
+logger = structlog.get_logger()
 ROOM_TAG = ["Rooms"]
 
 @extend_schema(
@@ -254,6 +256,7 @@ class SetRoomTimer(GenericAPIView):
         room_message_service.notify_room_timer_started(new_timestamp, timer_started_user)
 
         room_cache.start_room_timer(new_timestamp)
+        logger.info("Таймер запущен", room=pk, user=timer_started_user, timer_end_time=new_timestamp)
 
         return Response(status=status.HTTP_200_OK)
 
@@ -289,5 +292,6 @@ class ResetRoomTimer(APIView):
         room_message_service = RoomMessageService(pk, channel_sender, room_cache)
 
         room_cache.reset_room_timer()
+        logger.info("Таймер сброшен", room=pk, user=timer_reset_user)
         room_message_service.notify_room_timer_reset(timer_reset_user)
         return Response(status=status.HTTP_200_OK)

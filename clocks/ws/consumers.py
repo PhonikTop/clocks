@@ -1,6 +1,7 @@
 import json
 from urllib.parse import parse_qs
 
+import structlog
 from api.services.jwt_service import JWTService
 from asgiref.sync import sync_to_async
 from channels.db import database_sync_to_async
@@ -17,6 +18,7 @@ from votings.models import Voting
 from ws.actions import action_handler
 from ws.services.user_channel_tracker import UserChannelTracker
 
+logger = structlog.get_logger()
 
 class RoomConsumer(AsyncWebsocketConsumer):
     group_prefix = "room"
@@ -77,6 +79,7 @@ class RoomConsumer(AsyncWebsocketConsumer):
 
         await sync_to_async(UserChannelTracker.add_participant)(self.channel_name, self.uuid, self.lookup_id)
         await sync_to_async(RoomOnlineTracker.set_user_online)(self.uuid, self.lookup_id)
+        logger.info("Пользователь подключился", room=self.lookup_id, user=self.uuid)
 
         await sync_to_async(self.room_message_service.send_room_voted_users)()
         voting = await self.get_voting()
@@ -99,6 +102,8 @@ class RoomConsumer(AsyncWebsocketConsumer):
         if self.lookup_id or self.uuid:
             await sync_to_async(RoomOnlineTracker.set_user_offline)(self.uuid, self.lookup_id)
             await sync_to_async(UserChannelTracker.remove_participant)(self.channel_name)
+            logger.info("Пользователь отключился", room=self.lookup_id, user=self.uuid)
+
             if await sync_to_async(check_voting_finish)(self.lookup_id) and (await self.get_voting()) is not None:
                 voting = await self.get_voting()
                 votes = await sync_to_async(self.room_cache.get_votes)()
@@ -108,9 +113,20 @@ class RoomConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         try:
             text_data_json = json.loads(text_data)
+            text_data_json["user_uuid"] = self.uuid
             action_name = text_data_json.get("action")
-            response = await action_handler.execute(action_name, self, text_data_json)
-            await self._send_group_message(response)
+            try:
+                response = await action_handler.execute(action_name, self, text_data_json)
+                await self._send_group_message(response)
+            except ValueError:
+                logger.info(
+                    "Пользователь отправил сообщение",
+                    room=self.lookup_id,
+                    user=self.uuid,
+                    message=text_data,
+                )
+                await self.send(json.dumps({"error": "Invalid action"}))
+
         except json.JSONDecodeError:
             await self.send(json.dumps({"error": "Invalid JSON format"}))
 
