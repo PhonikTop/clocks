@@ -25,9 +25,9 @@ class RoomMessageService:
     def _group_name(self):
         return f"room_{self.room_id}"
 
-    def notify_meeting_restart(self):
+    def notify_voting_restart(self):
         message = {
-            "type": "meeting_change_status",
+            "type": "voting_change_status",
             "status": RoomStatusType.RESTART.value
         }
         self.message_sender.send(self._group_name, message)
@@ -80,7 +80,7 @@ class RoomMessageService:
 
         self.message_sender.send(self._group_name, message)
 
-    def notify_meeting_results(self, votes, average_score):
+    def notify_voting_results(self, votes, average_score):
         message = {
             "type": "results",
             "votes": votes,
@@ -115,7 +115,7 @@ class RoomMessageService:
         }
         self.message_sender.send(self._group_name, message)
 
-    def notify_meeting_task_name_changed(self, new_task_name:str, user_nickname: str):
+    def notify_voting_task_name_changed(self, new_task_name:str, user_nickname: str):
         message = {
             "type": "task_name_changed",
             "new_task_name": new_task_name,
@@ -123,9 +123,9 @@ class RoomMessageService:
         }
         self.message_sender.send(self._group_name, message)
 
-    def notify_meeting_started(self, meeting_id: int):
+    def notify_voting_started(self, voting_id: int):
         message = {
-            "type": "meeting_started",
-            "id": meeting_id,
+            "type": "voting_started",
+            "id": voting_id,
         }
         self.message_sender.send(self._group_name, message)

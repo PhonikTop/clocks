@@ -1,4 +1,4 @@
-import { Vote } from "@/composables/api/useMeetingAPI";
+import { Vote } from "@/composables/api/useVotingsAPI";
 import { User } from "@/composables/api/useUserAPI";
 
 export interface UserJoinedMsg {
@@ -37,7 +37,7 @@ export interface RoomTimerReset {
   "timer_reset_user": Record<string, User>,
 }
 
-export interface MeetingStartedMsg {
+export interface VotingStartedMsg {
   id: number;
 }
 
@@ -45,7 +45,7 @@ export interface VotedUsersMsg {
   voted_users: string[]
 }
 
-export interface MeetingStatusChangeMsg {
+export interface VotingStatusChangeMsg {
   status?: "restart" | "next";
 }
 
@@ -59,9 +59,9 @@ export interface WebsocketMessages {
   "user_kicked": UserKickedMsg;
   "timer_started": RoomTimerStarted;
   "timer_reset": RoomTimerReset;
-  "meeting_started": MeetingStartedMsg;
+  "voting_started": VotingStartedMsg;
   "voted_users_update": VotedUsersMsg;
-  "meeting_change_status": MeetingStatusChangeMsg;
+  "voting_change_status": VotingStatusChangeMsg;
 }
 
 export type AddMessageHandler = <K extends keyof WebsocketMessages>(

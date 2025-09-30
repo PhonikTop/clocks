@@ -36,7 +36,7 @@ THIRD_APPS = [
 LOCAL_APPS = [
     "rooms",
     "users",
-    "meetings",
+    "votings",
     "ws"
 ]
 

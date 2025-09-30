@@ -40,7 +40,7 @@ const handleScreenshot = async() => {
   emit("resultsCopied");
 }
 
-const emit = defineEmits(["restartMeeting", "nextMeeting", "resultsCopied"]);
+const emit = defineEmits(["restartVoting", "nextVoting", "resultsCopied"]);
 defineProps({
   resultsVotes: {
     type: Object,
@@ -124,13 +124,13 @@ defineProps({
     <div class="flex flex-wrap gap-3 justify-end no-screenshot">
       <button
         class="btn btn-outline btn-warning"
-        @click="$emit('restartMeeting')"
+        @click="$emit('restartVoting')"
       >
         Перезапустить
       </button>
       <button
         class="btn btn-primary"
-        @click="$emit('nextMeeting')"
+        @click="$emit('nextVoting')"
       >
         Далее
       </button>

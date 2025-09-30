@@ -6,14 +6,14 @@ from django.urls import reverse
 
 
 @pytest.mark.django_db
-def test_start_meeting_creates_and_notifies(api_client, room):
-    url = reverse("start_meeting")
+def test_start_voting_creates_and_notifies(api_client, room):
+    url = reverse("start_voting")
     payload = {"room": room.id, "task_name": "Разработка архитектуры"}
 
-    with patch("meetings.views.RoomMessageService") as MockRMS, patch(
-        "meetings.views.DjangoChannelMessageSender"
+    with patch("votings.views.RoomMessageService") as MockRMS, patch(
+        "votings.views.DjangoChannelMessageSender"
     ):
-        MockRMS.return_value.notify_meeting_started = MagicMock()
+        MockRMS.return_value.notify_voting_started = MagicMock()
 
         resp = api_client.post(url, data=payload, format="json")
 
@@ -24,12 +24,12 @@ def test_start_meeting_creates_and_notifies(api_client, room):
         assert data["task_name"] == "Разработка архитектуры"
 
         MockRMS.assert_called_once()
-        MockRMS.return_value.notify_meeting_started.assert_called_once_with(data["id"])
+        MockRMS.return_value.notify_voting_started.assert_called_once_with(data["id"])
 
 
 @pytest.mark.django_db
-def test_start_meeting_validation_when_active_exists(api_client, room, meeting):
-    url = reverse("start_meeting")
+def test_start_voting_validation_when_active_exists(api_client, room, voting):
+    url = reverse("start_voting")
     payload = {"room": room.id, "task_name": "Еще одна задача"}
 
     resp = api_client.post(url, data=payload, format="json")
@@ -37,67 +37,67 @@ def test_start_meeting_validation_when_active_exists(api_client, room, meeting):
     assert resp.status_code == 400
     body = resp.json()
     assert "error" in body
-    assert "Room meeting already exists" in json.dumps(body)
+    assert "Room voting already exists" in json.dumps(body)
 
 
 @pytest.mark.django_db
-def test_get_meeting_returns_info(api_client, meeting):
-    url = reverse("get_meeting", kwargs={"pk": meeting.id})
+def test_get_voting_returns_info(api_client, voting):
+    url = reverse("get_voting", kwargs={"pk": voting.id})
     resp = api_client.get(url)
 
     assert resp.status_code == 200
     body = resp.json()
-    assert body["id"] == meeting.id
-    assert body["task_name"] == meeting.task_name
-    assert body["room"] == meeting.room.id
+    assert body["id"] == voting.id
+    assert body["task_name"] == voting.task_name
+    assert body["room"] == voting.room.id
 
 
 @pytest.mark.django_db
-def test_end_meeting_only_active_allowed_and_calls_end_meeting(api_client, meeting):
-    url = reverse("end_meeting", kwargs={"pk": meeting.id})
-    with patch("meetings.views.end_meeting") as mock_end:
+def test_end_voting_only_active_allowed_and_calls_end_voting(api_client, voting):
+    url = reverse("end_voting", kwargs={"pk": voting.id})
+    with patch("votings.views.end_voting") as mock_end:
         mock_end.return_value = None
         resp = api_client.put(url, data={}, format="json")
         assert resp.status_code == 200
         mock_end.assert_called_once()
-        assert resp.json()["id"] == meeting.id
+        assert resp.json()["id"] == voting.id
 
-    meeting.active = False
-    meeting.save()
+    voting.active = False
+    voting.save()
 
     resp2 = api_client.put(url, data={}, format="json")
     assert resp2.status_code == 404
 
 
 @pytest.mark.django_db
-def test_restart_meeting_calls_services_and_resets_meeting(api_client, meeting):
-    url = reverse("restart_meeting", kwargs={"pk": meeting.id})
+def test_restart_voting_calls_services_and_resets_voting(api_client, voting):
+    url = reverse("restart_voting", kwargs={"pk": voting.id})
 
-    with patch("meetings.views.DjangoChannelMessageSender"), patch(
-        "meetings.views.RoomMessageService"
-    ) as MockRMS, patch("meetings.views.RoomCacheService") as MockRoomCache, patch(
-        "meetings.views.RoomOnlineTracker"
+    with patch("votings.views.DjangoChannelMessageSender"), patch(
+        "votings.views.RoomMessageService"
+    ) as MockRMS, patch("votings.views.RoomCacheService") as MockRoomCache, patch(
+        "votings.views.RoomOnlineTracker"
     ) as MockTracker:
-        MockRMS.return_value.notify_meeting_restart = MagicMock()
+        MockRMS.return_value.notify_voting_restart = MagicMock()
         MockRoomCache.return_value.clear_votes = MagicMock()
         MockTracker.return_value.clean_room_offline_participants = MagicMock()
 
         resp = api_client.put(url, data={}, format="json")
         assert resp.status_code == 200
-        MockRoomCache.assert_called_once_with(meeting.room.id)
+        MockRoomCache.assert_called_once_with(voting.room.id)
         MockRoomCache.return_value.clear_votes.assert_called_once()
-        MockTracker.return_value.clean_room_offline_participants.assert_called_once_with(meeting.room.id)
-        MockRMS.return_value.notify_meeting_restart.assert_called_once()
+        MockTracker.return_value.clean_room_offline_participants.assert_called_once_with(voting.room.id)
+        MockRMS.return_value.notify_voting_restart.assert_called_once()
 
-        meeting.refresh_from_db()
-        assert meeting.active is True
-        assert meeting.votes == {}
-        assert meeting.average_score is None
+        voting.refresh_from_db()
+        assert voting.active is True
+        assert voting.votes == {}
+        assert voting.average_score is None
 
 
 @pytest.mark.django_db
-def test_update_meeting_task_requires_authorization_and_notifies(api_client, meeting, jwt_token):
-    url = reverse("update_meeting_task", kwargs={"pk": meeting.id})
+def test_update_voting_task_requires_authorization_and_notifies(api_client, voting, jwt_token):
+    url = reverse("update_voting_task", kwargs={"pk": voting.id})
     payload = {"task_name": "Новое имя задачи"}
 
     resp1 = api_client.put(url, data=payload, format="json")
@@ -111,10 +111,10 @@ def test_update_meeting_task_requires_authorization_and_notifies(api_client, mee
     token = jwt_token
     api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
 
-    with patch("meetings.views.JWTService") as MockJWT, patch(
-        "meetings.views.RoomCacheService"
-    ) as MockRoomCache, patch("meetings.views.UserSessionService") as MockUSS, patch(
-        "meetings.views.RoomMessageService"
+    with patch("votings.views.JWTService") as MockJWT, patch(
+        "votings.views.RoomCacheService"
+    ) as MockRoomCache, patch("votings.views.UserSessionService") as MockUSS, patch(
+        "votings.views.RoomMessageService"
     ) as MockRMS:
 
         MockJWT.return_value.decode.return_value = {
@@ -127,7 +127,7 @@ def test_update_meeting_task_requires_authorization_and_notifies(api_client, mee
 
         MockRoomCache.return_value = MagicMock()
 
-        MockRMS.return_value.notify_meeting_task_name_changed = MagicMock()
+        MockRMS.return_value.notify_voting_task_name_changed = MagicMock()
 
         resp3 = api_client.put(url, data=payload, format="json")
         assert resp3.status_code == 200
@@ -137,24 +137,24 @@ def test_update_meeting_task_requires_authorization_and_notifies(api_client, mee
 
         instance_uss.get_user_session_data.assert_called_once_with(token)
 
-        MockRMS.assert_called_once_with(meeting.room.id, ANY)
-        MockRMS.return_value.notify_meeting_task_name_changed.assert_called_once_with("Новое имя задачи", "TesterNick")
+        MockRMS.assert_called_once_with(voting.room.id, ANY)
+        MockRMS.return_value.notify_voting_task_name_changed.assert_called_once_with("Новое имя задачи", "TesterNick")
 
 
 @pytest.mark.django_db
-def test_meeting_results_computes_and_returns_votes_and_average(api_client, meeting):
-    url = reverse("get_meeting_results", kwargs={"pk": meeting.id})
+def test_voting_results_computes_and_returns_votes_and_average(api_client, voting):
+    url = reverse("get_voting_results", kwargs={"pk": voting.id})
 
-    def fake_meeting_results(meeting_obj):
+    def fake_voting_results(voting_obj):
         votes = {
             "ed445c68-f4a4-40ba-b316-9f528603481d": {"nickname": "User1", "vote": 4},
             "a9115cc2-5c7c-4e1a-b5bd-61ed99c7492c": {"nickname": "User2", "vote": 12},
         }
-        meeting_obj.votes = votes
-        meeting_obj.average_score = 8.0
-        meeting_obj.save()
+        voting_obj.votes = votes
+        voting_obj.average_score = 8.0
+        voting_obj.save()
 
-    with patch("meetings.views.meeting_results", side_effect=fake_meeting_results) as mock_results:
+    with patch("votings.views.voting_results", side_effect=fake_voting_results) as mock_results:
         resp = api_client.put(url, data={}, format="json")
         assert resp.status_code == 200
         body = resp.json()

@@ -30,10 +30,10 @@ function startCooldown(seconds: number) {
 
 function handleRestartButton() {
   startCooldown(10);
-  emit('restart-meeting');
+  emit('restart-voting');
 }
 
-const emit = defineEmits(["leave-room", "restart-meeting", "start-timer", "reset-timer"]);
+const emit = defineEmits(["leave-room", "restart-voting", "start-timer", "reset-timer"]);
 
 const timerStore = useTimerStore()
 

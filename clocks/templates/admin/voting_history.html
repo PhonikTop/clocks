@@ -74,20 +74,20 @@
         </tr>
       </thead>
       <tbody>
-        {% for meeting in page_obj.object_list %}
+        {% for voting in page_obj.object_list %}
           <tr>
-            <td>{{ meeting.id }}</td>
-            <td>{{ meeting.task_name }}</td>
+            <td>{{ voting.id }}</td>
+            <td>{{ voting.task_name }}</td>
             <td>
               <ul>
-                {% for uuid, user_data in meeting.votes.items %}
+                {% for uuid, user_data in voting.votes.items %}
                   <li>{{ user_data.nickname }}: {{ user_data.vote }}</li>
                 {% endfor %}
               </ul>
             </td>
-            <td>{{ meeting.average_score|default:"N/A" }}</td>
-            <td>{{ meeting.created|date:"d M Y H:i" }}</td>
-            <td>{{ meeting.updated|date:"d M Y H:i" }}</td>
+            <td>{{ voting.average_score|default:"N/A" }}</td>
+            <td>{{ voting.created|date:"d M Y H:i" }}</td>
+            <td>{{ voting.updated|date:"d M Y H:i" }}</td>
           </tr>
         {% endfor %}
       </tbody>

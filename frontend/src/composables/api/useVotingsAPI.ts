@@ -10,7 +10,7 @@ export interface Vote {
   [key: string]: UserVoteDetail;
 }
 
-export interface Meeting {
+export interface Voting {
   id: number;
   room: string;
   task_name: string;
@@ -28,13 +28,13 @@ interface ApiError {
   };
 };
 
-export default function useRoom() {
-  const meetingRoom: Ref<Meeting | null> = ref(null);
+export default function useVoting() {
+  const roomVoting: Ref<Voting | null> = ref(null);
   const error: Ref<string | null> = ref(null);
 
-  const createMeeting = async (roomId: number, taskName: string): Promise<Meeting | undefined> => {
+  const createVoting = async (roomId: number, taskName: string): Promise<Voting | undefined> => {
     try {
-      const { data } = await api.post<Meeting>("/meeting/", {
+      const { data } = await api.post<Voting>("/voting/", {
         room: roomId,
         task_name: taskName,
       });
@@ -45,37 +45,37 @@ export default function useRoom() {
     }
   };
 
-  const getMeeting = async (meetingId: number): Promise<void> => {
+  const getVoting = async (votingId: number): Promise<void> => {
     try {
-      const { data } = await api.get<Meeting>(`/meeting/${meetingId}`);
-      meetingRoom.value = data;
+      const { data } = await api.get<Voting>(`/voting/${votingId}`);
+      roomVoting.value = data;
     } catch (err: unknown) {
       const e = err as ApiError;
       error.value = e.response?.data?.message || "Ошибка загрузки голосования";
     }
   };
 
-  const endMeeting = async (meetingId: number): Promise<void> => {
+  const endVoting = async (votingId: number): Promise<void> => {
     try {
-      await api.put(`/meeting/${meetingId}/end`);
+      await api.put(`/voting/${votingId}/end`);
     } catch (err: unknown) {
       const e = err as ApiError;
       error.value = e.response?.data?.message || "Ошибка завершения голосования";
     }
   };
 
-  const setMeetingTask = async (meetingId: number, task: string): Promise<void> => {
+  const setVotingTask = async (votingId: number, task: string): Promise<void> => {
     try {
-      await api.put(`/meeting/${meetingId}/task`, { task_name: task });
+      await api.put(`/voting/${votingId}/task`, { task_name: task });
     } catch (err: unknown) {
       const e = err as ApiError;
       error.value = e.response?.data?.message || "Ошибка обновления задачи";
     }
   };
 
-  const restartMeeting = async (meetingId: number): Promise<Meeting | undefined> => {
+  const restartVoting = async (votingId: number): Promise<Voting | undefined> => {
     try {
-      const { data } = await api.put<Meeting>(`/meeting/${meetingId}/restart`);
+      const { data } = await api.put<Voting>(`/voting/${votingId}/restart`);
       return data;
     } catch (err: unknown) {
       const e = err as ApiError;
@@ -84,12 +84,12 @@ export default function useRoom() {
   };
 
   return {
-    meetingRoom,
+    roomVoting,
     error,
-    createMeeting,
-    getMeeting,
-    endMeeting,
-    setMeetingTask,
-    restartMeeting,
+    createVoting,
+    getVoting,
+    endVoting,
+    setVotingTask,
+    restartVoting,
   };
 }

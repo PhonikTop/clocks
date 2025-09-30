@@ -19,30 +19,30 @@ from rooms.services.room_message_service import RoomMessageService
 from rooms.services.room_online_tracker import RoomOnlineTracker
 from users.services.user_session_service import UserSessionService
 
-from meetings.logic import end_meeting, meeting_results
-from meetings.models import Meeting
-from meetings.serializers import (
-    MeetingCreateSerializer,
-    MeetingInfoSerializer,
-    MeetingRemoveSerializer,
-    MeetingResultsSerializer,
-    MeetingUpdateTaskNameSerializer,
+from votings.logic import end_voting, voting_results
+from votings.models import Voting
+from votings.serializers import (
+    VotingCreateSerializer,
+    VotingInfoSerializer,
+    VotingRemoveSerializer,
+    VotingResultsSerializer,
+    VotingUpdateTaskNameSerializer,
 )
 
-MEETING_TAG = ["Meetings"]
+VOTING_TAG = ["Votings"]
 
 @extend_schema(
-    operation_id="createMeeting",
-    summary="Создание новой встречи",
-    description="Создаёт новую встречу в комнате и отправляет уведомление участникам через WebSocket",
+    operation_id="createVoting",
+    summary="Создание нового голосование",
+    description="Создаёт новое голосование в комнате и отправляет уведомление участникам через WebSocket",
     responses={
-        201: MeetingCreateSerializer,
+        201: VotingCreateSerializer,
         400: OpenApiResponse(
-            description="Некорректные данные или в комнате уже есть активная встреча",
+            description="Некорректные данные или в комнате уже есть активное голосование",
             examples=[
                 OpenApiExample(
                     "Пример ошибки",
-                    value={"error": "Room meeting already exists"},
+                    value={"error": "Room voting already exists"},
                     status_codes=[400]
                 )
             ]
@@ -68,10 +68,10 @@ MEETING_TAG = ["Meetings"]
             status_codes=[201]
         )
     ],
-    tags=MEETING_TAG,
+    tags=VOTING_TAG,
 )
-class StartMeetingView(CreateAPIView):
-    serializer_class = MeetingCreateSerializer
+class StartVotingView(CreateAPIView):
+    serializer_class = VotingCreateSerializer
 
     def perform_create(self, serializer):
         instance = serializer.save(room=serializer.validated_data["room"],
@@ -80,23 +80,23 @@ class StartMeetingView(CreateAPIView):
         channel_sender = DjangoChannelMessageSender()
         room_message_service = RoomMessageService(instance.room.id, channel_sender)
 
-        room_message_service.notify_meeting_started(instance.id)
+        room_message_service.notify_voting_started(instance.id)
 
 
 @extend_schema(
-    operation_id="getMeeting",
-    summary="Получение данных о встрече",
-    description="Возвращает полные данные о встрече по её ID",
+    operation_id="getVoting",
+    summary="Получение данных о голосовании",
+    description="Возвращает полные данные о голосовании по его ID",
     auth=[],
     parameters=[
         OpenApiParameter(
-            name="id", type=OpenApiTypes.INT, location="path", description="ID встречи"
+            name="id", type=OpenApiTypes.INT, location="path", description="ID голосования"
         )
     ],
     responses={
-        200: MeetingInfoSerializer,
+        200: VotingInfoSerializer,
         404: OpenApiResponse(
-            description="Встреча с указанным ID не найдена",
+            description="Голосование с указанным ID не найдено",
             examples=[
                 OpenApiExample(
                     "Пример ошибки", value={"detail": "Not found."}, status_codes=[404]
@@ -121,96 +121,96 @@ class StartMeetingView(CreateAPIView):
             response_only=True,
         )
     ],
-    tags=MEETING_TAG,
+    tags=VOTING_TAG,
 )
-class GetMeetingView(RetrieveAPIView):
-    queryset = Meeting.objects.all()
-    serializer_class = MeetingInfoSerializer
+class GetVotingView(RetrieveAPIView):
+    queryset = Voting.objects.all()
+    serializer_class = VotingInfoSerializer
 
 
 @extend_schema(
-    operation_id="endMeeting",
-    summary="Завершение встречи",
-    description="Завершает активную встречу, очищает кэш комнаты, "
+    operation_id="endVoting",
+    summary="Завершение голосования",
+    description="Завершает активное голосование, очищает кэш комнаты, "
                 "удаляет информацию об участниках и отправляет уведомления",
     auth=[],
     methods=["PUT"],
     responses={
-        200: MeetingRemoveSerializer,
-        400: OpenApiResponse(description="Невозможно завершить встречу"),
+        200: VotingRemoveSerializer,
+        400: OpenApiResponse(description="Невозможно завершить голосование"),
         404: OpenApiResponse(
-            description="Активная встреча с указанным ID не найдена",
+            description="Активное голосование с указанным ID не найдено",
         ),
     },
     examples=[
         OpenApiExample("Пример успешного ответа", value={"id": 123}, response_only=True)
     ],
-    tags=MEETING_TAG,
+    tags=VOTING_TAG,
 )
-class EndMeetingView(UpdateAPIView):
-    queryset = Meeting.objects.select_related("room").filter(active=True)
-    serializer_class = MeetingRemoveSerializer
+class EndVotingView(UpdateAPIView):
+    queryset = Voting.objects.select_related("room").filter(active=True)
+    serializer_class = VotingRemoveSerializer
     http_method_names = ["put"]
 
     def update(self, request, *args, **kwargs):
-        meeting = self.get_object()
-        serializer = self.get_serializer(meeting, data=request.data, partial=kwargs.pop("partial", False))
+        voting = self.get_object()
+        serializer = self.get_serializer(voting, data=request.data, partial=kwargs.pop("partial", False))
         serializer.is_valid(raise_exception=True)
 
-        end_meeting(meeting)
+        end_voting(voting)
         return Response(serializer.data)
 
 
 @extend_schema(
-    operation_id="restartMeeting",
-    summary="Перезапуск встречи",
+    operation_id="restartVoting",
+    summary="Перезапуск голосования",
     description=(
-        "Сбрасывает состояние встречи: активирует встречу, "
+        "Сбрасывает состояние голосования: активирует голосование, "
         "очищает голоса, сбрасывает средний балл и уведомляет участников"
     ),
     auth=[],
     methods=["PUT"],
     responses={
-        200: MeetingRemoveSerializer,
-        400: OpenApiResponse(description="Невозможно перезапустить встречу"),
-        404: OpenApiResponse(description="Встреча с указанным ID не найдена"),
+        200: VotingRemoveSerializer,
+        400: OpenApiResponse(description="Невозможно перезапустить голосование"),
+        404: OpenApiResponse(description="Голосование с указанным ID не найдено"),
     },
     examples=[
         OpenApiExample("Пример успешного ответа", value={"id": 123}, response_only=True)
     ],
-    tags=MEETING_TAG,
+    tags=VOTING_TAG,
 )
-class RestartMeetingView(UpdateAPIView):
-    queryset = Meeting.objects.all()
-    serializer_class = MeetingRemoveSerializer
+class RestartVotingView(UpdateAPIView):
+    queryset = Voting.objects.all()
+    serializer_class = VotingRemoveSerializer
     http_method_names = ["put"]
 
     def update(self, request, *args, **kwargs):
-        meeting = self.get_object()
-        serializer = self.get_serializer(meeting, data=request.data, partial=kwargs.pop("partial", False))
+        voting = self.get_object()
+        serializer = self.get_serializer(voting, data=request.data, partial=kwargs.pop("partial", False))
         serializer.is_valid(raise_exception=True)
         channel_sender = DjangoChannelMessageSender()
-        room_message_service = RoomMessageService(meeting.room.id, channel_sender)
+        room_message_service = RoomMessageService(voting.room.id, channel_sender)
 
-        room_cache_service = RoomCacheService(meeting.room.id)
+        room_cache_service = RoomCacheService(voting.room.id)
 
-        meeting.reset_to_default()
+        voting.reset_to_default()
         room_cache_service.clear_votes()
-        RoomOnlineTracker().clean_room_offline_participants(meeting.room.id)
+        RoomOnlineTracker().clean_room_offline_participants(voting.room.id)
 
-        room_message_service.notify_meeting_restart()
+        room_message_service.notify_voting_restart()
 
         return Response(serializer.data)
 
 
 @extend_schema(
-    operation_id="updateMeetingTask",
-    summary="Обновление задачи встречи",
-    description="Изменяет название текущей задачи встречи и отправляет уведомление участникам",
+    operation_id="updateVotingTask",
+    summary="Обновление задачи голосования",
+    description="Изменяет название текущей задачи голосования и отправляет уведомление участникам",
     auth=[],
     methods=["PUT"],
     responses={
-        200: MeetingUpdateTaskNameSerializer,
+        200: VotingUpdateTaskNameSerializer,
         400: OpenApiResponse(
             description="Некорректное название задачи",
             examples=[
@@ -222,7 +222,7 @@ class RestartMeetingView(UpdateAPIView):
             ],
         ),
         404: OpenApiResponse(
-            description="Встреча с указанным ID не найдена",
+            description="Голосование с указанным ID не найдено",
             examples=[
                 OpenApiExample(
                     "Пример ошибки", value={"detail": "Not found."}, status_codes=[404]
@@ -242,11 +242,11 @@ class RestartMeetingView(UpdateAPIView):
             response_only=True,
         ),
     ],
-    tags=MEETING_TAG,
+    tags=VOTING_TAG,
 )
-class UpdateMeetingTaskView(UpdateAPIView):
-    queryset = Meeting.objects.all()
-    serializer_class = MeetingUpdateTaskNameSerializer
+class UpdateVotingTaskView(UpdateAPIView):
+    queryset = Voting.objects.all()
+    serializer_class = VotingUpdateTaskNameSerializer
     http_method_names = ["put"]
 
     def perform_update(self, serializer):
@@ -268,12 +268,12 @@ class UpdateMeetingTaskView(UpdateAPIView):
         channel_sender = DjangoChannelMessageSender()
         room_message_service = RoomMessageService(instance.room.id, channel_sender)
 
-        room_message_service.notify_meeting_task_name_changed(instance.task_name, user_nickname)
+        room_message_service.notify_voting_task_name_changed(instance.task_name, user_nickname)
 
 
 @extend_schema(
-    operation_id="resultsMeeting",
-    summary="Подведение итогов встречи",
+    operation_id="resultsVoting",
+    summary="Подведение итогов голосования",
     description=(
         "Рассчитывает и сохраняет результаты голосования, "
         "возвращает итоговые данные. Средний балл округляется до целого числа."
@@ -281,9 +281,9 @@ class UpdateMeetingTaskView(UpdateAPIView):
     auth=[],
     methods=["PUT"],
     responses={
-        200: MeetingResultsSerializer,
+        200: VotingResultsSerializer,
         400: OpenApiResponse(description="Невозможно подвести итоги"),
-        404: OpenApiResponse(description="Встреча с указанным ID не найдена")
+        404: OpenApiResponse(description="Голосование с указанным ID не найдено")
     },
     examples=[
         OpenApiExample(
@@ -305,19 +305,19 @@ class UpdateMeetingTaskView(UpdateAPIView):
             response_only=True,
         )
     ],
-    tags=MEETING_TAG,
+    tags=VOTING_TAG,
 )
-class MeetingResultsView(UpdateAPIView):
-    queryset = Meeting.objects.all()
-    serializer_class = MeetingResultsSerializer
+class VotingResultsView(UpdateAPIView):
+    queryset = Voting.objects.all()
+    serializer_class = VotingResultsSerializer
     http_method_names = ["put"]
 
     def update(self, request, *args, **kwargs):
-        meeting = self.get_object()
-        serializer = self.get_serializer(meeting, data=request.data, partial=kwargs.pop("partial", False))
+        voting = self.get_object()
+        serializer = self.get_serializer(voting, data=request.data, partial=kwargs.pop("partial", False))
         serializer.is_valid(raise_exception=True)
 
-        meeting_results(meeting)
-        meeting.save()
+        voting_results(voting)
+        voting.save()
 
         return Response(serializer.data)

@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Meeting',
+            name='Voting',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('task_name', models.CharField(max_length=200)),
@@ -23,7 +23,7 @@ class Migration(migrations.Migration):
                 ('active', models.BooleanField(default=True)),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('updated', models.DateTimeField(auto_now=True)),
-                ('room', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='meetings', to='rooms.room')),
+                ('room', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='votings', to='rooms.room')),
             ],
         ),
     ]

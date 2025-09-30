@@ -73,11 +73,11 @@ class RoomCreateView(CreateAPIView):
         OpenApiExample(
             "Пример ответа",
             value=[
-                {"id": 1, "name": "Room A", "active_meeting_id": 42, "active": True},
+                {"id": 1, "name": "Room A", "active_voting_id": 42, "active": True},
                 {
                     "id": 2,
                     "name": "Room B",
-                    "active_meeting_id": None,
+                    "active_voting_id": None,
                     "active": True,
                 },
             ],
@@ -146,7 +146,7 @@ class RoomDetailView(RetrieveDestroyAPIView):
                 value={
                     "id": 1,
                     "name": "Комната переговоров",
-                    "active_meeting_id": 42,
+                    "active_voting_id": 42,
                     "active": True,
                 },
                 response_only=True,

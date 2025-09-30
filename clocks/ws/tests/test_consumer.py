@@ -10,8 +10,8 @@ from ws.consumers import RoomConsumer
 
 @pytest.mark.asyncio
 @pytest.mark.django_db(transaction=True)
-async def test_connect_accepts_and_sends_results_if_meeting_with_avg(room_url_router, finished_meeting):
-    room_id = finished_meeting.room.id
+async def test_connect_accepts_and_sends_results_if_voting_with_avg(room_url_router, finished_voting):
+    room_id = finished_voting.room.id
     token = "dummy-token"
 
     with patch.object(RoomConsumer, "_get_lookup_id", return_value=room_id), \
@@ -24,7 +24,7 @@ async def test_connect_accepts_and_sends_results_if_meeting_with_avg(room_url_ro
         mock_room_cache = mock_room_cache_cls.return_value
         mock_room_cache.get_votes.return_value = {"user-uuid-1": 5}
 
-        with patch.object(RoomConsumer, "get_meeting", return_value=finished_meeting):
+        with patch.object(RoomConsumer, "get_voting", return_value=finished_voting):
             communicator = WebsocketCommunicator(room_url_router, f"/ws/room/{room_id}/?token={token}")
             connected, _ = await communicator.connect()
             assert connected
@@ -32,7 +32,7 @@ async def test_connect_accepts_and_sends_results_if_meeting_with_avg(room_url_ro
             msg = await communicator.receive_from()
             payload = json.loads(msg)
             assert payload["type"] == "results"
-            assert payload["average_score"] == finished_meeting.average_score
+            assert payload["average_score"] == finished_voting.average_score
             assert "votes" in payload
 
             await communicator.disconnect()
@@ -51,7 +51,7 @@ async def test_group_message_broadcasts_to_other_clients(room_url_router, room):
          patch.object(RoomConsumer, "_get_user_uuid", new=fake_get_user_uuid), \
          patch("ws.consumers.RoomMessageService") as mock_room_message_service_cls, \
          patch("ws.consumers.RoomOnlineTracker") as mock_room_online_tracker_cls, \
-         patch("ws.consumers.check_meeting_finish") as mock_check_finish:
+         patch("ws.consumers.check_voting_finish") as mock_check_finish:
 
         mock_check_finish.return_value = False
 

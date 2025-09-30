@@ -1,15 +1,15 @@
 from api.services.jwt_service import JWTService
 from asgiref.sync import sync_to_async
-from meetings.logic import (
-    check_meeting_finish,
-    end_meeting_without_clearing_room,
-    meeting_results,
-)
-from meetings.models import Meeting
 from rooms.services.room_cache_service import RoomCacheService
 from rooms.services.room_message_service import RoomStatusType
 from users.enums import UserRole
 from users.services.user_session_service import UserSessionService
+from votings.logic import (
+    check_voting_finish,
+    end_voting_without_clearing_room,
+    voting_results,
+)
+from votings.models import Voting
 
 from ws.base_action import BaseAction
 
@@ -18,7 +18,7 @@ from .handlers import ActionHandler
 
 class SubmitVoteAction(BaseAction):
     def get_queryset(self):
-        return Meeting.objects.filter(room=self.consumer.lookup_id, active=True)
+        return Voting.objects.filter(room=self.consumer.lookup_id, active=True)
 
     async def perform_action(self):
         token = await self.get_param("token")
@@ -27,7 +27,7 @@ class SubmitVoteAction(BaseAction):
         except (ValueError, TypeError):
             return {"error": "Invalid vote format"}
 
-        meeting = await self.get_object()
+        voting = await self.get_object()
         jwt_service = JWTService()
         room_cache = RoomCacheService(self.consumer.lookup_id)
         user_session_service = UserSessionService(jwt_service, room_cache)
@@ -42,39 +42,39 @@ class SubmitVoteAction(BaseAction):
 
         await sync_to_async(room_cache.set_vote)(user_id, vote)
 
-        meeting_finished: bool = await sync_to_async(check_meeting_finish)(self.consumer.lookup_id)
+        voting_finished: bool = await sync_to_async(check_voting_finish)(self.consumer.lookup_id)
 
-        if meeting_finished:
+        if voting_finished:
             votes = await sync_to_async(room_cache.get_votes)()
-            await sync_to_async(meeting_results)(meeting)
+            await sync_to_async(voting_results)(voting)
             return {
                 "type": "results",
                 "votes": votes,
-                "average_score": meeting.average_score,
+                "average_score": voting.average_score,
             }
 
         return {"type": "user_voted", "user": user_id}
 
-class ChangeMeetingStatus(BaseAction):
+class ChangeVotingStatus(BaseAction):
     def get_queryset(self):
-        return Meeting.objects.filter(room=self.consumer.lookup_id, active=True)
+        return Voting.objects.filter(room=self.consumer.lookup_id, active=True)
 
     async def perform_action(self):
-        meeting = await self.get_object()
+        voting = await self.get_object()
 
         new_status = await self.get_param("status")
         if new_status not in [s.value for s in RoomStatusType]:
             return None
 
         if new_status == RoomStatusType.NEXT.value:
-            await sync_to_async(end_meeting_without_clearing_room)(meeting)
+            await sync_to_async(end_voting_without_clearing_room)(voting)
 
         return {
-            "type": "meeting_change_status",
+            "type": "voting_change_status",
             "status": new_status
         }
 
 
 action_handler = ActionHandler()
 action_handler.register("submit_vote", SubmitVoteAction)
-action_handler.register("change_meeting_status", ChangeMeetingStatus)
+action_handler.register("change_voting_status", ChangeVotingStatus)

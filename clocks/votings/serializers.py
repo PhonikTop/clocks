@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from meetings.models import Meeting
+from votings.models import Voting
 
 
 class VoteDetailSerializer(serializers.Serializer):
@@ -17,42 +17,42 @@ class VotesResponseField(serializers.DictField):
         self.read_only = True
 
 
-class MeetingCreateSerializer(serializers.ModelSerializer):
+class VotingCreateSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Meeting
+        model = Voting
         fields = ["id", "room", "task_name"]
 
     def validate(self, data):
         room = data.get("room")
-        if room and Meeting.objects.filter(room=room, active=True).exists():
-            raise ValidationError({"error": "Room meeting already exists"})
+        if room and Voting.objects.filter(room=room, active=True).exists():
+            raise ValidationError({"error": "Room voting already exists"})
         return data
 
 
-class MeetingInfoSerializer(serializers.ModelSerializer):
+class VotingInfoSerializer(serializers.ModelSerializer):
     votes = VotesResponseField(required=False)
 
     class Meta:
-        model = Meeting
+        model = Voting
         fields = ["id", "room", "task_name", "votes", "average_score", "active"]
 
 
-class MeetingUpdateTaskNameSerializer(serializers.ModelSerializer):
+class VotingUpdateTaskNameSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Meeting
+        model = Voting
         fields = ["task_name"]
 
 
-class MeetingRemoveSerializer(serializers.ModelSerializer):
+class VotingRemoveSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Meeting
+        model = Voting
         fields = ["id"]
 
 
-class MeetingResultsSerializer(serializers.ModelSerializer):
+class VotingResultsSerializer(serializers.ModelSerializer):
     votes = VotesResponseField(required=False)
 
     class Meta:
-        model = Meeting
+        model = Voting
         fields = ["id", "votes", "average_score"]
         read_only_fields = ["average_score", "votes"]

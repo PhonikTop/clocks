@@ -3,13 +3,13 @@ import { ref, onBeforeMount, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import RoomHeader from "@/components/room/ui/RoomHeader.vue";
-import WaitingMeetingState from "@/components/room/voting/states/WaitingMeetingState.vue";
-import VotingMeetingState from "@/components/room/voting/states/VotingMeetingState.vue";
-import ResultsMeetingState from "@/components/room/voting/states/ResultsMeetingState.vue";
+import WaitingVotingState from "@/components/room/voting/states/WaitingVotingState.vue";
+import ActiveVotingState from "@/components/room/voting/states/ActiveVotingState.vue";
+import ResultsVotingState from "@/components/room/voting/states/ResultsVotingState.vue";
 import ParticipantsSection from "@/components/room/ui/ParticipantsSection.vue";
 
 import useRoomState from "@/composables/room/useRoomState";
-import useMeetingManager from "@/composables/room/useMeetingManager";
+import useVotingManager from "@/composables/room/useVotingManager";
 import useRoomWebSocketHandler from "@/composables/room/useRoomWebSocketHandler";
 import useRoomParticipants from "@/composables/room/useRoomParticipants";
 import { useRoomWebSocket } from "@/composables/api/useWebSocket";
@@ -56,7 +56,7 @@ const { isConnected, connect, sendMessage, addMessageHandler } =
     `${import.meta.env.VITE_WS_BASE_URL}room/${roomId.value}/?token=${token.value}`
   );
 
-const { currentMeeting } = useRoomWebSocketHandler(
+const { currentVoting } = useRoomWebSocketHandler(
   addMessageHandler,
   roomState,
   participants,
@@ -70,10 +70,10 @@ const { currentMeeting } = useRoomWebSocketHandler(
   hasVoted
 );
 
-const { getRoomMeeting, ...meetingActions } = useMeetingManager(
+const { getRoomVoting, ...votingActions } = useVotingManager(
   roomState,
   sendMessage,
-  currentMeeting,
+  currentVoting,
   notify,
 );
 
@@ -135,12 +135,12 @@ onMounted(async () => {
     console.error("Ошибка подключения:", err);
     notify.error("Ошибка подключения к WebSocket!")
   }
-  if (currentMeeting.value == null) {
-    const meeting = await getRoomMeeting(roomId.value);
-    if (meeting?.id != null) {
-      currentMeeting.value = meeting.id;
-      localStorage.setItem("active_meeting_id", JSON.stringify(meeting.id));
-      taskName.value = meeting.task_name;
+  if (currentVoting.value == null) {
+    const voting = await getRoomVoting(roomId.value);
+    if (voting?.id != null) {
+      currentVoting.value = voting.id;
+      localStorage.setItem("active_voting_id", JSON.stringify(voting.id));
+      taskName.value = voting.task_name;
       roomState.value = ROOM_STATES.VOTING;
     }
   }
@@ -158,7 +158,7 @@ onMounted(async () => {
       :end-timestamp="timer.timeEndTS"
       @reset-timer="handleRestartRoomTimer"
       @leave-room="redirectToLogin"
-      @restart-meeting="meetingActions.handleRestartMeeting"
+      @restart-voting="votingActions.handleRestartVoting"
       @start-timer="(minutes: number) => startRoomTimer(roomId, minutes)"
     />
 
@@ -168,9 +168,9 @@ onMounted(async () => {
           v-if="roomState === ROOM_STATES.WAITING"
           class="w-full max-w-2xl"
         >
-          <WaitingMeetingState
+          <WaitingVotingState
             v-model:task-name="taskName"
-            @start-voting="(taskName: string) => meetingActions.startVoting(roomId, taskName)"
+            @start-voting="(taskName: string) => votingActions.startVoting(roomId, taskName)"
           />
         </div>
 
@@ -178,11 +178,11 @@ onMounted(async () => {
           v-else-if="roomState === ROOM_STATES.VOTING"
           class="w-full max-w-2xl"
         >
-          <VotingMeetingState
+          <ActiveVotingState
             :user-role="userRole"
             :has-voted="hasVoted"
             @vote="handleVote"
-            @update-task="meetingActions.updateMeetingTaskName"
+            @update-task="votingActions.updateVotingTaskName"
           />
         </div>
 
@@ -196,12 +196,12 @@ onMounted(async () => {
             v-if="roomState === ROOM_STATES.RESULTS"
             class="w-full max-w-3xl"
           >
-            <ResultsMeetingState
+            <ResultsVotingState
               :results-votes="resultsVotes"
               :average-score="averageScore"
               :task-name="taskName"
-              @restart-meeting="meetingActions.handleRestartMeeting"
-              @next-meeting="meetingActions.handleNextMeeting"
+              @restart-voting="votingActions.handleRestartVoting"
+              @next-voting="votingActions.handleNextVoting"
               @results-copied="notify.info(`Результаты были успешно скопированы`)"
             />
           </div>

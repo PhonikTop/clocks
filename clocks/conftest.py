@@ -50,16 +50,16 @@ def room(db):
 
 
 @pytest.fixture
-def meeting(db, room):
-    from meetings.models import Meeting
+def voting(db, room):
+    from votings.models import Voting
 
-    return Meeting.objects.create(room=room, task_name="Initial Task")
+    return Voting.objects.create(room=room, task_name="Initial Task")
 
 @pytest.fixture
-def finished_meeting(db, room):
-    from meetings.models import Meeting
+def finished_voting(db, room):
+    from votings.models import Voting
 
-    return Meeting.objects.create(room=room, task_name="Initial Task", average_score=4)
+    return Voting.objects.create(room=room, task_name="Initial Task", average_score=4)
 
 @pytest.fixture
 def room_url_router():

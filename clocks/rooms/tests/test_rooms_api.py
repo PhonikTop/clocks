@@ -45,9 +45,9 @@ def test_list_rooms(api_client):
     assert data[0]["name"] == "Room1"
 
 @pytest.mark.django_db
-def test_list_rooms_includes_active_meeting_id(api_client):
-    Room.objects.create(name="RoomWithMeeting", active=True)
-    Room.objects.create(name="RoomWithoutMeeting", active=True)
+def test_list_rooms_includes_active_voting_id(api_client):
+    Room.objects.create(name="RoomWithVoting", active=True)
+    Room.objects.create(name="RoomWithoutVoting", active=True)
 
     url = reverse("room_list")
     resp = api_client.get(url)
@@ -55,8 +55,8 @@ def test_list_rooms_includes_active_meeting_id(api_client):
     data = resp.json()
 
     for item in data:
-        assert "active_meeting_id" in item
-        assert item["active_meeting_id"] is None or isinstance(item["active_meeting_id"], int)
+        assert "active_voting_id" in item
+        assert item["active_voting_id"] is None or isinstance(item["active_voting_id"], int)
 
 @pytest.mark.django_db
 def test_room_detail_get(api_client, room):
