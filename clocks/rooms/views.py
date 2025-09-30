@@ -222,6 +222,34 @@ class RoomParticipantsView(APIView):
 
         return Response({"participants": participants})
 
+@extend_schema(
+    operation_id="setRoomTimer",
+    summary="Запуск таймера в комнате",
+    parameters=[
+        OpenApiParameter(
+            name="id",
+            location="path",
+            description="ID комнаты",
+            type=int,
+        ),
+        OpenApiParameter(
+            name="Authorization",
+            type=str,
+            location="header",
+            description='JWT токен в формате "Bearer <token>"',
+            required=True,
+        ),
+    ],
+    responses={
+        200: OpenApiResponse(
+            description="Таймер успешно запущен",
+        ),
+        401: OpenApiResponse(
+            description="Ошибка аутентификации",
+        ),
+    },
+    tags=ROOM_TAG,
+)
 class SetRoomTimer(GenericAPIView):
     serializer_class = RoomTimerSerializer
 
@@ -260,6 +288,20 @@ class SetRoomTimer(GenericAPIView):
 
         return Response(status=status.HTTP_200_OK)
 
+
+@extend_schema(
+    operation_id="getRoomTimer",
+    summary="Получение время окончания таймера в комнате",
+    parameters=[
+        OpenApiParameter(
+            name="id",
+            location="path",
+            description="ID комнаты",
+            type=int,
+        )
+    ],
+    tags=ROOM_TAG,
+)
 class GetRoomTimer(APIView):
     def get(self, request, pk):
         room_cache = RoomCacheService(pk)
@@ -267,6 +309,34 @@ class GetRoomTimer(APIView):
 
         return Response({"timer_end_time": timer_end_time}, status=status.HTTP_200_OK )
 
+@extend_schema(
+    operation_id="deleteRoomTimer",
+    summary="Сброс таймера в комнате",
+    parameters=[
+        OpenApiParameter(
+            name="id",
+            location="path",
+            description="ID комнаты",
+            type=int,
+        ),
+        OpenApiParameter(
+            name="Authorization",
+            type=str,
+            location="header",
+            description='JWT токен в формате "Bearer <token>"',
+            required=True,
+        ),
+    ],
+    responses={
+        200: OpenApiResponse(
+            description="Таймер успешно сброшен",
+        ),
+        401: OpenApiResponse(
+            description="Ошибка аутентификации",
+        ),
+    },
+    tags=ROOM_TAG,
+)
 class ResetRoomTimer(APIView):
     def delete(self, request, pk):
         auth_header = self.request.headers.get("Authorization")
