@@ -10,8 +10,9 @@ def test_start_voting_creates_and_notifies(api_client, room):
     url = reverse("start_voting")
     payload = {"room": room.id, "task_name": "Разработка архитектуры"}
 
-    with patch("votings.views.RoomMessageService") as MockRMS, patch(
-        "votings.views.DjangoChannelMessageSender"
+    with (
+        patch("votings.views.RoomMessageService") as MockRMS,
+        patch("votings.views.DjangoChannelMessageSender")
     ):
         MockRMS.return_value.notify_voting_started = MagicMock()
 
@@ -73,11 +74,12 @@ def test_end_voting_only_active_allowed_and_calls_end_voting(api_client, voting)
 def test_restart_voting_calls_services_and_resets_voting(api_client, voting):
     url = reverse("restart_voting", kwargs={"pk": voting.id})
 
-    with patch("votings.views.DjangoChannelMessageSender"), patch(
-        "votings.views.RoomMessageService"
-    ) as MockRMS, patch("votings.views.RoomCacheService") as MockRoomCache, patch(
-        "votings.views.RoomOnlineTracker"
-    ) as MockTracker:
+    with (
+        patch("votings.views.DjangoChannelMessageSender"),
+        patch("votings.views.RoomMessageService") as MockRMS,
+        patch("votings.views.RoomCacheService") as MockRoomCache,
+        patch("votings.views.RoomOnlineTracker") as MockTracker
+    ):
         MockRMS.return_value.notify_voting_restart = MagicMock()
         MockRoomCache.return_value.clear_votes = MagicMock()
         MockTracker.return_value.clean_room_offline_participants = MagicMock()
@@ -111,11 +113,12 @@ def test_update_voting_task_requires_authorization_and_notifies(api_client, voti
     token = jwt_token
     api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
 
-    with patch("votings.views.JWTService") as MockJWT, patch(
-        "votings.views.RoomCacheService"
-    ) as MockRoomCache, patch("votings.views.UserSessionService") as MockUSS, patch(
-        "votings.views.RoomMessageService"
-    ) as MockRMS:
+    with (
+        patch("votings.views.JWTService") as MockJWT,
+        patch("votings.views.RoomCacheService") as MockRoomCache,
+        patch("votings.views.UserSessionService") as MockUSS,
+        patch("votings.views.RoomMessageService") as MockRMS
+    ):
 
         MockJWT.return_value.decode.return_value = {
             "user_id": 123,

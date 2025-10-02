@@ -1,44 +1,31 @@
-from unittest.mock import MagicMock
+from unittest.mock import ANY, patch
 
 import pytest
 from django.urls import reverse
-from rest_framework.test import APIRequestFactory
 
 from users.enums import UserRole
-from users.views import JoinRoomView, UserInfoView, UserKickView
 
 
 @pytest.mark.django_db
-def test_join_room_success(room, jwt_token, monkeypatch):
-    factory = APIRequestFactory()
-    data = {"nickname": "Bob", "role": "voter"}
-    request = factory.post("/", data, format="json")
+def test_join_room_success(api_client, room, jwt_token):
+    url = reverse("join_room", kwargs={"pk": room.id})
 
-    token = jwt_token
+    with (
+        patch("users.views.UserSessionService") as mock_user_session,
+        patch("users.views.RoomMessageService") as mock_room_msg,
+        patch("users.views.DjangoChannelMessageSender"),
+        patch("users.views.RoomCacheService")
+    ):
+        token = jwt_token
+        mock_user_session.return_value.create_user_session.return_value = token
 
-    mock_user_session = MagicMock()
-    mock_user_session.create_user_session.return_value = token
+        data = {"nickname": "Bob", "role": "voter"}
+        response = api_client.post(url, data, format="json")
 
-    monkeypatch.setattr("users.views.UserSessionService", lambda jwt, cache: mock_user_session)
-
-    mock_room_msg = MagicMock()
-    monkeypatch.setattr("users.views.RoomMessageService", lambda room_id, sender, cache: mock_room_msg)
-
-    monkeypatch.setattr("users.views.DjangoChannelMessageSender", lambda: MagicMock())
-    monkeypatch.setattr("users.views.RoomCacheService", lambda room_id: MagicMock())
-
-    view = JoinRoomView.as_view()
-    response = view(request, pk=room.id)
-
-    assert response.status_code == 200
-    assert response.data == {"token": token}
-    mock_room_msg.notify_user_joined.assert_called_once()
-
-    assert mock_user_session.create_user_session.called
-    call_args = mock_user_session.create_user_session.call_args[0]
-    assert isinstance(call_args[0], str)
-    assert call_args[1] == UserRole.VOTER
-    assert call_args[2] == "Bob"
+        assert response.status_code == 200
+        assert response.data == {"token": token}
+        mock_room_msg.return_value.notify_user_joined.assert_called_once()
+        mock_user_session.return_value.create_user_session.assert_called_once_with(ANY, UserRole.VOTER, "Bob")
 
 
 @pytest.mark.django_db
@@ -69,24 +56,21 @@ def test_user_info_invalid_format_raises(api_client, room):
 
 
 @pytest.mark.django_db
-def test_user_info_valid_token_returns_session_data(monkeypatch, room, jwt_token):
-    token = jwt_token
-    factory = APIRequestFactory()
-    request = factory.get("/", HTTP_AUTHORIZATION=f"Bearer {token}")
+def test_user_info_valid_token_returns_session_data(api_client, room, jwt_token):
+    url = reverse("user_info", args=[room.id])
 
-    mock_user_session = MagicMock()
-    mock_user_session.get_user_session_data.return_value = {"user_uuid": "u1", "nickname": "n1"}
+    with (
+        patch("users.views.UserSessionService") as mock_user_session,
+        patch("users.views.JWTService"),
+        patch("users.views.RoomCacheService"),
+    ):
+        mock_user_session.return_value.get_user_session_data.return_value = {"user_uuid": "u1", "nickname": "n1"}
 
-    monkeypatch.setattr("users.views.UserSessionService", lambda jwt, cache: mock_user_session)
-    monkeypatch.setattr("users.views.JWTService", lambda: MagicMock())
-    monkeypatch.setattr("users.views.RoomCacheService", lambda rid: MagicMock())
+        response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {jwt_token}")
 
-    view = UserInfoView.as_view()
-    response = view(request, pk=room.id)
-
-    assert response.status_code == 200
-    assert response.data == {"user_uuid": "u1", "nickname": "n1"}
-    mock_user_session.get_user_session_data.assert_called_once_with(token)
+        assert response.status_code == 200
+        assert response.data == {"user_uuid": "u1", "nickname": "n1"}
+        mock_user_session.return_value.get_user_session_data.assert_called_once_with(jwt_token)
 
 
 @pytest.mark.django_db
@@ -109,27 +93,25 @@ def test_user_kick_invalid_format_raises(api_client, room):
 
 
 @pytest.mark.django_db
-def test_user_kick_success_calls_services(monkeypatch, room):
-    factory = APIRequestFactory()
-    request = factory.post("/", {"user_uuid": "kicked-uuid"}, format="json", HTTP_AUTHORIZATION="Bearer kickertoken")
+def test_user_kick_success_calls_services(api_client, room, jwt_token):
+    url = reverse("user_kick", args=[room.id])
 
-    mock_user_session = MagicMock()
-    mock_user_session.get_user_uuid.return_value = "kicker-uuid"
-    monkeypatch.setattr("users.views.UserSessionService", lambda jwt, cache: mock_user_session)
-    monkeypatch.setattr("users.views.JWTService", lambda: MagicMock())
+    with (
+        patch("users.views.UserSessionService") as mock_user_session,
+        patch("users.views.JWTService"),
+        patch("users.views.RoomCacheService") as mock_room_cache,
+        patch("users.views.RoomMessageService") as mock_room_msg,
+        patch("users.views.DjangoChannelMessageSender")
+    ):
 
-    mock_room_cache = MagicMock()
-    monkeypatch.setattr("users.views.RoomCacheService", lambda arg: mock_room_cache)
+        mock_user_session.return_value.get_user_uuid.return_value = "kicker-uuid"
 
-    mock_room_msg = MagicMock()
-    monkeypatch.setattr("users.views.RoomMessageService", lambda room_id, sender, cache: mock_room_msg)
-    monkeypatch.setattr("users.views.DjangoChannelMessageSender", lambda: MagicMock())
+        response = api_client.post(
+            url, {"user_uuid": "kicked-uuid"}, HTTP_AUTHORIZATION=f"Bearer {jwt_token}"
+        )
 
-    view = UserKickView.as_view()
-    response = view(request, pk=room.id)
-
-    assert response.status_code == 200
-    mock_user_session.get_user_uuid.assert_called_once_with("kickertoken")
-    mock_room_msg.notify_user_kicked.assert_called_once_with("kicked-uuid", "kicker-uuid")
-    mock_room_cache.remove_user_vote.assert_called_once_with("kicked-uuid")
-    mock_room_cache.remove_user.assert_called_once_with("kicked-uuid")
+        assert response.status_code == 200
+        mock_user_session.return_value.get_user_uuid.assert_called_once_with(jwt_token)
+        mock_room_msg.return_value.notify_user_kicked.assert_called_once_with("kicked-uuid", "kicker-uuid")
+        mock_room_cache.return_value.remove_user_vote.assert_called_once_with("kicked-uuid")
+        mock_room_cache.return_value.remove_user.assert_called_once_with("kicked-uuid")

@@ -19,8 +19,7 @@ def test_create_room_admin(api_client, admin_user):
     assert Room.objects.filter(name="Room A").exists()
 
 @pytest.mark.django_db
-def test_create_room_non_admin(api_client):
-    user = User.objects.create_user(username="user1", password="password")
+def test_create_room_non_admin(api_client, user):
     api_client.force_authenticate(user=user)
 
     url = reverse("room_create")
@@ -54,9 +53,9 @@ def test_list_rooms_includes_active_voting_id(api_client):
     assert resp.status_code == 200
     data = resp.json()
 
-    for item in data:
-        assert "active_voting_id" in item
-        assert item["active_voting_id"] is None or isinstance(item["active_voting_id"], int)
+    for room_data in data:
+        assert "active_voting_id" in room_data
+        assert room_data["active_voting_id"] is None or isinstance(room_data["active_voting_id"], int)
 
 @pytest.mark.django_db
 def test_room_detail_get(api_client, room):
