@@ -14,7 +14,7 @@ services:
       - watchy-redis
       - watchy-db
     volumes:
-      - ./clocks/static:/code/clocks/static
+      - ./backend/static:/code/backend/static
     environment:
       - REDIS_PASSWORD=passwo4509b14a24a8rd
     restart: always
@@ -55,7 +55,7 @@ services:
     depends_on:
       - watchy-api
     volumes:
-      - ./clocks/static:/static
+      - ./backend/static:/static
     networks:
       - watchy_network
 

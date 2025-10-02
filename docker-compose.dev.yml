@@ -16,7 +16,7 @@ services:
       - watchy-redis
       - watchy-db
     volumes:
-      - ./clocks:/app
+      - ./backend:/app
     restart: always
     networks:
       - watchy_network
