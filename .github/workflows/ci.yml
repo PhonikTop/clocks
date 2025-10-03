@@ -93,6 +93,11 @@ jobs:
       - name: Build frontend
         working-directory: frontend
         run: npm ci && npm run build
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
 
   docker-build-push:
     if: ${{ needs.set-version.outputs.IS_RELEASE == 'true' || needs.set-version.outputs.IS_MAIN == 'true' }}
@@ -111,6 +116,11 @@ jobs:
       - name: Set lowercase repo name
         run: |
           echo "REPO_LOWER=$(echo $GITHUB_REPOSITORY | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+      - name: Download frontend dist artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
       - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
