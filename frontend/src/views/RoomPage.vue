@@ -1,33 +1,34 @@
-<script setup>
+<script setup lang="ts">
 import { ref, onBeforeMount, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import RoomHeader from "@/components/room/ui/RoomHeader.vue";
-import WaitingMeetingState from "@/components/room/voting/states/WaitingMeetingState.vue";
-import VotingMeetingState from "@/components/room/voting/states/VotingMeetingState.vue";
-import ResultsMeetingState from "@/components/room/voting/states/ResultsMeetingState.vue";
+import WaitingVotingState from "@/components/room/voting/states/WaitingVotingState.vue";
+import ActiveVotingState from "@/components/room/voting/states/ActiveVotingState.vue";
+import ResultsVotingState from "@/components/room/voting/states/ResultsVotingState.vue";
 import ParticipantsSection from "@/components/room/ui/ParticipantsSection.vue";
 
 import useRoomState from "@/composables/room/useRoomState";
-import useMeetingManager from "@/composables/room/useMeetingManager";
+import useVotingManager from "@/composables/room/useVotingManager";
 import useRoomWebSocketHandler from "@/composables/room/useRoomWebSocketHandler";
 import useRoomParticipants from "@/composables/room/useRoomParticipants";
 import { useRoomWebSocket } from "@/composables/api/useWebSocket";
 import { useNotify } from '@/composables/useNotify.js'
+import { useTimerStore } from "@/stores/roomTimer";
 
 import useRoom from "@/composables/api/useRoomAPI"
 
-import useMeeting from "@/composables/api/useMeetingAPI";
 
 const route = useRoute();
 const router = useRouter();
-const roomId = ref(route.params.room_id);
+const roomId = ref(Number(route.params.room_id));
 
 const roomName = ref("");
 
 const notify = useNotify();
+const timer = useTimerStore()
 
-const { fetchRoomDetails, currentRoom } = useRoom()
+const { fetchRoomDetails, currentRoom, startRoomTimer, fetchRoomTimer, resetRoomTimer } = useRoom()
 
 const { roomState, ROOM_STATES, taskName, votes, resultsVotes, averageScore } =
   useRoomState();
@@ -55,7 +56,7 @@ const { isConnected, connect, sendMessage, addMessageHandler } =
     `${import.meta.env.VITE_WS_BASE_URL}room/${roomId.value}/?token=${token.value}`
   );
 
-const { currentMeeting } = useRoomWebSocketHandler(
+const { currentVoting } = useRoomWebSocketHandler(
   addMessageHandler,
   roomState,
   participants,
@@ -69,20 +70,17 @@ const { currentMeeting } = useRoomWebSocketHandler(
   hasVoted
 );
 
-const { meetingRoom } = useMeeting();
-
-const { getRoomMeeting, ...meetingActions } = useMeetingManager(
+const { getRoomVoting, ...votingActions } = useVotingManager(
   roomState,
   sendMessage,
-  currentMeeting,
+  currentVoting,
   notify,
-  hasVoted
 );
 
-const handleVote = (voteValue) => {
+const handleVote = (voteValue: number) => {
   try {
     hasVoted.value = true;
-    localStorage.setItem("hasVoted", true)
+    localStorage.setItem("hasVoted", JSON.stringify(true))
     sendMessage({
       action: "submit_vote",
       vote: `${voteValue}`,
@@ -94,8 +92,12 @@ const handleVote = (voteValue) => {
   }
 };
 
-const handleKickUser = async (voterId) => {
+const handleKickUser = async (voterId: string) => {
   await kickUserRoom(voterId)
+}
+
+const handleRestartRoomTimer = async () => {
+  await resetRoomTimer(roomId.value)
 }
 
 onBeforeMount(async () => {
@@ -104,7 +106,6 @@ onBeforeMount(async () => {
   try {
     await getCurrentUser();
     if (userError.value?.status === 403) {
-      meetingRoom;
       redirectToLogin();
       return;
     }
@@ -116,11 +117,15 @@ onBeforeMount(async () => {
     redirectToLogin();
   }
   await fetchRoomDetails(roomId.value);
-  roomName.value = currentRoom.value.name;
 
-  hasVoted.value = JSON.parse(localStorage.getItem("hasVoted")) || false
+  if (currentRoom.value) {
+    roomName.value = currentRoom.value.name;
+  }
+
+  hasVoted.value = JSON.parse(localStorage.getItem("hasVoted") ?? "false");
 
   await fetchParticipants();
+  await fetchRoomTimer(roomId.value)
 });
 
 onMounted(async () => {
@@ -130,12 +135,12 @@ onMounted(async () => {
     console.error("Ошибка подключения:", err);
     notify.error("Ошибка подключения к WebSocket!")
   }
-  if (currentMeeting.value == null) {
-    const meeting = await getRoomMeeting(roomId.value);
-    if (meeting?.id != null) {
-      currentMeeting.value = meeting.id;
-      localStorage.setItem("active_meeting_id", meeting.id);
-      taskName.value = meeting.task_name;
+  if (currentVoting.value == null) {
+    const voting = await getRoomVoting(roomId.value);
+    if (voting?.id != null) {
+      currentVoting.value = voting.id;
+      localStorage.setItem("active_voting_id", JSON.stringify(voting.id));
+      taskName.value = voting.task_name;
       roomState.value = ROOM_STATES.VOTING;
     }
   }
@@ -150,16 +155,22 @@ onMounted(async () => {
       :room-name="roomName"
       :is-connected="isConnected"
       :room-state="roomState"
+      :end-timestamp="timer.timeEndTS"
+      @reset-timer="handleRestartRoomTimer"
       @leave-room="redirectToLogin"
-      @restart-meeting="meetingActions.handleRestartMeeting"
+      @restart-voting="votingActions.handleRestartVoting"
+      @start-timer="(minutes: number) => startRoomTimer(roomId, minutes)"
     />
 
-    <div class="flex flex-1 w-full gap-6">
+    <div class="flex flex-1 w-full gap-6 flex-col md:flex-row">
       <div class="flex-1 flex flex-col items-center gap-6">
-        <div v-if="roomState === ROOM_STATES.WAITING" class="w-full max-w-2xl">
-          <WaitingMeetingState
+        <div
+          v-if="roomState === ROOM_STATES.WAITING"
+          class="w-full max-w-2xl"
+        >
+          <WaitingVotingState
             v-model:task-name="taskName"
-            @start-voting="(taskName) => meetingActions.startVoting(roomId, taskName)"
+            @start-voting="(taskName: string) => votingActions.startVoting(roomId, taskName)"
           />
         </div>
 
@@ -167,11 +178,11 @@ onMounted(async () => {
           v-else-if="roomState === ROOM_STATES.VOTING"
           class="w-full max-w-2xl"
         >
-          <VotingMeetingState
-            :userRole="userRole"
-            :hasVoted="hasVoted"
+          <ActiveVotingState
+            :user-role="userRole"
+            :has-voted="hasVoted"
             @vote="handleVote"
-            @update-task="meetingActions.updateMeetingTaskName"
+            @update-task="votingActions.updateVotingTaskName"
           />
         </div>
 
@@ -185,19 +196,22 @@ onMounted(async () => {
             v-if="roomState === ROOM_STATES.RESULTS"
             class="w-full max-w-3xl"
           >
-            <ResultsMeetingState
+            <ResultsVotingState
               :results-votes="resultsVotes"
               :average-score="averageScore"
               :task-name="taskName"
-              @restart-meeting="meetingActions.handleRestartMeeting"
-              @next-meeting="meetingActions.handleNextMeeting"
-              @resultsCopied="notify.info(`Результаты были успешно скопированы`)"
+              @restart-voting="votingActions.handleRestartVoting"
+              @next-voting="votingActions.handleNextVoting"
+              @results-copied="notify.info(`Результаты были успешно скопированы`)"
             />
           </div>
         </Transition>
       </div>
 
-      <div v-if="roomState !== ROOM_STATES.RESULTS" class="w-84">
+      <div
+        v-if="roomState !== ROOM_STATES.RESULTS"
+        class="w-full md:w-84"
+      >
         <ParticipantsSection
           :participants="participants"
           :votes="votes"

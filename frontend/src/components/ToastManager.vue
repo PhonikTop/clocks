@@ -1,17 +1,15 @@
-<script setup>
-import { inject } from 'vue'
+<script setup lang="ts">
+import { useToastStore } from "@/stores/toasts"
 
-const toast = inject('toast')
-if (!toast) throw new Error('Toast not provided!')
+const toasts = useToastStore()
 
-const { toasts, pauseToast, resumeToast, removeToast } = toast
 </script>
 
 <template>
   <Teleport to="body">
     <div class="toast toast-end z-50">
       <div
-        v-for="toast in toasts"
+        v-for="toast in toasts.toasts"
         :key="toast.id"
         :class="[
           'alert',
@@ -22,11 +20,16 @@ const { toasts, pauseToast, resumeToast, removeToast } = toast
           'font-bold'
         ]"
         class="w-80 shadow-lg flex items-center justify-between"
-        @mouseenter="pauseToast(toast.id)"
-        @mouseleave="resumeToast(toast.id)"
+        @mouseenter="toasts.pauseToast(toast.id)"
+        @mouseleave="toasts.resumeToast(toast.id)"
       >
         <span>{{ toast.message }}</span>
-        <button class="btn btn-sm btn-ghost ml-2" @click="removeToast(toast.id)">✕</button>
+        <button
+          class="btn btn-sm btn-ghost ml-2"
+          @click="toasts.removeToast(toast.id)"
+        >
+          ✕
+        </button>
       </div>
     </div>
   </Teleport>

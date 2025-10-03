@@ -1,0 +1,146 @@
+name: CI/CD
+
+on:
+  push:
+    branches: ["master"]
+    tags:
+      - "v*"
+  pull_request:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  set-version:
+    runs-on: ubuntu-latest
+    outputs:
+      VERSION: ${{ steps.get_version.outputs.version }}
+      IS_RELEASE: ${{ steps.get_version.outputs.is_release }}
+      IS_MAIN: ${{ steps.get_version.outputs.is_main }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Determine version
+        id: get_version
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            VERSION="${GITHUB_REF#refs/tags/}"
+            IS_RELEASE=true
+            IS_MAIN=false
+            echo "Release tag version $VERSION"
+          elif [[ "${GITHUB_REF}" == refs/heads/main ]]; then
+            BASE_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "0.0.0")
+            SHORT_SHA=${GITHUB_SHA::7}
+            VERSION="${BASE_TAG}-${SHORT_SHA}"
+            IS_RELEASE=false
+            IS_MAIN=true
+            echo "Dev version on main: $VERSION"
+          else
+            VERSION="dev-${GITHUB_SHA::7}"
+            IS_RELEASE=false
+            IS_MAIN=false
+            echo "PR or feature branch version: $VERSION"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "is_release=$IS_RELEASE" >> $GITHUB_OUTPUT
+          echo "is_main=$IS_MAIN" >> $GITHUB_OUTPUT
+
+  lint-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install dependencies
+        run: cd frontend && npm ci
+      - name: Run ESLint
+        run: cd frontend && npm run lint
+
+  test-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        working-directory: backend
+        run: pip install -r requirements-tests.txt
+      - name: Run Pytest
+        working-directory: backend
+        env:
+          DEBUG: 1
+          SECRET_KEY: test
+          DJANGO_SETTINGS_MODULE: settings.settings
+          DATABASE_URL: "sqlite:///:memory:"
+        run: pytest -vv
+
+  build-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+      - name: Build frontend
+        working-directory: frontend
+        run: npm ci && npm run build
+
+  docker-build-push:
+    if: ${{ needs.set-version.outputs.IS_RELEASE == 'true' || needs.set-version.outputs.IS_MAIN == 'true' }}
+    needs: [set-version, lint-frontend, test-backend, build-frontend]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Show version info
+        run: |
+          echo "VERSION=${{ needs.set-version.outputs.VERSION }}"
+          echo "IS_RELEASE=${{ needs.set-version.outputs.IS_RELEASE }}"
+          echo "IS_MAIN=${{ needs.set-version.outputs.IS_MAIN }}"
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build & push backend
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: backend/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ github.repository }}-backend:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ github.repository }}-backend:${{ needs.set-version.outputs.VERSION }}
+      - name: Push latest tag (backend)
+        if: ${{ needs.set-version.outputs.IS_RELEASE == 'true' }}
+        run: |
+          docker tag ${{ env.REGISTRY }}/${{ github.repository }}-backend:${{ needs.set-version.outputs.VERSION }} \
+                     ${{ env.REGISTRY }}/${{ github.repository }}-backend:latest
+          docker push ${{ env.REGISTRY }}/${{ github.repository }}-backend:latest
+      - name: Build & push frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: frontend/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ github.repository }}-frontend:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ github.repository }}-frontend:${{ needs.set-version.outputs.VERSION }}
+      - name: Push latest tag (frontend)
+        if: ${{ needs.set-version.outputs.IS_RELEASE == 'true' }}
+        run: |
+          docker tag ${{ env.REGISTRY }}/${{ github.repository }}-frontend:${{ needs.set-version.outputs.VERSION }} \
+                     ${{ env.REGISTRY }}/${{ github.repository }}-frontend:latest
+          docker push ${{ env.REGISTRY }}/${{ github.repository }}-frontend:latest

@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { onMounted } from "vue";
 import { ref } from "vue";
 import { useRouter } from "vue-router";
@@ -8,7 +8,7 @@ import useUser from "@/composables/api/useUserAPI";
 const router = useRouter();
 const username = ref("");
 const isObserver = ref(false);
-const selectRoomId = ref("");
+const selectRoomId = ref();
 
 const { roomList, fetchRoomList } = useRoom();
 const { joinRoom } = useUser();
@@ -45,7 +45,10 @@ onMounted(async () => {
         Вход в комнату
       </h1>
 
-      <form @submit.prevent="enterRoom" class="space-y-6">
+      <form
+        class="space-y-6"
+        @submit.prevent="enterRoom"
+      >
         <div>
           <label
             for="username"
@@ -54,7 +57,6 @@ onMounted(async () => {
             Имя пользователя
           </label>
           <input
-            @input="validateInput"
             id="username"
             v-model="username"
             type="text"
@@ -62,7 +64,8 @@ onMounted(async () => {
             required
             placeholder="Введите имя"
             class="input"
-          />
+            @input="validateInput"
+          >
         </div>
 
         <div>
@@ -72,9 +75,23 @@ onMounted(async () => {
           >
             ID комнаты
           </label>
-          <select id="room" v-model="selectRoomId" required class="select">
-            <option disabled value="">Выберите комнату</option>
-            <option v-for="room in roomList" :key="room.id" :value="room.id">
+          <select
+            id="room"
+            v-model="selectRoomId"
+            required
+            class="select"
+          >
+            <option
+              disabled
+              value=""
+            >
+              Выберите комнату
+            </option>
+            <option
+              v-for="room in roomList"
+              :key="room.id"
+              :value="room.id"
+            >
               {{ room.name }}
             </option>
           </select>
@@ -83,11 +100,14 @@ onMounted(async () => {
         <div class="flex items-center space-x-2">
           <input
             id="observer"
-            type="checkbox"
             v-model="isObserver"
+            type="checkbox"
             class="checkbox"
-          />
-          <label for="observer" class="select-none">
+          >
+          <label
+            for="observer"
+            class="select-none"
+          >
             Войти как наблюдатель
           </label>
         </div>

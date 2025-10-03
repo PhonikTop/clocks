@@ -1,14 +1,10 @@
-<script setup>
+<script setup lang="ts">
+import { Participant } from "@/composables/api/useRoomAPI";
 import { computed } from "vue";
 
-const props = defineProps({
-  participants: {
-    type: Object,
-    required: true,
-    validator: (value) =>
-      Object.values(value).every((p) => "nickname" in p && "role" in p),
-  },
-});
+const props = defineProps<{
+  participants: Participant
+}>()
 
 const observers = computed(() =>
   Object.entries(props.participants)
@@ -19,9 +15,14 @@ const observers = computed(() =>
 
 <template>
   <div class="card bg-base-100 shadow-md p-4 h-auto">
-    <h2 class="text-lg font-semibold mb-3">Наблюдающие</h2>
+    <h2 class="text-lg font-semibold mb-3">
+      Наблюдающие
+    </h2>
 
-    <div v-if="observers.length" class="space-y-2 overflow-y-auto">
+    <div
+      v-if="observers.length"
+      class="space-y-2 overflow-y-auto"
+    >
       <div
         v-for="[id, participant] in observers"
         :key="id"
@@ -36,7 +37,10 @@ const observers = computed(() =>
       </div>
     </div>
 
-    <div v-else class="text-sm text-gray-400 italic">
+    <div
+      v-else
+      class="text-sm text-gray-400 italic"
+    >
       Нет наблюдающих участников.
     </div>
   </div>

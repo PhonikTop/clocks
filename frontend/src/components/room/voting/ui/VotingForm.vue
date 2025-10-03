@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { ref, computed } from "vue";
 
 const emit = defineEmits(["vote"]);
@@ -19,17 +19,20 @@ const handleSubmit = () => {
 
 <template>
   <div class="card bg-base-100 p-4 shadow space-y-3 w-full max-w-sm">
-    <label for="guess" class="font-semibold text-base">Ваша оценка:</label>
+    <label
+      for="guess"
+      class="font-semibold text-base"
+    >Ваша оценка:</label>
     <div class="flex items-center gap-2">
       <input
-        v-model="guessValue"
         id="guess"
+        v-model="guessValue"
         type="number"
         min="0"
         step="1"
         placeholder="Введите часы"
         class="input input-bordered w-full"
-      />
+      >
       <span class="text-sm text-gray-500">ч.</span>
     </div>
 
