@@ -45,8 +45,8 @@ services:
   watchy-frontend:
     container_name: watchy-frontend
     build:
-      context: .
-      dockerfile: frontend/Dockerfile
+      context: frontend/
+      dockerfile: Dockerfile
     restart: always
     ports:
       - "8080:80"
