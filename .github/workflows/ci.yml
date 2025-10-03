@@ -121,7 +121,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: backend
-          file: Dockerfile
+          file: ./backend/Dockerfile
           target: api-prod
           push: true
           tags: |
@@ -139,7 +139,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: frontend
-          file: Dockerfile
+          file: ./frontend/Dockerfile
           push: true
           tags: |
             ${{ env.REGISTRY }}/${{ env.REPO_LOWER }}-frontend:${{ github.sha }}
