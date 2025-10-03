@@ -44,17 +44,28 @@ services:
     networks:
       - watchy_network
 
-  watchy-nginx:
-    container_name: watchy-nginx
+  watchy-frontend:
+    container_name: watchy-frontend
     build:
       context: .
-      dockerfile: nginx/Dockerfile
+      dockerfile: frontend/Dockerfile
+    restart: always
+    ports:
+      - "8080:80"
+    networks:
+      - watchy_network
+
+  watchy-nginx:
+    container_name: watchy-nginx
+    image: nginx:1.25
     restart: always
     ports:
       - "82:80"
     depends_on:
       - watchy-api
+      - watchy-frontend
     volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
       - ./backend/static:/static
     networks:
       - watchy_network
