@@ -108,6 +108,9 @@ jobs:
           echo "VERSION=${{ needs.set-version.outputs.VERSION }}"
           echo "IS_RELEASE=${{ needs.set-version.outputs.IS_RELEASE }}"
           echo "IS_MAIN=${{ needs.set-version.outputs.IS_MAIN }}"
+      - name: Set lowercase repo name
+        run: |
+          echo "REPO_LOWER=$(echo $GITHUB_REPOSITORY | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
       - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
@@ -121,14 +124,16 @@ jobs:
           file: backend/Dockerfile
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ github.repository }}-backend:${{ github.sha }}
-            ${{ env.REGISTRY }}/${{ github.repository }}-backend:${{ needs.set-version.outputs.VERSION }}
+            ${{ env.REGISTRY }}/${{ env.REPO_LOWER }}-backend:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.REPO_LOWER }}-backend:${{ needs.set-version.outputs.VERSION }}
+
       - name: Push latest tag (backend)
         if: ${{ needs.set-version.outputs.IS_RELEASE == 'true' }}
         run: |
-          docker tag ${{ env.REGISTRY }}/${{ github.repository }}-backend:${{ needs.set-version.outputs.VERSION }} \
-                     ${{ env.REGISTRY }}/${{ github.repository }}-backend:latest
-          docker push ${{ env.REGISTRY }}/${{ github.repository }}-backend:latest
+          docker tag ${{ env.REGISTRY }}/${{ env.REPO_LOWER }}-backend:${{ needs.set-version.outputs.VERSION }} \
+                    ${{ env.REGISTRY }}/${{ env.REPO_LOWER }}-backend:latest
+          docker push ${{ env.REGISTRY }}/${{ env.REPO_LOWER }}-backend:latest
+
       - name: Build & push frontend
         uses: docker/build-push-action@v6
         with:
@@ -136,11 +141,12 @@ jobs:
           file: frontend/Dockerfile
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ github.repository }}-frontend:${{ github.sha }}
-            ${{ env.REGISTRY }}/${{ github.repository }}-frontend:${{ needs.set-version.outputs.VERSION }}
+            ${{ env.REGISTRY }}/${{ env.REPO_LOWER }}-frontend:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.REPO_LOWER }}-frontend:${{ needs.set-version.outputs.VERSION }}
+
       - name: Push latest tag (frontend)
         if: ${{ needs.set-version.outputs.IS_RELEASE == 'true' }}
         run: |
-          docker tag ${{ env.REGISTRY }}/${{ github.repository }}-frontend:${{ needs.set-version.outputs.VERSION }} \
-                     ${{ env.REGISTRY }}/${{ github.repository }}-frontend:latest
-          docker push ${{ env.REGISTRY }}/${{ github.repository }}-frontend:latest
+          docker tag ${{ env.REGISTRY }}/${{ env.REPO_LOWER }}-frontend:${{ needs.set-version.outputs.VERSION }} \
+                    ${{ env.REGISTRY }}/${{ env.REPO_LOWER }}-frontend:latest
+          docker push ${{ env.REGISTRY }}/${{ env.REPO_LOWER }}-frontend:latest
