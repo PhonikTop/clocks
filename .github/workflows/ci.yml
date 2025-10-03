@@ -123,7 +123,12 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}/${{ github.repository }}-backend:${{ github.sha }}
             ${{ env.REGISTRY }}/${{ github.repository }}-backend:${{ needs.set-version.outputs.VERSION }}
-            ${{ if needs.set-version.outputs.IS_RELEASE == 'true' }}${{ env.REGISTRY }}/${{ github.repository }}-backend:latest
+      - name: Push latest tag (backend)
+        if: ${{ needs.set-version.outputs.IS_RELEASE == 'true' }}
+        run: |
+          docker tag ${{ env.REGISTRY }}/${{ github.repository }}-backend:${{ needs.set-version.outputs.VERSION }} \
+                     ${{ env.REGISTRY }}/${{ github.repository }}-backend:latest
+          docker push ${{ env.REGISTRY }}/${{ github.repository }}-backend:latest
       - name: Build & push frontend
         uses: docker/build-push-action@v6
         with:
@@ -133,4 +138,9 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}/${{ github.repository }}-frontend:${{ github.sha }}
             ${{ env.REGISTRY }}/${{ github.repository }}-frontend:${{ needs.set-version.outputs.VERSION }}
-            ${{ if needs.set-version.outputs.IS_RELEASE == 'true' }}${{ env.REGISTRY }}/${{ github.repository }}-frontend:latest
+      - name: Push latest tag (frontend)
+        if: ${{ needs.set-version.outputs.IS_RELEASE == 'true' }}
+        run: |
+          docker tag ${{ env.REGISTRY }}/${{ github.repository }}-frontend:${{ needs.set-version.outputs.VERSION }} \
+                     ${{ env.REGISTRY }}/${{ github.repository }}-frontend:latest
+          docker push ${{ env.REGISTRY }}/${{ github.repository }}-frontend:latest
