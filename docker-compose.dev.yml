@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   watchy-api:
     container_name: watchy-api
@@ -22,6 +20,7 @@ services:
       - watchy_network
 
   watchy-frontend:
+    container_name: watchy-frontend
     image: node:22
     working_dir: /app
     env_file:
