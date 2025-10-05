@@ -53,7 +53,7 @@ const redirectToLogin = () => router.push({ name: "Login" });
 
 const { isConnected, connect, sendMessage, addMessageHandler } =
   useRoomWebSocket(
-    `${import.meta.env.VITE_WS_BASE_URL}room/${roomId.value}/?token=${token.value}`
+    `/${roomId.value}/?token=${token.value}`
   );
 
 const { currentVoting } = useRoomWebSocketHandler(
