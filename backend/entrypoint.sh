@@ -13,7 +13,7 @@ echo -e "${GREEN}Applying database migrations...${NC}"
 python manage.py migrate
 
 echo -e "${YELLOW}Creating superuser...${NC}"
-python manage.py createsuperuser --noinput
+python manage.py createsuperuser --noinput || true
 
 if [ "$1" ]; then
     exec "$@"
