@@ -53,7 +53,7 @@ const redirectToLogin = () => router.push({ name: "Login" });
 
 const { isConnected, connect, sendMessage, addMessageHandler } =
   useRoomWebSocket(
-    `ws/${roomId.value}/?token=${token.value}`
+    `/ws/room/${roomId.value}/?token=${token.value}`
   );
 
 const { currentVoting } = useRoomWebSocketHandler(
