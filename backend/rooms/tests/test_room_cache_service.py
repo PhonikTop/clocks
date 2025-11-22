@@ -1,4 +1,5 @@
 import time
+from datetime import datetime, timezone
 from uuid import uuid4
 
 import pytest
@@ -116,7 +117,10 @@ def test_clear_room_deletes_all(fake_cache, room):
 
 def test_start_and_get_room_timer(fake_cache, room):
     rcs = RoomCacheService(room.id)
-    end_time = 1761049410
+
+    now = datetime.now(timezone.utc).timestamp()
+    end_time = now + (5 * 60 * 1000)
+
     rcs.start_room_timer(end_time)
 
     assert rcs.get_room_timer() == end_time
