@@ -3,8 +3,8 @@ services:
     container_name: watchy-api
     hostname: watchy
     build:
-      context: .
-      dockerfile: backend/Dockerfile
+      context: backend
+      dockerfile: Dockerfile
       target: api-local
     ports:
       - "8000:8000"

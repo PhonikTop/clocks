@@ -38,7 +38,7 @@ RUN apk add --no-cache libpq bash
 WORKDIR /app
 
 COPY --from=builder /install /usr/local
-COPY backend/ /app
+COPY . /app
 
 RUN chmod +x /app/entrypoint.sh
 ENTRYPOINT ["/app/entrypoint.sh"]
