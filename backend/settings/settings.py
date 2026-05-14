@@ -1,20 +1,18 @@
 import os
 import sys
-import logging
+from pathlib import Path
 
+import dj_database_url
 import structlog
 from structlog import contextvars
-from structlog.stdlib import ProcessorFormatter, add_logger_name
+from structlog.dev import ConsoleRenderer
 from structlog.processors import (
     TimeStamper,
     add_log_level,
     format_exc_info,
     JSONRenderer,
 )
-from structlog.dev import ConsoleRenderer
-from pathlib import Path
-
-import dj_database_url
+from structlog.stdlib import ProcessorFormatter, add_logger_name
 
 from settings.core import get_env_param_bool, get_env_param_str, get_env_param_list
 
@@ -90,6 +88,7 @@ structlog.configure(
 
 ALLOWED_HOSTS = get_env_param_list("ALLOWED_HOSTS", default=["127.0.0.1", "localhost"])
 CSRF_TRUSTED_ORIGINS = get_env_param_list("CSRF_TRUSTED_ORIGINS", default=[])
+CORS_ALLOWED_ORIGINS = get_env_param_list("CORS_ALLOWED_ORIGINS", default=["127.0.0.1:3000", "localhost:3000"])
 
 # Application definition
 DJANGO_APPS = [
@@ -197,8 +196,6 @@ CACHES = {
         }
     }
 }
-
-CORS_ALLOWED_ORIGINS = get_env_param_list("CORS_ALLOWED_ORIGINS", default=["127.0.0.1:3000", "localhost:3000"])
 
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
