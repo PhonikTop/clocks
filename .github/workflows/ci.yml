@@ -62,12 +62,7 @@ jobs:
         run: pip install -r requirements-tests.txt
       - name: Run Pytest
         working-directory: backend
-        env:
-          DEBUG: 1
-          SECRET_KEY: test
-          DJANGO_SETTINGS_MODULE: settings.settings
-          DATABASE_URL: "sqlite:///:memory:"
-        run: pytest -vv
+        run: pytest -vv -c pytest.ini
 
   build-frontend:
     runs-on: ubuntu-latest
