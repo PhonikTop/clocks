@@ -10,6 +10,7 @@ services:
       - watchy-db
     volumes:
       - backend-static:/app/static
+      - ./backend/secret_key:/app/secret_key
     environment:
       - REDIS_PASSWORD=passwo4509b14a24a8rd
     restart: always

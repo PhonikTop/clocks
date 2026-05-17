@@ -18,7 +18,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 PROJECT_ROOT = BASE_DIR.parent
 
 DOMAIN = get_env_param_str("DOMAIN", "localhost")
-SECRET_KEY = get_env_param_str("SECRET_KEY", "dev")
+SECRET_KEY = (BASE_DIR / "secret_key").read_text().strip()
 DEBUG = get_env_param_bool("DEBUG", False)
 
 LOGGING = build_logging(DEBUG)
