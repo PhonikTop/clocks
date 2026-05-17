@@ -23,6 +23,8 @@ RUN apk add --no-cache libpq bash
 
 WORKDIR /app
 
+ENV DJANGO_SETTINGS_MODULE=settings.settings
+
 COPY --from=builder /install /usr/local
 COPY . /app
 
@@ -36,6 +38,8 @@ FROM python:3.12-alpine AS api-local
 RUN apk add --no-cache libpq bash
 
 WORKDIR /app
+
+ENV DJANGO_SETTINGS_MODULE=settings.settings
 
 COPY --from=builder /install /usr/local
 COPY . /app
