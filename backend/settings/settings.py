@@ -17,7 +17,7 @@ from settings.logging import build_logging
 BASE_DIR = Path(__file__).resolve().parent.parent
 PROJECT_ROOT = BASE_DIR.parent
 
-
+DOMAIN = get_env_param_str("DOMAIN", "localhost")
 SECRET_KEY = get_env_param_str("SECRET_KEY", "dev")
 DEBUG = get_env_param_bool("DEBUG", False)
 
@@ -37,9 +37,9 @@ structlog.configure(
     cache_logger_on_first_use=True,
 )
 
-ALLOWED_HOSTS = get_env_param_list("ALLOWED_HOSTS", default=["127.0.0.1", "localhost"])
-CSRF_TRUSTED_ORIGINS = get_env_param_list("CSRF_TRUSTED_ORIGINS", default=[])
-CORS_ALLOWED_ORIGINS = get_env_param_list("CORS_ALLOWED_ORIGINS", default=["127.0.0.1:3000", "localhost:3000"])
+ALLOWED_HOSTS = ["127.0.0.1", "localhost", "watchy", DOMAIN]
+CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1:8080", "http://localhost:8080", f"https://{DOMAIN}", f"http://{DOMAIN}"]
+CORS_ALLOWED_ORIGINS = ["http://127.0.0.1:8080", "http://localhost:8080", f"https://{DOMAIN}", f"http://{DOMAIN}"]
 
 # Application definition
 DJANGO_APPS = [
