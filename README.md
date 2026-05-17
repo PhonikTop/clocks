@@ -67,7 +67,7 @@ services:
   watchy-api:
     container_name: watchy-api
     hostname: watchy
-    image: ghcr.io/phoniktop/clocks-backend:latest
+    image: ghcr.io/phoniktop/watchy-backend:latest
     env_file:
       - .env
     depends_on:
@@ -111,10 +111,8 @@ services:
       - watchy_network
 
   watchy-frontend:
-    container_name: watchy-frontend
-    build:
-      context: frontend/
-      dockerfile: Dockerfile
+    image: watchy-frontend
+    container_name: ghcr.io/phoniktop/watchy-frontend:latest
     restart: always
     ports:
       - "8080:80"
