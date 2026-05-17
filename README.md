@@ -3,34 +3,148 @@
 
 ## 🚀 Быстрый старт
 
-### 1. Настройка переменных окружения
-
-Создайте файл `.env.prod`, скопировав содержимое из `.env.dev`, и обязательно обновите переменные под ваше окружение:
+### 1. Создайте файл `nginx.conf`, скопировав содержимое ниже:
 
 ```env
-DEBUG=0
-SECRET_KEY=your-secret-key
-POSTGRES_USER=your-database-user
-POSTGRES_PASSWORD=your-database-password
-ALLOWED_HOSTS=your_domain,watchy-api
-CSRF_TRUSTED_ORIGINS=https://your_domain
-DJANGO_SUPERUSER_USERNAME=admin_name
-DJANGO_SUPERUSER_EMAIL=admin@example.com
-DJANGO_SUPERUSER_PASSWORD=admin_password
-VUE_APP_API_URL=https://your_domain/api/v1/
-VUE_APP_WS_BASE_URL=wss://your_domain/ws/
+server {
+    listen 80;
+
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+
+    proxy_connect_timeout 300s;
+    proxy_send_timeout 300s;
+    proxy_read_timeout 300s;
+    send_timeout 300s;
+
+    location /api {
+        proxy_pass http://watchy-api:8000;
+    }
+
+    location /admin {
+        proxy_pass http://watchy-api:8000;
+    }
+
+    location /ws {
+        proxy_pass http://watchy-api:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "Upgrade";
+
+        proxy_connect_timeout 7d;
+        proxy_send_timeout 7d;
+        proxy_read_timeout 7d;
+    }
+
+    location / {
+        proxy_pass http://watchy-frontend:80;
+    }
+
+    location /static {
+        alias /static;
+        expires 365d;
+        access_log off;
+        add_header Cache-Control "public, immutable";
+    }
+
+    location ~ /\. {
+        deny all;
+        access_log off;
+        log_not_found off;
+    }
+}
+
 ```
 ---
 
-### 2. Запуск проекта
+### 2. Создайте файл `docker-compose.yml`, скопировав содержимое ниже, и обязательно впишите вместо YOUR_DOMAIN_HERE свой домен:
+
 
 ```bash
-docker compose build
-docker compose -f docker-compose.prod.yml run watchy-api python manage.py migrate
-docker compose -f docker-compose.prod.yml run watchy-api python manage.py collectstatic --noinput
-docker compose -f docker-compose.prod.yml up -d 
-docker compose -f docker-compose.prod.yml run --rm watchy-api python manage.py createsuperuser --noinput
+services:
+  watchy-api:
+    container_name: watchy-api
+    hostname: watchy
+    image: ghcr.io/phoniktop/clocks-backend:latest
+    env_file:
+      - .env
+    depends_on:
+      - watchy-redis
+      - watchy-db
+    volumes:
+      - backend-static:/app/static
+      - ./backend/secret_key:/app/secret_key
+    environment:
+      - DOMAIN = YOUR_DOMAIN_HERE
+	  - DJANGO_SUPERUSER_USERNAME = admin
+	  - DJANGO_SUPERUSER_PASSWORD = p@ssw0rd
+	  - POSTGRES_USER = postgres
+	  - POSTGRES_PASSWORD = postgres
+	  - POSTGRES_DB = postgres
+    restart: always
+    networks:
+      - watchy_network
+
+  watchy-redis:
+    image: redis:latest
+    container_name: watchy-redis
+    restart: always
+    command: >
+      sh -c "exec redis-server /usr/local/etc/redis/redis.conf"
+    volumes:
+      - ./redis.prod.conf:/usr/local/etc/redis/redis.conf:ro
+      - redis-data:/data
+    networks:
+      - watchy_network
+
+  watchy-db:
+    image: postgres:latest
+    container_name: watchy-db
+    environment:
+	  - POSTGRES_USER = postgres
+	  - POSTGRES_PASSWORD = postgres
+	  - POSTGRES_DB = postgres
+    restart: always
+    networks:
+      - watchy_network
+
+  watchy-frontend:
+    container_name: watchy-frontend
+    build:
+      context: frontend/
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "8080:80"
+    networks:
+      - watchy_network
+
+  watchy-nginx:
+    container_name: watchy-nginx
+    image: nginx:1.25
+    restart: always
+    ports:
+      - "82:80"
+    depends_on:
+      - watchy-api
+      - watchy-frontend
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - backend-static:/static
+    networks:
+      - watchy_network
+
+networks:
+  watchy_network:
+
+volumes:
+  redis-data:
+  backend-static:
 ```
+
+### 3. Запустите проект с помощью `docker compose up -d`
 
 После успешного запуска приложение будет доступно по вашему домену.
 
@@ -94,5 +208,6 @@ docker compose -f docker-compose.prod.yml run --rm watchy-api python manage.py c
 
 ### Для администраторов (через Django admin)
 
+* Стандартный логин:пароль — admin:p@ssw0rd
 * Управление комнатами и голосованиями (создание, удаление, редактирование).
 * Просмотр истории голосований в комнатах.
