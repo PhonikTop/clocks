@@ -10,5 +10,20 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src')
     }
+  },
+  server: {
+    proxy: {
+      '/api/v1': {
+        target: 'http://watchy:8000',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/ws': {
+        target: 'ws://watchy:8000',
+        changeOrigin: true,
+        secure: false,
+        ws: true,
+      },
+    }
   }
 })

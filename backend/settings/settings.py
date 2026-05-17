@@ -1,76 +1,27 @@
 import os
-import sys
 from pathlib import Path
 
 import dj_database_url
 import structlog
 from structlog import contextvars
-from structlog.dev import ConsoleRenderer
 from structlog.processors import (
     TimeStamper,
     add_log_level,
     format_exc_info,
-    JSONRenderer,
 )
 from structlog.stdlib import ProcessorFormatter, add_logger_name
 
 from settings.core import get_env_param_bool, get_env_param_str, get_env_param_list
+from settings.logging import build_logging
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 PROJECT_ROOT = BASE_DIR.parent
 
-
-SECRET_KEY = get_env_param_str("SECRET_KEY", "dev")
+DOMAIN = get_env_param_str("DOMAIN", "localhost")
+SECRET_KEY = (BASE_DIR / "secret_key").read_text().strip()
 DEBUG = get_env_param_bool("DEBUG", False)
 
-foreign_pre_chain = [
-    structlog.contextvars.merge_contextvars,
-    add_log_level,
-    TimeStamper(fmt="iso", utc=True),
-    format_exc_info,
-]
-
-if not DEBUG:
-    renderer = JSONRenderer()
-    root_level = "INFO"
-else:
-    renderer = ConsoleRenderer(colors=True)
-    root_level = "DEBUG"
-
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "formatters": {
-        "struct": {
-            "()": ProcessorFormatter,
-            "processor": renderer,
-            "foreign_pre_chain": foreign_pre_chain,
-        },
-    },
-    "handlers": {
-        "default": {
-            "level": root_level,
-            "class": "logging.StreamHandler",
-            "stream": sys.stdout,
-            "formatter": "struct",
-        },
-    },
-    "root": {
-        "handlers": ["default"],
-        "level": root_level,
-    },
-    "loggers": {
-        "django": {"handlers": ["default"], "level": root_level, "propagate": False},
-        "django.db.backends": {"handlers": ["default"], "level": "WARNING", "propagate": False},
-        "django.template": {"handlers": ["default"], "level": "WARNING", "propagate": False},
-        "asgiref": {"handlers": ["default"], "level": "WARNING", "propagate": False},
-        "django.request": {"handlers": ["default"], "level": "ERROR", "propagate": False},
-        "uvicorn": {"handlers": ["default"], "level": "INFO", "propagate": False},
-        "uvicorn.error": {"handlers": ["default"], "level": "INFO", "propagate": False},
-        "uvicorn.access": {"handlers": ["default"], "level": "WARN", "propagate": False},
-        "channels": {"handlers": ["default"], "level": "INFO", "propagate": False},
-    },
-}
+LOGGING = build_logging(DEBUG)
 
 structlog.configure(
     processors=[
@@ -86,9 +37,9 @@ structlog.configure(
     cache_logger_on_first_use=True,
 )
 
-ALLOWED_HOSTS = get_env_param_list("ALLOWED_HOSTS", default=["127.0.0.1", "localhost"])
-CSRF_TRUSTED_ORIGINS = get_env_param_list("CSRF_TRUSTED_ORIGINS", default=[])
-CORS_ALLOWED_ORIGINS = get_env_param_list("CORS_ALLOWED_ORIGINS", default=["127.0.0.1:3000", "localhost:3000"])
+ALLOWED_HOSTS = ["127.0.0.1", "localhost", "watchy", DOMAIN]
+CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1:8080", "http://localhost:8080", f"https://{DOMAIN}", f"http://{DOMAIN}"]
+CORS_ALLOWED_ORIGINS = ["http://127.0.0.1:8080", "http://localhost:8080", f"https://{DOMAIN}", f"http://{DOMAIN}"]
 
 # Application definition
 DJANGO_APPS = [
@@ -152,7 +103,9 @@ WSGI_APPLICATION = "settings.wsgi.application"
 ASGI_APPLICATION = "settings.asgi.application"
 
 DATABASES = {}
-DATABASES["default"] = db = dj_database_url.parse(get_env_param_str("DATABASE_URL"))
+DATABASES["default"] = db = dj_database_url.parse(
+    f"postgres://{get_env_param_str('POSTGRES_USER', 'postgres')}:{get_env_param_str('POSTGRES_PASSWORD', 'postgres')}@watchy-db:5432/{get_env_param_str('POSTGRES_DB', 'postgres')}"
+)
 
 AUTH_PASSWORD_VALIDATORS = [
     {
