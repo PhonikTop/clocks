@@ -17,7 +17,6 @@ jobs:
     outputs:
       VERSION: ${{ steps.get_version.outputs.version }}
       IS_RELEASE: ${{ steps.get_version.outputs.is_release }}
-      IS_MAIN: ${{ steps.get_version.outputs.is_main }}
     steps:
       - uses: actions/checkout@v4
       - name: Determine version
@@ -26,24 +25,14 @@ jobs:
           if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
             VERSION="${GITHUB_REF#refs/tags/}"
             IS_RELEASE=true
-            IS_MAIN=false
             echo "Release tag version $VERSION"
-          elif [[ "${GITHUB_REF}" == refs/heads/main ]]; then
-            BASE_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "0.0.0")
-            SHORT_SHA=${GITHUB_SHA::7}
-            VERSION="${BASE_TAG}-${SHORT_SHA}"
-            IS_RELEASE=false
-            IS_MAIN=true
-            echo "Dev version on main: $VERSION"
           else
             VERSION="dev-${GITHUB_SHA::7}"
             IS_RELEASE=false
-            IS_MAIN=false
             echo "PR or feature branch version: $VERSION"
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "is_release=$IS_RELEASE" >> $GITHUB_OUTPUT
-          echo "is_main=$IS_MAIN" >> $GITHUB_OUTPUT
 
   lint-frontend:
     runs-on: ubuntu-latest
@@ -73,12 +62,7 @@ jobs:
         run: pip install -r requirements-tests.txt
       - name: Run Pytest
         working-directory: backend
-        env:
-          DEBUG: 1
-          SECRET_KEY: test
-          DJANGO_SETTINGS_MODULE: settings.settings
-          DATABASE_URL: "sqlite:///:memory:"
-        run: pytest -vv
+        run: pytest -vv -c pytest.ini
 
   build-frontend:
     runs-on: ubuntu-latest
@@ -100,7 +84,7 @@ jobs:
           path: frontend/dist
 
   docker-build-push:
-    if: ${{ needs.set-version.outputs.IS_RELEASE == 'true' || needs.set-version.outputs.IS_MAIN == 'true' }}
+    if: ${{ needs.set-version.outputs.IS_RELEASE == 'true' }}
     needs: [set-version, lint-frontend, test-backend, build-frontend]
     runs-on: ubuntu-latest
     permissions:
@@ -112,7 +96,6 @@ jobs:
         run: |
           echo "VERSION=${{ needs.set-version.outputs.VERSION }}"
           echo "IS_RELEASE=${{ needs.set-version.outputs.IS_RELEASE }}"
-          echo "IS_MAIN=${{ needs.set-version.outputs.IS_MAIN }}"
       - name: Set lowercase repo name
         run: |
           echo "REPO_LOWER=$(echo $GITHUB_REPOSITORY | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
@@ -135,7 +118,6 @@ jobs:
           target: api-prod
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.REPO_LOWER }}-backend:${{ github.sha }}
             ${{ env.REGISTRY }}/${{ env.REPO_LOWER }}-backend:${{ needs.set-version.outputs.VERSION }}
 
       - name: Push latest tag (backend)
@@ -152,7 +134,6 @@ jobs:
           file: ./frontend/Dockerfile
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.REPO_LOWER }}-frontend:${{ github.sha }}
             ${{ env.REGISTRY }}/${{ env.REPO_LOWER }}-frontend:${{ needs.set-version.outputs.VERSION }}
 
       - name: Push latest tag (frontend)
