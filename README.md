@@ -3,63 +3,7 @@
 
 ## 🚀 Быстрый старт
 
-### 1. Создайте файл `nginx.conf`, скопировав содержимое ниже:
-
-```env
-server {
-    listen 80;
-
-    proxy_set_header Host $host;
-    proxy_set_header X-Real-IP $remote_addr;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Proto $scheme;
-
-    proxy_connect_timeout 300s;
-    proxy_send_timeout 300s;
-    proxy_read_timeout 300s;
-    send_timeout 300s;
-
-    location /api {
-        proxy_pass http://watchy-api:8000;
-    }
-
-    location /admin {
-        proxy_pass http://watchy-api:8000;
-    }
-
-    location /ws {
-        proxy_pass http://watchy-api:8000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "Upgrade";
-
-        proxy_connect_timeout 7d;
-        proxy_send_timeout 7d;
-        proxy_read_timeout 7d;
-    }
-
-    location / {
-        proxy_pass http://watchy-frontend:80;
-    }
-
-    location /static {
-        alias /static;
-        expires 365d;
-        access_log off;
-        add_header Cache-Control "public, immutable";
-    }
-
-    location ~ /\. {
-        deny all;
-        access_log off;
-        log_not_found off;
-    }
-}
-
-```
----
-
-### 2. Создайте файл `docker-compose.yml`, скопировав содержимое ниже, и обязательно впишите вместо YOUR_DOMAIN_HERE свой домен:
+### 1. Создайте файл `docker-compose.yml`, скопировав содержимое ниже, и обязательно впишите вместо YOUR_DOMAIN_HERE свой домен:
 
 
 ```bash
@@ -114,23 +58,10 @@ services:
     image: watchy-frontend
     container_name: ghcr.io/phoniktop/watchy-frontend:latest
     restart: always
-    ports:
-      - "8080:80"
-    networks:
-      - watchy_network
-
-  watchy-nginx:
-    container_name: watchy-nginx
-    image: nginx:1.25
-    restart: always
+    volumes:
+      - backend-static:/static
     ports:
       - "82:80"
-    depends_on:
-      - watchy-api
-      - watchy-frontend
-    volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
-      - backend-static:/static
     networks:
       - watchy_network
 
@@ -142,7 +73,7 @@ volumes:
   backend-static:
 ```
 
-### 3. Запустите проект с помощью `docker compose up -d`
+### 2. Запустите проект с помощью команды `docker compose up -d`
 
 После успешного запуска приложение будет доступно по вашему домену.
 
