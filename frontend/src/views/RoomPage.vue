@@ -47,8 +47,6 @@ const token = ref(localStorage.getItem("token"));
 const userRole = ref("");
 const userUuid = ref("")
 
-const hasVoted = ref(false)
-
 const redirectToLogin = () => router.push({ name: "Login" });
 
 const { isConnected, connect, sendMessage, addMessageHandler } =
@@ -66,8 +64,7 @@ const { currentVoting } = useRoomWebSocketHandler(
   taskName,
   notify,
   redirectToLogin,
-  userUuid,
-  hasVoted
+  userUuid
 );
 
 const { getRoomVoting, ...votingActions } = useVotingManager(
@@ -79,8 +76,6 @@ const { getRoomVoting, ...votingActions } = useVotingManager(
 
 const handleVote = (voteValue: number) => {
   try {
-    hasVoted.value = true;
-    localStorage.setItem("hasVoted", JSON.stringify(true))
     sendMessage({
       action: "submit_vote",
       vote: `${voteValue}`,
@@ -122,7 +117,6 @@ onBeforeMount(async () => {
     roomName.value = currentRoom.value.name;
   }
 
-  hasVoted.value = JSON.parse(localStorage.getItem("hasVoted") ?? "false");
 
   await fetchParticipants();
   await fetchRoomTimer(roomId.value)
@@ -180,7 +174,6 @@ onMounted(async () => {
         >
           <ActiveVotingState
             :user-role="userRole"
-            :has-voted="hasVoted"
             @vote="handleVote"
             @update-task="votingActions.updateVotingTaskName"
           />

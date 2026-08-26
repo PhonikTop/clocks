@@ -3,7 +3,6 @@ import ChangeTaskForm from "@/components/room/voting/ui/ChangeTaskForm.vue";
 import VotingForm from "@/components/room/voting/ui/VotingForm.vue";
 
 defineProps({
-  hasVoted: Boolean,
   userRole: String
 });
 
@@ -17,7 +16,7 @@ defineEmits(["vote", "update-task"]);
       @submitted="$emit('update-task', $event)"
     />
     <VotingForm
-      v-if="!hasVoted && userRole === `voter`"
+      v-if="userRole === `voter`"
       @vote="$emit('vote', $event)"
     />
   </div>
