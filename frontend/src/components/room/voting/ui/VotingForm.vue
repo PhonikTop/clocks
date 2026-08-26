@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import { InputType } from "@/types/inputType";
 import { ref, computed } from "vue";
 
-const emit = defineEmits(["vote"]);
+const emit = defineEmits(["vote", "change-input-type"]);
 
 const guessValue = ref("");
 
@@ -15,6 +16,10 @@ const handleSubmit = () => {
   emit("vote", Number(guessValue.value));
   guessValue.value = "";
 };
+
+const handleChangeInputType = () => {
+  emit("change-input-type", InputType.cards)
+}
 </script>
 
 <template>
@@ -42,6 +47,12 @@ const handleSubmit = () => {
       @click="handleSubmit"
     >
       OK
+    </button>
+    <button
+      class="btn"
+      @click="handleChangeInputType"
+    >
+      Сменить тип ввода
     </button>
   </div>
 </template>

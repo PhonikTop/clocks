@@ -20,7 +20,6 @@ export default function useRoomWebSocketHandler(
   notify: ReturnType<typeof useNotify>,
   redirectToLogin: () => void,
   userUuid: Ref<string>,
-  hasVoted: Ref<boolean>
 ) {
   const currentVoting: Ref<null | number> = ref(null);
 
@@ -60,8 +59,6 @@ export default function useRoomWebSocketHandler(
       roomState.value = ROOM_STATES.RESULTS;
       resultsVotes.value = msg.votes;
       averageScore.value = msg.average_score;
-      localStorage.setItem("hasVoted", JSON.stringify(false));
-      hasVoted.value = false;
     });
 
     addMessageHandler("task_name_changed", (msg) => {
@@ -104,8 +101,6 @@ export default function useRoomWebSocketHandler(
       getVoting(msg.id)
         .then(() => {
           currentVoting.value = msg.id;
-          localStorage.setItem("hasVoted", JSON.stringify(false));
-          hasVoted.value = false;
           localStorage.setItem("active_voting_id", msg.id.toString());
           taskName.value = roomVoting.value?.task_name || "";
           roomState.value = ROOM_STATES.VOTING;
@@ -123,7 +118,6 @@ export default function useRoomWebSocketHandler(
 
       switch (msg.status) {
         case "restart":
-          hasVoted.value = false;
           roomState.value = ROOM_STATES.VOTING;
           votes.value = [];
           notify.info("Голосование перезапущенно")
