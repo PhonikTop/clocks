@@ -3,10 +3,11 @@ import ChangeTaskForm from "@/components/room/voting/ui/ChangeTaskForm.vue";
 import VotingForm from "@/components/room/voting/ui/VotingForm.vue";
 
 defineProps({
-  userRole: String
+  userRole: String,
+  showKeyboard: Boolean
 });
 
-defineEmits(["vote", "update-task"]);
+defineEmits(["vote", "update-task", "change-input-type"]);
 </script>
 
 <template>
@@ -16,8 +17,9 @@ defineEmits(["vote", "update-task"]);
       @submitted="$emit('update-task', $event)"
     />
     <VotingForm
-      v-if="userRole === `voter`"
+      v-if="showKeyboard && userRole === `voter`"
       @vote="$emit('vote', $event)"
+      @change-input-type="$emit('change-input-type', $event)"
     />
   </div>
 </template>

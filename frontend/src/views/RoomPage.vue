@@ -17,6 +17,8 @@ import { useNotify } from '@/composables/useNotify.js'
 import { useTimerStore } from "@/stores/roomTimer";
 
 import useRoom from "@/composables/api/useRoomAPI"
+import PlayingCards from "@/components/room/ui/PlayingCards.vue";
+import { InputType } from "@/types/inputType";
 
 
 const route = useRoute();
@@ -74,6 +76,19 @@ const { getRoomVoting, ...votingActions } = useVotingManager(
   notify,
 );
 
+const userInputType = ref("keyboard")
+
+const getUserPrefInputType = (): InputType => {
+  const storedKey = localStorage.getItem("inputType") as keyof typeof InputType;
+  const key = storedKey in InputType ? storedKey : 'keyboard';
+  return InputType[key];
+}
+
+const handleChangeInputType = (inputType: InputType) => {
+  localStorage.setItem("inputType", inputType);
+  userInputType.value = inputType
+}
+
 const handleVote = (voteValue: number) => {
   try {
     sendMessage({
@@ -117,6 +132,7 @@ onBeforeMount(async () => {
     roomName.value = currentRoom.value.name;
   }
 
+  userInputType.value = getUserPrefInputType()
 
   await fetchParticipants();
   await fetchRoomTimer(roomId.value)
@@ -174,8 +190,10 @@ onMounted(async () => {
         >
           <ActiveVotingState
             :user-role="userRole"
+            :show-keyboard="userInputType == InputType.keyboard"
             @vote="handleVote"
             @update-task="votingActions.updateVotingTaskName"
+            @change-input-type="handleChangeInputType"
           />
         </div>
 
@@ -211,6 +229,13 @@ onMounted(async () => {
           @kick-user="handleKickUser"
         />
       </div>
+    </div>
+    <div class="flex justify-center">
+      <PlayingCards
+        v-if="userRole === 'voter' && userInputType == InputType.cards"
+        @vote="handleVote"
+        @change-input-type="handleChangeInputType"
+      />
     </div>
   </div>
 </template>
